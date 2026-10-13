@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# iKnowBall
 
-## Getting Started
+Knowledge-first football app: The Daily, The League and rankings. Next.js (App Router, TypeScript) on Vercel, Supabase for Postgres, auth and scheduled jobs.
 
-First, run the development server:
+## Run locally
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # fill in Supabase keys at least
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`/api/health` reports which settings are present and whether the database answers.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Database
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The schema lives in `supabase/migrations/`. To apply it to the hosted project:
 
-## Learn More
+```bash
+npx supabase login
+npx supabase link --project-ref <your-project-ref>
+npx supabase db push
+npm run db:types            # regenerate TypeScript types after a schema change
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Checks
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm test          # unit tests (game clock, later answer matching and scoring)
+npm run typecheck
+npm run lint
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## House rules
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Players never trigger a football API call. Scheduled jobs fetch from Highlightly into our database; screens read from the database.
+- The quiz timer starts on the server and answers are checked on the server. The answer key (`daily_answers`, `player_aliases`) has no client read policy.
+- The Daily closes at midnight GMT+1, all year. Matchweeks run Monday to Sunday on the same clock (`src/lib/time.ts`, `public.game_date()`).
+- The domain lives only in `NEXT_PUBLIC_SITE_URL`.
