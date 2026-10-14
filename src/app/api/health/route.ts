@@ -1,11 +1,10 @@
-import { NextResponse } from "next/server";
+import { connection, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { gameDate } from "@/lib/time";
 
-export const dynamic = "force-dynamic";
-
 // Setup check: is the env configured and can we reach the database?
 export async function GET() {
+  await connection();
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const checks: Record<string, boolean | string> = {
