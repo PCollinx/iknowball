@@ -13,6 +13,10 @@ export async function GET() {
     supabaseConfigured: Boolean(url && key),
     serviceRoleConfigured: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
     highlightlyConfigured: Boolean(process.env.HIGHLIGHTLY_API_KEY),
+    // Public keys are baked in at build time, so these show what the live build got.
+    posthogConfigured: Boolean(process.env.NEXT_PUBLIC_POSTHOG_KEY),
+    sentryConfigured: Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN),
+    commit: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local",
     database: false,
   };
   if (url && key) {
