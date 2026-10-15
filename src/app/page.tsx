@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { gameDate, gameDateClosesAt } from "@/lib/time";
@@ -18,7 +19,10 @@ export default function Home() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-4 px-4">
       <h1 className="font-display text-5xl uppercase text-royal">iKnowBall</h1>
-      <p>One Daily, one try. Coming soon.</p>
+      <p>One Daily, one try.</p>
+      <Link href="/daily" className="bg-royal p-3.5 text-center font-display text-[28px] text-white uppercase">
+        Play today&apos;s Daily
+      </Link>
       <Suspense fallback={<p className="text-sm opacity-70">&nbsp;</p>}>
         <DailyCloses />
       </Suspense>

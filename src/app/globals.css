@@ -25,6 +25,18 @@
   /* Display: headings, numbers, shirt names. Body: everything else. */
   --font-display: var(--font-big-shoulders), "Arial Narrow", Impact, sans-serif;
   --font-sans: var(--font-barlow), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --animate-shirt-pop: shirt-pop 0.45s cubic-bezier(0.2, 1.6, 0.4, 1);
+  @keyframes shirt-pop {
+    from {
+      transform: scale(0.6) rotate(-6deg);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
 }
 
 html {
@@ -35,4 +47,26 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+}
+
+/* Small uppercase label used in mastheads, tables and the share card. */
+@utility label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-teal);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 1ms !important;
+    transition-duration: 1ms !important;
+  }
 }
