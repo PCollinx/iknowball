@@ -39,3 +39,9 @@ export function serverEnv() {
   }
   return { ...publicEnv(), ...serverSchema.parse(process.env) };
 }
+
+/** Names of server variables that are missing or invalid (never their values). */
+export function serverEnvProblems(): string[] {
+  const result = serverSchema.safeParse(process.env);
+  return result.success ? [] : [...new Set(result.error.issues.map((i) => i.path.join(".")))];
+}
