@@ -16,6 +16,15 @@ Project memory for Claude Code, carried over from the Claude project where the p
 - Web app first, mobile-first, with its own desktop layout from about 1024px.
 - No Premier League branding or club crests. Player cards are code-generated shirt-back cards, never faces.
 
+## Look and type (chosen 15 Oct 2026)
+
+- Theme **Royal and Teal**. Tokens live in `src/app/globals.css` (Tailwind: `text-royal`, `bg-teal`, `bg-mist`, and so on).
+- The background is **always white** (#FFFFFF): no dark theme. Navy `#0C1330` is the text colour.
+- Royal blue `#1F48D6` leads: shirts, correct answers, the answer box. Teal `#00A3A3` is the countdown (bar and tab), tier badge and highlights; light teal `#7FE3E0` for shirt numbers. Mist `#EEF2FB` fills, track `#DCE3F5`, red card `#D7263D` for banter and warnings. Pitch green and yellow were tried and rejected.
+- Type: **Big Shoulders** 900 (`font-display`, uppercase) for headings, numbers and shirt names; **Barlow** 400 and 600 (`font-sans`) for everything else. Both self-hosted by `next/font` in `src/app/layout.tsx`.
+- This settles colours and fonts only. Screen layouts are designed screen by screen in the core build, starting with The Daily.
+- Picker page with all rounds: https://claude.ai/artifact/99Qnj4Vm79G3JeDY24KUTp
+
 ## Data
 
 - **Primary source: Highlightly, free plan** (commercial use confirmed by Collins, 13 Oct 2026). Base URL `https://soccer.highlightly.net`, header `x-rapidapi-key`, 100 requests/day free (paid from $9.49/mo for 7,500/day). 2026/27 PL is league id `33973`, `season=2026`.
@@ -59,7 +68,6 @@ Project memory for Claude Code, carried over from the Claude project where the p
 
 ## Open items
 
-- Visual theme and type (due 19 Oct).
 - Tier names.
 - Matchweek scoring formula.
 - Whether to buy iknowball.com.

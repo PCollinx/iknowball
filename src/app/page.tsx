@@ -17,7 +17,7 @@ async function DailyCloses() {
 export default function Home() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-4 px-4">
-      <h1 className="text-4xl font-bold">iKnowBall</h1>
+      <h1 className="font-display text-5xl uppercase text-royal">iKnowBall</h1>
       <p>One Daily, one try. Coming soon.</p>
       <Suspense fallback={<p className="text-sm opacity-70">&nbsp;</p>}>
         <DailyCloses />
