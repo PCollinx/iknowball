@@ -9,7 +9,7 @@ Project memory for Claude Code, carried over from the Claude project where the p
 - Name: **iKnowBall** (short form IKB, never "YKB"). Domain **playiknowball.com**. The domain lives only in `NEXT_PUBLIC_SITE_URL`; if it ever moves (e.g. to iknowball.com, which may be bought later), the old one must redirect forever.
 - A knowledge-first football app: one rating with tiers. Nigeria-first, plus UK and global football Twitter. Tone is confident banter, not British nostalgia. Inspired by futoteca.club.
 - Three pillars:
-  - **The Daily**: one try per day, Free Recall and In Order formats, timed, themed on the Premier League fixtures.
+  - **The Daily**: one try per day in two parts, Part 1 Free Recall then Part 2 In Order (one `dailies` row per part), timed, themed on the Premier League fixtures. Lives at `/daily`.
   - **Clash**: 60-second duels (Higher/Lower facts, skill-specific player comparisons, crowd vs data). At launch: solo sprint plus async challenge links. Rate mode feeds the vote pool (about 100 votes for a comparison to enter play).
   - **The League**: mini-leagues with invite codes, scored per PL matchweek (Mon to Sun), plus a global weekly table and an all-time rating.
   - Predictions come after launch.
@@ -22,7 +22,9 @@ Project memory for Claude Code, carried over from the Claude project where the p
 - The background is **always white** (#FFFFFF): no dark theme. Navy `#0C1330` is the text colour.
 - Royal blue `#1F48D6` leads: shirts, correct answers, the answer box. Teal `#00A3A3` is the countdown (bar and tab), tier badge and highlights; light teal `#7FE3E0` for shirt numbers. Mist `#EEF2FB` fills, track `#DCE3F5`, red card `#D7263D` for banter and warnings. Pitch green and yellow were tried and rejected.
 - Type: **Big Shoulders** 900 (`font-display`, uppercase) for headings, numbers and shirt names; **Barlow** 400 and 600 (`font-sans`) for everything else. Both self-hosted by `next/font` in `src/app/layout.tsx`.
-- This settles colours and fonts only. Screen layouts are designed screen by screen in the core build, starting with The Daily.
+- Screen layouts are designed screen by screen as clickable mocks, then built. Rule from Collins: nothing that looks like a generic AI-built app (no soft rounded card stacks, gradients, emoji icons or centred everything); borrow from football itself.
+- **The Daily uses the "Programme" layout** (picked 15 Oct 2026): a printed matchday programme with an issue-number masthead, double rules, a huge fixture headline, a teal scoreboard clock that turns red near the end, answers as a grid of shirt-backs and a royal answer box. Desktop is the programme opened flat (fixture left, squad right). Mocks: https://claude.ai/artifact/VdB3kEGoVSK2XcQ7hB8BVh
+- **Share card: "Programme cover"**, square 1:1: masthead, fixture, big score beside numbered and empty shirts (how many, never who), a red "N short" stamp, a stats strip and a teal "Think you know ball? Beat N." footer. Code: `src/components/daily/ShareCard.tsx`. A server-rendered 1080 × 1080 image is still to do.
 - Picker page with all rounds: https://claude.ai/artifact/99Qnj4Vm79G3JeDY24KUTp
 
 ## Data
