@@ -60,6 +60,10 @@ Project memory for Claude Code, carried over from the Claude project where the p
 - `/api/health` shows the live commit, whether the database answers, and whether Sentry/PostHog keys are in the build. Check it first when something seems missing, then redeploy.
 - Sentry auth token lives under Settings > Developer Settings > Organization Tokens (not the project Security Token).
 - DNS is on Cloudflare (apex CNAME flattened to Vercel, grey cloud).
+- Production hides server errors behind "Minified React error #441": the real message is in Sentry > Issues or Vercel > Logs.
+- Every server variable in `src/lib/env.ts` must be set in Vercel, or any page using the service role (including `/daily`) fails. `/api/health` doesn't check `CRON_SECRET`, which must be 16+ characters. On 15 Oct 2026 it was empty.
+- `npx supabase db push` goes to whichever project was linked last. Always `npx supabase link --project-ref <ref from NEXT_PUBLIC_SUPABASE_URL in Vercel>` and `npx supabase migration list` first. On 15 Oct 2026 the Daily migration went to the wrong project ("column dailies.part does not exist").
+- Running locally (Docker Desktop + local Supabase, `.env.local` from `npx supabase status -o env`, stop and start) is in README.md. The seeded sample Daily is only for the day of `npx supabase db reset`.
 
 ## Timeline
 
