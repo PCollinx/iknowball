@@ -69,10 +69,15 @@ Project memory for Claude Code, carried over from the Claude project where the p
 
 ## Timeline
 
-- Oct 14 to 18: setup (done 15 Oct: domain, Supabase schema, PostHog and Sentry live).
-- Oct 19 to Nov 8: core build. Nov 9 to 15: leagues. Nov 16 to 25: closed beta.
-- **Launch Fri 27 Nov 2026** (fallback 4 Dec). Demo video recorded in the beta, published Thu 26 Nov on X and WhatsApp, pinned on the waitlist page.
-- Clash and Rate mode: 18 Dec 2026. Native decision: 1 Mar 2027. Android: July 2027.
+Replanned 16 Oct 2026 because the build is ahead (plan doc: https://claude.ai/code/artifact/ddd3e7d2-6471-4dfa-845b-6b90ef603740):
+
+- Done: setup (15 Oct); The Daily, the maker and Wikidata auto-drafts (15 to 16 Oct).
+- Oct 17 to 25: accounts (guest to Google/email-link sign-in), profile shirt, favourite club.
+- Oct 26 to Nov 1: Daily polish (server share-card images, best-5-of-7 day scores, daily leaderboard). Waitlist page Nov 1.
+- Nov 2 to 8: Highlightly fixture sync, leagues and rankings (a week earlier than first planned). Checkpoint Nov 8.
+- Nov 9 to 15: Clash solo sprint + async challenge links as a stretch goal for launch; PWA install. Nov 15 check decides whether Clash ships at launch or on 18 Dec.
+- Nov 16 to 25: closed beta. **Launch Fri 27 Nov 2026** (fallback 4 Dec; if the build slips, Clash drops back to 18 Dec first). Demo video recorded in the beta, published Thu 26 Nov on X and WhatsApp, pinned on the waitlist page.
+- Rate mode (plus Clash if it missed launch): 18 Dec 2026. Native decision: 1 Mar 2027. Android: July 2027.
 
 ## Rating and scoring (decided 16 Oct 2026)
 
@@ -95,4 +100,5 @@ Project memory for Claude Code, carried over from the Claude project where the p
 ## Open items
 
 - Whether to buy iknowball.com.
+- Clash at launch or 18 Dec: settled at the Nov 15 check.
 - Switch Vercel to Pro ($20/mo) before launch: Hobby is non-commercial only.
