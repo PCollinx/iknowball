@@ -49,6 +49,29 @@ npx supabase db push
 npm run db:types            # regenerate TypeScript types after a schema change
 ```
 
+## The Daily maker
+
+`/maker` is the back office for writing Dailies: a list of the coming weeks, and an editor for each day's two parts with a live shirt preview and a "try a guess" box that uses the real answer matching. A part locks once anyone has started it.
+
+Answer boxes take one answer per line:
+
+```text
+Part 1, Free Recall:   Cesc Fàbregas | Cesc, Fabregas      (aliases after the bar)
+Part 2, In Order:      Emmanuel Petit | 2001               (correct order, top first; the reveal after the bar)
+```
+
+Locally, `npx supabase db reset` creates an admin: `admin@iknowball.local`, password `ball-knowledge`.
+
+On the live project, once:
+
+1. Supabase > Authentication > Users > Add user, with your email and a strong password, and tick "Auto confirm".
+2. Supabase > SQL editor:
+   ```sql
+   update public.profiles set is_admin = true
+   where id = (select id from auth.users where email = 'you@example.com');
+   ```
+3. Sign in at `/maker/login`.
+
 ## Checks
 
 ```bash
