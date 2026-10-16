@@ -6,6 +6,8 @@ import { draftDay, pairKey, pickPair, type Club, type SharedPlayer } from "./gen
 
 /** Days ahead the job keeps drafted, so there is about a week to review. */
 export const DRAFT_DAYS_AHEAD = 8;
+/** Off a fixture, a club isn't picked again within this many days either side, when there's a choice. */
+const CLUB_REST_DAYS = 3;
 /** A club pair isn't reused within this many days. */
 const PAIR_COOLDOWN_DAYS = 90;
 /** Players from this many recent days are avoided in Part 2. */
@@ -45,10 +47,16 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
 
   // Pairs already used recently or still to come, read from the titles ("A v B").
   const used = new Set<string>();
+  const clubsOn = new Map<string, number[]>();
   for (const d of existing ?? []) {
     const [a, b] = String(d.title).split(" v ").map((n) => clubByName.get(n));
-    if (a && b) used.add(pairKey(a, b));
+    if (a && b) {
+      used.add(pairKey(a, b));
+      clubsOn.set(d.play_date as string, [a, b]);
+    }
   }
+  const restedNear = (date: string) =>
+    new Set(Array.from({ length: 2 * CLUB_REST_DAYS + 1 }, (_, i) => clubsOn.get(addDays(date, i - CLUB_REST_DAYS)) ?? []).flat());
   const recent = await recentAnswerNames(addDays(today, -PLAYER_COOLDOWN_DAYS), last);
   const fixtures = await fixturePairs(matchweekBounds(today).startsOn, addDays(last, 7));
 
@@ -56,7 +64,7 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
     const week = matchweekBounds(date);
     const sameWeek = [...fixtures].filter(([d]) => d >= week.startsOn && d <= week.endsOn);
     const preferred = [...sameWeek.filter(([d]) => d === date), ...sameWeek.filter(([d]) => d !== date)].map(([, pair]) => pair);
-    const pair = pickPair(date, pairs, preferred, used);
+    const pair = pickPair(date, pairs, preferred, used, restedNear(date));
     if (!pair) {
       result.skipped.push({ date, reason: "No unused club pair with a good list. Import more clubs or wait for the cooldown." });
       continue;
@@ -91,6 +99,7 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
       continue;
     }
     used.add(pairKey(home.id, away.id));
+    clubsOn.set(date, [home.id, away.id]);
     day.part2?.answers.forEach((a) => recent.add(normalizeName(a.text)));
     result.drafted.push({ date, title: day.part1.title, answers: day.part1.answers.length });
   }
