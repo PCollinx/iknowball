@@ -74,9 +74,15 @@ Project memory for Claude Code, carried over from the Claude project where the p
 - **Launch Fri 27 Nov 2026** (fallback 4 Dec). Demo video recorded in the beta, published Thu 26 Nov on X and WhatsApp, pinned on the waitlist page.
 - Clash and Rate mode: 18 Dec 2026. Native decision: 1 Mar 2027. Android: July 2027.
 
+## Rating and scoring (decided 16 Oct 2026)
+
+- **Tiers**: Plastic, Casual, Supporter, Ball Knower, Pundit, Ball God. Everyone starts on a rating of 1000 and is placed after 3 Dailies. Cut-offs to tune in the closed beta: below 900 Plastic, 900 Casual, 1100 Supporter, 1300 Ball Knower, 1500 Pundit, 1750+ Ball God (aim for about the top 1%).
+- **Matchweek score, best 5 of 7**: each Daily day scores 0 to 100 (Part 1 up to 60, Part 2 up to 40, by share of answers right, so a day with more answers weighs the same). A week counts your best 5 days, max 500. Clash adds up to 100 a week from your best 3 sprints once it launches. Ties go to less total time on the counted days.
+- Predictions, when they come, get a fixed weekly pot split across however many matches there are, so double-round weeks never outweigh normal ones.
+- The all-time rating moves once a week from your global weekly finish; a missed week costs nothing.
+- This replaces the provisional `POINTS_PER_CORRECT` in `src/lib/daily/score.ts` when The League is built.
+
 ## Open items
 
-- Tier names.
-- Matchweek scoring formula.
 - Whether to buy iknowball.com.
 - Switch Vercel to Pro ($20/mo) before launch: Hobby is non-commercial only.
