@@ -14,12 +14,20 @@ export type ImportResult = { club: string; players: number; spells: number } | {
 /** Fetches one club's player histories from Wikidata and upserts them. */
 export async function importClub(club: TrackedClub): Promise<ImportResult> {
   const admin = createAdminClient();
-  let spells: Spell[];
+  let ok = false;
   try {
-    spells = await fetchClubPlayers(club.wikipedia);
+    const result = await saveClub(admin, club, await fetchClubPlayers(club.wikipedia));
+    ok = !("error" in result);
+    return result;
   } finally {
-    await admin.from("api_calls").insert({ source: "wikidata", endpoint: `club:${club.wikipedia}` });
+    // status 200 marks a finished import, so the next run can skip this club.
+    await admin.from("api_calls").insert({ source: "wikidata", endpoint: clubEndpoint(club), status_code: ok ? 200 : 500 });
   }
+}
+
+export const clubEndpoint = (club: TrackedClub) => `club:${club.wikipedia}`;
+
+async function saveClub(admin: ReturnType<typeof createAdminClient>, club: TrackedClub, spells: Spell[]): Promise<ImportResult> {
   if (!spells.length) return { club: club.name, error: "No players found. Check the Wikipedia title." };
 
   const { data: clubRow, error: clubError } = await admin
