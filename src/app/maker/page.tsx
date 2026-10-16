@@ -114,6 +114,9 @@ function DayRow({ date, today, parts }: { date: string; today: string; parts?: M
                 <span className="label mr-2 text-navy/60">P{p.part}</span>
                 <span className="font-semibold">{p.title}</span>
                 <span className="text-navy/60"> · {p.answer_count} answers</span>
+                {p.status === "draft" && p.source_note?.startsWith("Drafted from Wikidata") && (
+                  <span className="label ml-2 text-teal">Auto</span>
+                )}
               </span>
             ))
           ) : (

@@ -10,6 +10,7 @@ Project memory for Claude Code, carried over from the Claude project where the p
 - A knowledge-first football app: one rating with tiers. Nigeria-first, plus UK and global football Twitter. Tone is confident banter, not British nostalgia. Inspired by futoteca.club.
 - Three pillars:
   - **The Daily**: one try per day in two parts, Part 1 Free Recall then Part 2 In Order (one `dailies` row per part), timed, themed on the Premier League fixtures. Lives at `/daily`. Written in the **Daily maker** at `/maker` (admins only: `profiles.is_admin`, email and password sign-in). It saves a whole day through `public.maker_save_day()` in one transaction, and a part locks once anyone has started it.
+  - Content is **auto-drafted, reviewed weekly** (decided 16 Oct 2026). `/api/jobs/import-wikidata` (Mondays) loads player club spells from Wikidata into `player_spells`; `/api/jobs/drafts` (20:00 WAT daily) drafts empty days 8 ahead (Part 1 "played for both X and Y since 1992", Part 2 order of joining) and schedules any still-draft day due tomorrow. Collins reviews drafts (teal "Auto" tag) in the maker. Answers always come from data; AI may only help with wording. Code in `src/lib/drafts/`.
   - **Clash**: 60-second duels (Higher/Lower facts, skill-specific player comparisons, crowd vs data). At launch: solo sprint plus async challenge links. Rate mode feeds the vote pool (about 100 votes for a comparison to enter play).
   - **The League**: mini-leagues with invite codes, scored per PL matchweek (Mon to Sun), plus a global weekly table and an all-time rating.
   - Predictions come after launch.
@@ -33,6 +34,7 @@ Project memory for Claude Code, carried over from the Claude project where the p
   - `/box-score/{matchId}` gives per-player duels won, key passes, successful dribbles, interceptions, tackles, shots, xG, xA and a match rating.
   - Season totals for those stats are not in `/players/{id}/statistics`: aggregate box scores in our database (about 10 calls per matchweek).
   - `/matches` lists newest first. Lineups are only served from 40 min before to 120 min after kickoff, so fetch them on match day.
+- Wikidata (CC0) feeds player club histories (`player_spells`, `clubs.wikidata_qid`). The tracked clubs list is `src/lib/drafts/clubs.ts`.
 - Fallback: API-Football Pro ($19/mo). Its free plan blocks the current season.
 - Also usable: Wikidata (CC0) for player facts, football-data.org as a backup.
 - Ruled out: FBref, scraping FotMob/Understat/Transfermarkt, StatsBomb open data, the unofficial FPL API as a core source.
