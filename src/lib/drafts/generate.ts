@@ -32,6 +32,7 @@ export function pickPair(
   candidates: PairCandidate[],
   fixtures: [number, number][],
   used: Set<string>,
+  rested: Set<number> = new Set(),
 ): [number, number] | null {
   const good = new Map(
     candidates.filter((c) => c.players >= MIN_SHARED && c.players <= MAX_SHARED).map((c) => [pairKey(c.a, c.b), c]),
@@ -40,7 +41,10 @@ export function pickPair(
     const key = pairKey(home, away);
     if (good.has(key) && !used.has(key)) return [home, away];
   }
-  const open = [...good.entries()].filter(([key]) => !used.has(key)).sort(([x], [y]) => (x < y ? -1 : 1));
+  const unused = [...good.entries()].filter(([key]) => !used.has(key)).sort(([x], [y]) => (x < y ? -1 : 1));
+  // Off a fixture, keep clubs that featured on nearby days out when there's a choice.
+  const fresh = unused.filter(([, c]) => !rested.has(c.a) && !rested.has(c.b));
+  const open = fresh.length ? fresh : unused;
   if (!open.length) return null;
   const [, c] = open[hash(date) % open.length];
   return [c.a, c.b];

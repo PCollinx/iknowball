@@ -6,7 +6,10 @@ export const WIKIDATA_SPARQL = process.env.WIKIDATA_SPARQL_URL || "https://query
 const USER_AGENT = "iKnowBall/0.1 (https://playiknowball.com; data import)";
 const ASSOCIATION_FOOTBALL_PLAYER = "Q937857";
 
-/** Every footballer with a "member of sports team" statement for one club. */
+/** PL era only: spells still running into the 1992/93 season, or open-ended ones from 1985 on. */
+export const ERA_START_YEAR = 1992;
+
+/** Every footballer with a "member of sports team" statement for one club in the PL era. */
 export function clubPlayersQuery(wikipediaTitle: string): string {
   const title = wikipediaTitle.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
   return `SELECT ?club ?player ?playerLabel ?playerAltLabel ?st ?start ?end ?dob WHERE {
@@ -15,6 +18,8 @@ export function clubPlayersQuery(wikipediaTitle: string): string {
   ?player wdt:P106 wd:${ASSOCIATION_FOOTBALL_PLAYER}.
   OPTIONAL { ?st pq:P580 ?start. }
   OPTIONAL { ?st pq:P582 ?end. }
+  # Without this, big clubs return every player since the 1880s (over 1 MB, cut off mid-answer).
+  FILTER((BOUND(?end) && YEAR(?end) >= ${ERA_START_YEAR}) || (!BOUND(?end) && BOUND(?start) && YEAR(?start) >= ${ERA_START_YEAR - 7}))
   OPTIONAL { ?player wdt:P569 ?dob. }
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
 }`;

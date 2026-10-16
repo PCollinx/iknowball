@@ -31,6 +31,12 @@ describe("pickPair", () => {
     expect(a).toEqual(pickPair("2026-10-18", candidates, [], new Set()));
     expect(pickPair("2026-10-18", candidates, [], new Set(["1-2", "5-6"]))).toBeNull();
   });
+
+  it("rests clubs from nearby days when another pair is free, but not over a fixture", () => {
+    expect(pickPair("2026-10-18", candidates, [], new Set(), new Set([1]))).toEqual([5, 6]);
+    expect(pickPair("2026-10-18", candidates, [], new Set(["5-6"]), new Set([1]))).toEqual([1, 2]);
+    expect(pickPair("2026-10-18", candidates, [[1, 2]], new Set(), new Set([1]))).toEqual([1, 2]);
+  });
 });
 
 describe("recallAnswers", () => {
