@@ -82,6 +82,16 @@ Project memory for Claude Code, carried over from the Claude project where the p
 - The all-time rating moves once a week from your global weekly finish; a missed week costs nothing.
 - This replaces the provisional `POINTS_PER_CORRECT` in `src/lib/daily/score.ts` when The League is built.
 
+## Profile and favourite club (decided 16 Oct 2026)
+
+- `profiles.favourite_club_id` stays and is optional. Ask once, skippable, after a guest's first Daily ("Who do you support?"); neutrals allowed; list = PL clubs plus a few big non-PL clubs followed in Nigeria.
+- It is used in exactly three ways, and never changes questions, scores or rating:
+  1. **Your shirt**: the profile is a shirt-back card in the club's `shirt_colour`/`number_colour`/`trim_colour`, username across the back, tier as the number.
+  2. **Fanbase table**: a weekly League table of clubs ranked by their fans' average score.
+  3. **Matchday nudge**: when your club is in that day's Daily, the page says so and the share card tags it.
+- A player can switch club **once a season**, so nobody hops clubs to climb the fanbase table.
+- The profile page shows the shirt, rating, tier, placement progress, streak, this week's best-5 score and leagues. No photos.
+
 ## Open items
 
 - Whether to buy iknowball.com.
