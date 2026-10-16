@@ -72,6 +72,26 @@ On the live project, once:
    ```
 3. Sign in at `/maker/login`.
 
+## Auto-drafted Dailies
+
+Nobody writes a Daily from scratch. Two scheduled jobs (in `vercel.json`) do it, and a person reviews once a week in the maker:
+
+- **`/api/jobs/import-wikidata`**, Mondays 04:00 WAT: pulls every player who has played for the 30 clubs in `src/lib/drafts/clubs.ts` from Wikidata (CC0), with their club spells, dates and nicknames, into `players`, `player_aliases` and `player_spells`. `?club=Arsenal F.C.` imports one club (the English Wikipedia title).
+- **`/api/jobs/drafts`**, daily 20:00 WAT: fills every empty day in the next 8 with a draft. Part 1 is "players who've played for both X and Y since 1992", preferring that week's fixtures and never repeating a pair within 90 days. Part 2 orders five of them by the year they joined. Then any day starting tomorrow that is still a draft gets scheduled, so no day goes empty.
+
+Drafts show in `/maker` with a teal **Auto** tag. Check them, fix what Wikidata got wrong (missed loans, odd dates), and press Schedule.
+
+On the live project, once, after pushing the migration:
+
+```sh
+curl -H "Authorization: Bearer $CRON_SECRET" https://playiknowball.com/api/jobs/import-wikidata
+curl -H "Authorization: Bearer $CRON_SECRET" https://playiknowball.com/api/jobs/drafts
+```
+
+If the import runs out of time, run it per club with `?club=...`; it is safe to re-run.
+
+Locally, point the import at a stand-in with `WIKIDATA_SPARQL_URL` in `.env.local`, or leave it unset to use the real Wikidata.
+
 ## Checks
 
 ```bash
