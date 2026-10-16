@@ -77,6 +77,7 @@ Replanned 16 Oct 2026 because the build is ahead (plan doc: https://claude.ai/co
 - Nov 2 to 8: Highlightly fixture sync, leagues and rankings (a week earlier than first planned). Checkpoint Nov 8.
 - Nov 9 to 15: Clash solo sprint + async challenge links as a stretch goal for launch; PWA install. Nov 15 check decides whether Clash ships at launch or on 18 Dec.
 - Nov 16 to 25: closed beta. **Launch Fri 27 Nov 2026** (fallback 4 Dec; if the build slips, Clash drops back to 18 Dec first). Demo video recorded in the beta, published Thu 26 Nov on X and WhatsApp, pinned on the waitlist page.
+- Audience warm-up on X (added 16 Oct): Oct 19 to 31 teaser quizzes as shirt-back images, no name; Nov 1 reveal the name and waitlist; Nov 16 to 25 beta invites to the most engaged followers; Nov 26 demo video. Never post a question from an upcoming Daily. Needs a quick question-to-image export by Oct 19.
 - Rate mode (plus Clash if it missed launch): 18 Dec 2026. Native decision: 1 Mar 2027. Android: July 2027.
 
 ## Rating and scoring (decided 16 Oct 2026)
