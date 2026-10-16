@@ -9,7 +9,9 @@ export const maxDuration = 300;
 // A club imported within this window is skipped, so each run picks up where
 // the last one stopped and a week's refresh spreads over several runs.
 const FRESH_DAYS = 6;
-const TIME_BUDGET_MS = 240_000;
+// One club can take about a minute (Wikidata plus our upserts), so stop starting
+// new ones well before the 300 s platform limit.
+const TIME_BUDGET_MS = 170_000;
 
 // Daily (vercel.json): refreshes player club histories from Wikidata, a few
 // clubs per run. ?club=Arsenal%20F.C. imports that one club now, fresh or not.

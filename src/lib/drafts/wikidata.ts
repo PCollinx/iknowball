@@ -76,6 +76,8 @@ export async function fetchClubPlayers(wikipediaTitle: string): Promise<Spell[]>
   const res = await fetch(url, {
     headers: { Accept: "application/sparql-results+json", "User-Agent": USER_AGENT },
     cache: "no-store",
+    // Wikidata gives up on a query after 60 s anyway; don't let one club eat the run.
+    signal: AbortSignal.timeout(65_000),
   });
   if (!res.ok) throw new Error(`Wikidata answered ${res.status} for ${wikipediaTitle}`);
   return parseClubPlayers(await res.json());
