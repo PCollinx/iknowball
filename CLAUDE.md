@@ -9,7 +9,7 @@ Project memory for Claude Code, carried over from the Claude project where the p
 - Name: **iKnowBall** (short form IKB, never "YKB"). Domain **playiknowball.com**. The domain lives only in `NEXT_PUBLIC_SITE_URL`; if it ever moves (e.g. to iknowball.com, which may be bought later), the old one must redirect forever.
 - A knowledge-first football app: one rating with tiers. Nigeria-first, plus UK and global football Twitter. Tone is confident banter, not British nostalgia. Inspired by futoteca.club.
 - Three pillars:
-  - **The Daily**: one try per day in two parts, Part 1 Free Recall then Part 2 In Order (one `dailies` row per part), timed, themed on the Premier League fixtures. Lives at `/daily`.
+  - **The Daily**: one try per day in two parts, Part 1 Free Recall then Part 2 In Order (one `dailies` row per part), timed, themed on the Premier League fixtures. Lives at `/daily`. Written in the **Daily maker** at `/maker` (admins only: `profiles.is_admin`, email and password sign-in). It saves a whole day through `public.maker_save_day()` in one transaction, and a part locks once anyone has started it.
   - **Clash**: 60-second duels (Higher/Lower facts, skill-specific player comparisons, crowd vs data). At launch: solo sprint plus async challenge links. Rate mode feeds the vote pool (about 100 votes for a comparison to enter play).
   - **The League**: mini-leagues with invite codes, scored per PL matchweek (Mon to Sun), plus a global weekly table and an all-time rating.
   - Predictions come after launch.

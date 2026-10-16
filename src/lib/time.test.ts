@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { gameDate, gameDateClosesAt, matchweekBounds } from "./time";
+import { gameDate, gameDateClosesAt, matchweekBounds, addDays } from "./time";
 
 describe("gameDate", () => {
   it("rolls over at 23:00 UTC (midnight GMT+1)", () => {
@@ -31,5 +31,12 @@ describe("matchweekBounds", () => {
     // Sat Dec 5 and a Wednesday Dec 9 round land in different weeks: Wed belongs to Dec 7-13
     expect(matchweekBounds("2026-12-05").startsOn).toBe("2026-11-30");
     expect(matchweekBounds("2026-12-09").startsOn).toBe("2026-12-07");
+  });
+});
+
+describe("addDays", () => {
+  it("crosses month and year ends", () => {
+    expect(addDays("2026-10-31", 1)).toBe("2026-11-01");
+    expect(addDays("2027-01-01", -1)).toBe("2026-12-31");
   });
 });

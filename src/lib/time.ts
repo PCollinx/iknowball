@@ -27,3 +27,8 @@ export function matchweekBounds(date: string): { startsOn: string; endsOn: strin
   const sunday = new Date(monday.getTime() + 6 * DAY_MS);
   return { startsOn: monday.toISOString().slice(0, 10), endsOn: sunday.toISOString().slice(0, 10) };
 }
+
+/** The game date n days after (or before, for negative n) a game date. */
+export function addDays(date: string, n: number): string {
+  return new Date(Date.parse(`${date}T00:00:00Z`) + n * DAY_MS).toISOString().slice(0, 10);
+}

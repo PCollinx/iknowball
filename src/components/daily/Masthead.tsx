@@ -7,12 +7,12 @@ export function Masthead({ issue, right }: { issue: number; right: string }) {
   );
 }
 
-/** "Thu 15 Oct" for a YYYY-MM-DD game date. */
+const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** "Thu 15 Oct" for a YYYY-MM-DD game date. Built by hand, not with
+ * toLocaleDateString, so the server and the browser print the same text. */
 export function shortDate(date: string): string {
-  return new Date(`${date}T12:00:00Z`).toLocaleDateString("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    timeZone: "UTC",
-  });
+  const d = new Date(`${date}T12:00:00Z`);
+  return `${WEEKDAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`;
 }
