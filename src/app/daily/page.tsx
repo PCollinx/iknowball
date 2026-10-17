@@ -6,7 +6,9 @@ import { FullTime } from "@/components/daily/FullTime";
 import { InOrder } from "@/components/daily/InOrder";
 import { KickOff } from "@/components/daily/KickOff";
 import { Masthead, shortDate } from "@/components/daily/Masthead";
-import { getDailyView } from "@/lib/daily/data";
+import { currentUserId, getDailyView } from "@/lib/daily/data";
+import { clubInTitle } from "@/lib/profile/club";
+import { clubChoices, getSupporter } from "@/lib/profile/data";
 import { publicEnv } from "@/lib/env";
 import { gameDate } from "@/lib/time";
 
@@ -26,8 +28,9 @@ export default function DailyPage() {
 // Reads the session and the clock, so it renders per request.
 async function DailyScreen() {
   await connection();
-  const view = await getDailyView();
+  const [view, userId] = await Promise.all([getDailyView(), currentUserId()]);
   const dateLabel = shortDate(gameDate());
+  const supporter = userId && (view.kind === "kickoff" || view.kind === "fulltime") ? await getSupporter(userId) : null;
 
   switch (view.kind) {
     case "none":
@@ -41,7 +44,16 @@ async function DailyScreen() {
         </main>
       );
     case "kickoff":
-      return <KickOff issue={view.issue} dateLabel={dateLabel} daily={view.daily} total={view.total} before={view.before} />;
+      return (
+        <KickOff
+          issue={view.issue}
+          dateLabel={dateLabel}
+          daily={view.daily}
+          total={view.total}
+          before={view.before}
+          club={supporter?.club ?? null}
+        />
+      );
     case "recall":
       return (
         <FreeRecall
@@ -72,7 +84,10 @@ async function DailyScreen() {
           items={view.items}
         />
       );
-    case "fulltime":
+    case "fulltime": {
+      // "Who do you support?" is asked once, right after a first Daily.
+      const choices = supporter && !supporter.asked ? await clubChoices() : null;
+      const title = view.recall?.daily.title ?? "";
       return (
         <FullTime
           issue={view.issue}
@@ -82,8 +97,11 @@ async function DailyScreen() {
           points={view.points}
           topPercent={view.topPercent}
           siteUrl={publicEnv().NEXT_PUBLIC_SITE_URL}
+          clubChoices={choices}
+          fanOf={clubInTitle(supporter?.club ?? null, title) ? supporter!.club!.name : null}
         />
       );
+    }
   }
 }
 

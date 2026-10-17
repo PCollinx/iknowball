@@ -23,6 +23,9 @@ export default function Home() {
       <Link href="/daily" className="bg-royal p-3.5 text-center font-display text-[28px] text-white uppercase">
         Play today&apos;s Daily
       </Link>
+      <Link href="/profile" className="border-2 border-navy p-3 text-center font-display text-2xl uppercase">
+        Your shirt
+      </Link>
       <Suspense fallback={<p className="text-sm opacity-70">&nbsp;</p>}>
         <DailyCloses />
       </Suspense>
