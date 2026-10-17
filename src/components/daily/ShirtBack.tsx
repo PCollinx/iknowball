@@ -21,9 +21,9 @@ export function ShirtBack({ name = "", num = "", state = "hit", kit, className =
   const stroke = kit ? kit.trim ?? kit.number : STROKE[state];
   const numberFill = kit?.number ?? NUMBER[state];
   const nameFill = kit?.number ?? (state === "hit" ? "#ffffff" : "var(--color-navy)");
-  // A word in the number's place (the tier, on the profile shirt) is set as words.
+  // Words in the number's place (a tier, a club code) are fitted to the shirt.
   const numText = String(num);
-  const wide = numText.length > 3;
+  const wide = numText.length > 1 && !/^\d+$/.test(numText);
   return (
     <svg
       viewBox="0 0 100 104"
