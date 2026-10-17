@@ -15,6 +15,8 @@ type Props = {
   state?: "hit" | "empty" | "miss";
   kit?: Kit;
   lettering?: Lettering;
+  /** Second line on the nameplate when the number is printed on the shirt. */
+  tag?: string;
   className?: string;
   pop?: boolean;
 };
@@ -23,8 +25,8 @@ const FILL = { hit: "var(--color-royal)", empty: "var(--color-mist)", miss: "#ff
 const STROKE = { hit: "var(--color-royal)", empty: "var(--color-track)", miss: "var(--color-red-card)" };
 const NUMBER = { hit: "var(--color-teal-light)", empty: "var(--color-track)", miss: "var(--color-red-card)" };
 
-export function ShirtBack({ name = "", num = "", state = "hit", kit, lettering = "arc", className = "", pop = false }: Props) {
-  if (kit) return <KitShirt kit={kit} name={name} num={num} className={className} lettering={lettering} />;
+export function ShirtBack({ name = "", num = "", state = "hit", kit, lettering = "arc", tag = "", className = "", pop = false }: Props) {
+  if (kit) return <KitShirt kit={kit} name={name} num={num} tag={tag} className={className} lettering={lettering} />;
   const nameSize = name.length > 9 ? 9 : 11;
   const numberFill = NUMBER[state];
   const nameFill = state === "hit" ? "#ffffff" : "var(--color-navy)";
@@ -74,11 +76,11 @@ export function ShirtBack({ name = "", num = "", state = "hit", kit, lettering =
 }
 
 /** How a club shirt is lettered (options under review). */
-export type Lettering = "arc" | "panel" | "plate" | "none";
+export type Lettering = "arc" | "panel" | "plate" | "platenum" | "none";
 
 /** A club shirt: its pattern, collar, cuffs and hem, with lettering on top.
  * Flat colour and a navy outline, like a printed programme. */
-function KitShirt({ kit, name, num, className, lettering }: { kit: Kit; name: string; num: string | number; className: string; lettering: Lettering }) {
+function KitShirt({ kit, name, num, tag, className, lettering }: { kit: Kit; name: string; num: string | number; tag: string; className: string; lettering: Lettering }) {
   const clip = useId();
   const arc = useId();
   const trim = kit.trim ?? kit.number;
@@ -158,6 +160,29 @@ function KitShirt({ kit, name, num, className, lettering }: { kit: Kit; name: st
         </>
       )}
 
+      {/* C2: the number big on the shirt, name and tier on the nameplate. */}
+      {lettering === "platenum" && (
+        <>
+          {busy && numText && <rect x="31" y="26" width="38" height="40" fill={kit.shirt} />}
+          {numText && (
+            <text {...type} x="50" y="61" fontSize={fit(numText, 36, 38)} fill={kit.number}>
+              {numText.toUpperCase()}
+            </text>
+          )}
+          <rect x="18" y="74" width="64" height="24" fill="var(--color-navy)" />
+          {name && (
+            <text {...type} x="50" y="85" fontSize={fit(name, 58, 10)} fill="#ffffff">
+              {name.toUpperCase()}
+            </text>
+          )}
+          {tag && (
+            <text {...type} x="50" y={name ? 95 : 90} fontSize={name ? 7 : 12} fill="var(--color-teal-light)" letterSpacing="0.8">
+              {tag.toUpperCase()}
+            </text>
+          )}
+        </>
+      )}
+
       {/* C: the shirt stays clean; a nameplate hangs on the hem like a kit tag. */}
       {lettering === "plate" && (name || numText) && (
         <>
@@ -168,7 +193,7 @@ function KitShirt({ kit, name, num, className, lettering }: { kit: Kit; name: st
             </text>
           )}
           {numText && (
-            <text {...type} x="50" y={name ? 95 : 90} fontSize={name ? 7 : 12} fill="var(--color-teal-light)" letterSpacing="0.8">
+            <text {...type} x="50" y={name ? 95 : 90} fontSize={fit(numText, 44, name ? 7 : 12)} fill="var(--color-teal-light)" letterSpacing="0.6">
               {numText.toUpperCase()}
             </text>
           )}
