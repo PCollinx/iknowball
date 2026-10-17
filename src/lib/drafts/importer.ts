@@ -30,11 +30,12 @@ export const clubEndpoint = (club: TrackedClub) => `club:${club.wikipedia}`;
 async function saveClub(admin: ReturnType<typeof createAdminClient>, club: TrackedClub, spells: Spell[]): Promise<ImportResult> {
   if (!spells.length) return { club: club.name, error: "No players found. Check the Wikipedia title." };
 
+  // Keyed on short_name, the key the supporter list (fan_pick clubs) uses too.
   const { data: clubRow, error: clubError } = await admin
     .from("clubs")
     .upsert(
       { wikidata_qid: spells[0].clubQid, name: club.name, short_name: club.short },
-      { onConflict: "wikidata_qid", ignoreDuplicates: false },
+      { onConflict: "short_name", ignoreDuplicates: false },
     )
     .select("id")
     .single();

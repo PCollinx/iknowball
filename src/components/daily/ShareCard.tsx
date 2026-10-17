@@ -12,6 +12,8 @@ export type ShareCardData = {
   timeUsed: string;
   stats: { value: string; key: string }[];
   host: string;
+  /** Your club, when it's in the fixture. */
+  fanOf?: string | null;
 };
 
 export function stampText(short: number): string {
@@ -34,6 +36,12 @@ export function ShareCard(d: ShareCardData) {
             The Daily · No. {String(d.issue).padStart(3, "0")}
             <br />
             {d.dateLabel}
+            {d.fanOf && (
+              <>
+                <br />
+                <span className="sc-fan">{d.fanOf} fan</span>
+              </>
+            )}
           </span>
         </div>
         <div className={`${d900} sc-fix`}>

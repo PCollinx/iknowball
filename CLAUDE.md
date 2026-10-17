@@ -97,6 +97,9 @@ Replanned 16 Oct 2026 because the build is ahead (plan doc: https://claude.ai/co
   3. **Matchday nudge**: when your club is in that day's Daily, the page says so and the share card tags it.
 - A player can switch club **once a season**, so nobody hops clubs to climb the fanbase table.
 - The profile page shows the shirt, rating, tier, placement progress, streak, this week's best-5 score and leagues. No photos.
+- Built (Oct 2026): `/profile`, the prompt on the Daily's full-time screen, the matchday line on kick-off and the share-card tag. The switch rule lives in the database (trigger `guard_favourite_club`): picking a club when you have none is free; changing or dropping one uses the season's switch. Seasons turn over on 1 July (`public.game_season()`, `seasonOf()` in `src/lib/time.ts`).
+- The picker lists `clubs.fan_pick` rows (Premier League first by `in_premier_league`). `clubs.short_name` is unique and is the key the importer upserts on. Update `in_premier_league` in the dashboard after promotion and relegation.
+- Accounts: guests are upgraded in place (same user id, so every Daily is kept) by email link (`updateUser`) or Google (`linkIdentity`, needs manual linking on in Supabase Auth). Both land on `/auth/callback`.
 
 ## Open items
 
