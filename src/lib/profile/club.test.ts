@@ -8,6 +8,7 @@ const spurs: Club = {
   shirt_colour: "#FFFFFF",
   number_colour: "#132257",
   trim_colour: "#132257",
+  kit_pattern: "plain",
   in_premier_league: true,
 };
 

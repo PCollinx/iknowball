@@ -23,10 +23,9 @@ export function ClubPicker({ clubs, current, mode }: Props) {
   return (
     <form action={action}>
       <Rack label="Premier League" clubs={premier} current={current} />
-      {abroad.length > 0 && <Rack label="Abroad" clubs={abroad} current={current} />}
-      <div className="mt-3 grid grid-cols-4 gap-x-2 sm:grid-cols-6 lg:grid-cols-7">
+      <Rack label="Abroad, or nobody" clubs={abroad} current={current}>
         <Option value="neutral" label="Neutral" club={null} checked={mode === "change" && !current} />
-      </div>
+      </Rack>
 
       <p role="alert" className={`min-h-[24px] pt-1 font-semibold ${state && "error" in state ? "text-red-card" : "text-teal"}`}>
         {state && ("error" in state ? state.error : state.ok)}
@@ -41,7 +40,7 @@ export function ClubPicker({ clubs, current, mode }: Props) {
   );
 }
 
-function Rack({ label, clubs, current }: { label: string; clubs: Club[]; current: Club | null }) {
+function Rack({ label, clubs, current, children }: { label: string; clubs: Club[]; current: Club | null; children?: React.ReactNode }) {
   return (
     <fieldset className="mt-3">
       <legend className="label text-navy/70">{label}</legend>
@@ -49,6 +48,7 @@ function Rack({ label, clubs, current }: { label: string; clubs: Club[]; current
         {clubs.map((c) => (
           <Option key={c.id} value={String(c.id)} label={c.name} club={c} checked={current?.id === c.id} />
         ))}
+        {children}
       </div>
     </fieldset>
   );
@@ -56,10 +56,18 @@ function Rack({ label, clubs, current }: { label: string; clubs: Club[]; current
 
 function Option({ value, label, club, checked }: { value: string; label: string; club: Club | null; checked: boolean }) {
   return (
-    <label className="cursor-pointer p-1 text-center outline-royal has-checked:bg-mist has-checked:outline-3 has-focus-visible:outline-3 has-focus-visible:outline-teal">
+    <label className="group relative cursor-pointer px-1 pt-1.5 pb-1 text-center outline-royal has-checked:bg-mist has-checked:outline-3 has-focus-visible:outline-3 has-focus-visible:outline-teal">
       <input type="radio" name="club" value={value} defaultChecked={checked} required className="sr-only" />
-      <ShirtBack kit={kitOf(club)} num={club ? club.short_name : ""} />
-      <span className="mt-0.5 block truncate text-[13px] leading-tight font-semibold">{label}</span>
+      <span className="block transition-transform duration-150 group-hover:-translate-y-1 group-has-checked:-translate-y-1 group-has-checked:-rotate-3">
+        <ShirtBack kit={kitOf(club)} num={club ? club.short_name : "?"} />
+      </span>
+      <span className="mt-1 block truncate font-display text-[15px] leading-none uppercase group-has-checked:text-royal">{label}</span>
+      <span
+        aria-hidden="true"
+        className="absolute top-0 right-0 hidden h-6 w-6 place-items-center bg-royal font-display text-base text-white group-has-checked:grid"
+      >
+        ✓
+      </span>
     </label>
   );
 }
