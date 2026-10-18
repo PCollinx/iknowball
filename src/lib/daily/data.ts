@@ -1,4 +1,6 @@
 import "server-only";
+import { cache } from "react";
+import type { User } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { gameDate } from "@/lib/time";
@@ -47,10 +49,15 @@ export type AnswerRow = {
 
 const DAILY_COLUMNS = "id, play_date, part, format, title, prompt, time_limit_seconds, answer_count";
 
-export async function currentUserId(): Promise<string | null> {
+/** The signed-in player or guest, checked with Supabase once per request. */
+export const currentUser = cache(async (): Promise<User | null> => {
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
-  return data.user?.id ?? null;
+  return data.user ?? null;
+});
+
+export async function currentUserId(): Promise<string | null> {
+  return (await currentUser())?.id ?? null;
 }
 
 export async function todaysParts(): Promise<DailyRow[]> {

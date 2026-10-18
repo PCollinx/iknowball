@@ -1,4 +1,4 @@
-import { ShirtBack } from "./ShirtBack";
+import { ShirtBack, type Kit } from "./ShirtBack";
 import { splitFixture } from "./fixture";
 import "./share-card.css";
 
@@ -12,6 +12,9 @@ export type ShareCardData = {
   timeUsed: string;
   stats: { value: string; key: string }[];
   host: string;
+  /** Your club, when it's in the fixture. */
+  fanOf?: string | null;
+  kit?: Kit | null;
 };
 
 export function stampText(short: number): string {
@@ -34,6 +37,12 @@ export function ShareCard(d: ShareCardData) {
             The Daily · No. {String(d.issue).padStart(3, "0")}
             <br />
             {d.dateLabel}
+            {d.fanOf && (
+              <>
+                <br />
+                <span className="sc-fan">{d.fanOf} fan</span>
+              </>
+            )}
           </span>
         </div>
         <div className={`${d900} sc-fix`}>
@@ -57,7 +66,7 @@ export function ShareCard(d: ShareCardData) {
           <div className="sc-right">
             <div className="sc-kit">
               {Array.from({ length: d.total }, (_, k) =>
-                k < d.found ? <ShirtBack key={k} num={k + 1} /> : <ShirtBack key={k} state="empty" />,
+                k < d.found ? <ShirtBack key={k} kit={d.kit ?? undefined} num={k + 1} /> : <ShirtBack key={k} state="empty" />,
               )}
             </div>
             <span className={`${d900} sc-stamp`}>{stampText(d.total - d.found)}</span>

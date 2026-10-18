@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { gameDate, gameDateClosesAt, matchweekBounds, addDays } from "./time";
+import { gameDate, gameDateClosesAt, matchweekBounds, addDays, seasonOf, seasonLabel } from "./time";
 
 describe("gameDate", () => {
   it("rolls over at 23:00 UTC (midnight GMT+1)", () => {
@@ -38,5 +38,18 @@ describe("addDays", () => {
   it("crosses month and year ends", () => {
     expect(addDays("2026-10-31", 1)).toBe("2026-11-01");
     expect(addDays("2027-01-01", -1)).toBe("2026-12-31");
+  });
+});
+
+describe("seasonOf", () => {
+  it("turns over on 1 July", () => {
+    expect(seasonOf("2027-06-30")).toBe(2026);
+    expect(seasonOf("2027-07-01")).toBe(2027);
+    expect(seasonOf("2026-10-17")).toBe(2026);
+  });
+
+  it("labels seasons the football way", () => {
+    expect(seasonLabel(2026)).toBe("2026/27");
+    expect(seasonLabel(2099)).toBe("2099/00");
   });
 });

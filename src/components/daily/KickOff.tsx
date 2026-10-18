@@ -1,9 +1,11 @@
 import { startPart } from "@/app/daily/actions";
 import { Masthead } from "./Masthead";
 import { RecallGrid } from "./RecallGrid";
+import type { Kit } from "./ShirtBack";
 import { SubmitButton } from "./SubmitButton";
 import { splitFixture } from "./fixture";
 import type { DailyRow, RecallReveal } from "@/lib/daily/data";
+import { clubInTitle, type Club } from "@/lib/profile/club";
 
 const FORMAT = { free_recall: "Free Recall", in_order: "In Order" } as const;
 const RULE = {
@@ -11,10 +13,12 @@ const RULE = {
   in_order: (n: number) => `Put all ${n} in the right order.`,
 };
 
-type Props = { issue: number; dateLabel: string; daily: DailyRow; total: number; before: RecallReveal | null };
+type Props = { issue: number; dateLabel: string; daily: DailyRow; total: number; before: RecallReveal | null; club: Club | null; kit: Kit | null };
 
-export function KickOff({ issue, dateLabel, daily, total, before }: Props) {
-  const [home, away] = splitFixture(before ? before.daily.title : daily.title);
+export function KickOff({ issue, dateLabel, daily, total, before, club, kit }: Props) {
+  const fixture = before ? before.daily.title : daily.title;
+  const [home, away] = splitFixture(fixture);
+  const yourLot = clubInTitle(club, fixture);
   return (
     <main className="mx-auto min-h-dvh max-w-[560px] px-4 pb-8">
       <Masthead issue={issue} right={dateLabel} />
@@ -38,7 +42,7 @@ export function KickOff({ issue, dateLabel, daily, total, before }: Props) {
               <small className="text-2xl text-navy">/{before.found.length + before.missed.length}</small>
             </span>
           </div>
-          <RecallGrid reveal={before} />
+          <RecallGrid reveal={before} kit={kit} />
         </section>
       )}
       <section className="py-5">
@@ -63,6 +67,11 @@ export function KickOff({ issue, dateLabel, daily, total, before }: Props) {
           )}
         </h1>
         <p className="mt-3 max-w-[40ch] text-lg">{daily.prompt}</p>
+        {yourLot && (
+          <p className="mt-3 border-l-[6px] border-teal px-3 py-2 font-semibold">
+            Your lot are on today. Show them what {club!.name} fans know.
+          </p>
+        )}
         <table className="mt-5 w-full border-collapse text-left">
           <tbody>
             <tr className="border-y border-track">

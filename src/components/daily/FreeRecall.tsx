@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { endPart, submitGuess } from "@/app/daily/actions";
 import { Masthead } from "./Masthead";
-import { ShirtBack, shirtName } from "./ShirtBack";
+import { ShirtBack, shirtName, type Kit } from "./ShirtBack";
 import { useCountdown } from "./useCountdown";
 import { clock } from "./clock";
 import { splitFixture } from "./fixture";
@@ -22,6 +22,8 @@ type Props = {
   deadlineAt: string;
   serverNow: number;
   found: { id: number; text: string }[];
+  /** The fixture's kit for the answer shirts. */
+  kit: Kit | null;
 };
 
 type Feedback = { text: string; tone: "ok" | "no" | "dup" } | null;
@@ -105,7 +107,7 @@ export function FreeRecall(props: Props) {
         <div className="grid grid-cols-5 gap-x-1 gap-y-1.5 pb-4 lg:grid-cols-6 lg:gap-x-3 lg:gap-y-3.5">
           {Array.from({ length: props.answerCount }, (_, k) =>
             k < found.length ? (
-              <ShirtBack key={found[k].id} name={shirtName(found[k].text)} num={k + 1} pop={found[k].id === fresh} />
+              <ShirtBack key={found[k].id} kit={props.kit ?? undefined} name={shirtName(found[k].text)} num={k + 1} pop={found[k].id === fresh} />
             ) : (
               <ShirtBack key={`empty-${k}`} num="?" state="empty" />
             ),

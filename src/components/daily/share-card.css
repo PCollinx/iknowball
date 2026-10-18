@@ -17,6 +17,7 @@
 .sc-logo { font-size: 7cqw; line-height: 0.9; }
 .sc-logo b { color: var(--color-royal); text-transform: none; }
 .sc-meta { text-align: right; font-size: 2.4cqw; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; line-height: 1.35; }
+.sc-fan { color: var(--color-teal); }
 .sc-fix { font-size: 10.5cqw; line-height: 0.9; margin-top: 2.6cqw; }
 .sc-fix span { color: var(--color-royal); }
 .sc-q { font-size: 2.9cqw; color: rgb(12 19 48 / 0.7); margin-top: 1cqw; padding-bottom: 2cqw; border-bottom: 1.2cqw double var(--color-navy); }

@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { ClubPicker } from "@/components/profile/ClubPicker";
+import type { Club } from "@/lib/profile/club";
 import { gameDateClosesAt } from "@/lib/time";
 import type { OrderReveal, RecallReveal } from "@/lib/daily/data";
 import { Masthead } from "./Masthead";
@@ -5,7 +8,7 @@ import { NextDaily } from "./NextDaily";
 import { RecallGrid } from "./RecallGrid";
 import { ShareButtons } from "./ShareButtons";
 import { ShareCard, stampText } from "./ShareCard";
-import { shirtName } from "./ShirtBack";
+import { shirtName, type Kit } from "./ShirtBack";
 import { clock } from "./clock";
 
 type Props = {
@@ -16,6 +19,12 @@ type Props = {
   points: number;
   topPercent: number | null;
   siteUrl: string;
+  /** The clubs to pick from when "Who do you support?" hasn't been asked yet. */
+  clubChoices: Club[] | null;
+  /** Your club, when it's in today's fixture: tagged on the share card. */
+  fanOf: string | null;
+  /** The fixture's kit for the answer shirts. */
+  kit: Kit | null;
 };
 
 function banter(recall: RecallReveal): string {
@@ -25,7 +34,7 @@ function banter(recall: RecallReveal): string {
   return `${short} missing. ${shirtName(recall.missed[0])} was right there.`;
 }
 
-export function FullTime({ issue, playDate, recall, order, points, topPercent, siteUrl }: Props) {
+export function FullTime({ issue, playDate, recall, order, points, topPercent, siteUrl, clubChoices, fanOf, kit }: Props) {
   const found = recall?.found.length ?? 0;
   const total = recall ? found + recall.missed.length : 0;
   const host = new URL(siteUrl).host;
@@ -77,6 +86,18 @@ export function FullTime({ issue, playDate, recall, order, points, topPercent, s
             <p className="mt-3 border-l-[6px] border-red-card px-3 py-2.5 text-[17px] font-semibold">{banter(recall)}</p>
           </>
         )}
+        {clubChoices && (
+          <div className="mt-5 border-y-[3px] border-double border-navy py-4">
+            <h2 className="font-display text-[44px] leading-[0.9] uppercase">
+              Who do you <span className="text-royal">support?</span>
+            </h2>
+            <p className="mt-2">
+              Your club dresses your shirt and puts you in the fanbase table. It never changes your questions or your score.
+              You can switch once a season.
+            </p>
+            <ClubPicker clubs={clubChoices} current={null} mode="prompt" />
+          </div>
+        )}
       </section>
 
       <aside className="mt-4 lg:sticky lg:top-4 lg:col-start-2 lg:row-span-2 lg:row-start-2 lg:mt-0 lg:self-start lg:pt-3.5">
@@ -91,6 +112,8 @@ export function FullTime({ issue, playDate, recall, order, points, topPercent, s
             timeUsed={clock(recall.timeUsedSeconds)}
             stats={stats}
             host={host}
+            fanOf={fanOf}
+            kit={kit}
           />
         )}
         <ShareButtons text={shareText} />
@@ -98,6 +121,9 @@ export function FullTime({ issue, playDate, recall, order, points, topPercent, s
           <span className="label">Next Daily in</span>
           <NextDaily closesAt={gameDateClosesAt(playDate).toISOString()} />
         </div>
+        <Link href="/profile" className="flex items-center justify-between border-t border-track py-3 font-semibold">
+          Your shirt, streak and week <span aria-hidden="true">→</span>
+        </Link>
       </aside>
 
       <section className="lg:col-start-1">
@@ -137,7 +163,7 @@ export function FullTime({ issue, playDate, recall, order, points, topPercent, s
           <div className="py-4">
             <span className="label">The squad</span>
             <div className="mt-2">
-              <RecallGrid reveal={recall} wide />
+              <RecallGrid reveal={recall} kit={kit} wide />
             </div>
           </div>
         )}

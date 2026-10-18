@@ -32,3 +32,15 @@ export function matchweekBounds(date: string): { startsOn: string; endsOn: strin
 export function addDays(date: string, n: number): string {
   return new Date(Date.parse(`${date}T00:00:00Z`) + n * DAY_MS).toISOString().slice(0, 10);
 }
+
+/** The season a game date belongs to: 2026 = 2026/27. Seasons turn over on
+ * 1 July, like public.game_season() in the database. */
+export function seasonOf(date: string): number {
+  const [year, month] = date.split("-").map(Number);
+  return month < 7 ? year - 1 : year;
+}
+
+/** "2026/27" for season 2026. */
+export function seasonLabel(season: number): string {
+  return `${season}/${String((season + 1) % 100).padStart(2, "0")}`;
+}
