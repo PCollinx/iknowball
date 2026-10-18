@@ -58,7 +58,7 @@ Once:
 1. Supabase > New project, named `iknowball-dev` (the free plan allows two).
 2. Apply the schema and the sample Daily: `npx supabase link --project-ref <dev ref>`, `npx supabase db push`, then paste `supabase/seed.sql` into the dev SQL editor. Re-link the live ref before any live push.
 3. Supabase (dev) > Authentication: turn on anonymous sign-ins and manual linking. Under URL Configuration add `http://localhost:3000/**` and `https://*-collins-projects-3ea7974f.vercel.app/**` as redirect URLs.
-4. Vercel > Settings > Environment Variables: set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` to the live values for Production only, and to the dev values for Preview. Previews sign in on their own branch URL (`src/lib/env.ts`).
+4. Vercel > Settings > Environment Variables: set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY` to the live values for Production only, and to the dev values for Preview. Previews sign in on their own branch URL (`src/lib/env.ts`). `CRON_SECRET` and `HIGHLIGHTLY_API_KEY` must be ticked for Preview too: the server checks every variable, so a Production-only one breaks every page that reads the database on previews.
 5. Google sign-in on dev (optional): in Google Cloud add `https://<dev ref>.supabase.co/auth/v1/callback` as a redirect URI, and turn on the Google provider in the dev project with the same client.
 
 Migrations go to dev first, then live once the PR is merged.
