@@ -5,11 +5,12 @@ import { useId } from "react";
 // with a navy outline, like a printed programme; the lettering is the
 // "nameplate" picked on 18 Oct 2026: a navy tag on the hem carries the name.
 
-export type KitPattern = "plain" | "stripes" | "sleeves" | "band";
+export type KitPattern = "plain" | "stripes" | "bars" | "pinstripes" | "sleeves" | "band" | "hoop" | "sides" | "yoke";
+export type KitCollar = "crew" | "polo";
 
-/** A club's colours and pattern. `half` makes a half-and-half shirt, as on a
- * matchday scarf: the Daily's answers wear both clubs of the fixture. */
-export type Kit = { shirt: string; number: string; trim?: string | null; pattern?: KitPattern; half?: Kit };
+/** A club's colours, pattern and collar. `half` makes a half-and-half shirt, as
+ * on a matchday scarf: the Daily's answers wear both clubs of the fixture. */
+export type Kit = { shirt: string; number: string; trim?: string | null; pattern?: KitPattern; collar?: KitCollar; half?: Kit };
 
 /** "number": big number on the shirt, name on the tag (Daily answers).
  * "tag": clean shirt, name and a second line on the tag (profile, picker). */
@@ -71,6 +72,11 @@ function Fabric({ kit, side }: { kit: Kit; side: "both" | "left" | "right" }) {
     <>
       <rect width="100" height="104" fill={kit.shirt} />
       {pattern === "stripes" && [26, 38, 50, 62, 74].map((x) => <rect key={x} x={x - 3} y="0" width="6" height="104" fill={trim} />)}
+      {pattern === "bars" && [14, 38, 62, 86].map((x) => <rect key={x} x={x - 6} y="0" width="12" height="104" fill={trim} />)}
+      {pattern === "pinstripes" && [22, 29, 36, 43, 50, 57, 64, 71, 78].map((x) => <rect key={x} x={x - 0.7} y="0" width="1.4" height="104" fill={trim} />)}
+      {pattern === "hoop" && <rect x="0" y="27" width="100" height="10" fill={trim} />}
+      {pattern === "sides" && <path d="M14 43 L24 34 L33 34 L33 104 L22 104 Z M86 43 L76 34 L67 34 L67 104 L78 104 Z" fill={trim} />}
+      {pattern === "yoke" && <path d="M0 0 L100 0 L100 22 L62 16 Q50 19 38 16 L0 22 Z" fill={trim} />}
       {pattern === "sleeves" && <path d="M0 0 L33 0 L24.5 38 L0 52 Z M100 0 L67 0 L75.5 38 L100 52 Z" fill={trim} />}
       {pattern === "band" && (
         <>
@@ -80,7 +86,12 @@ function Fabric({ kit, side }: { kit: Kit; side: "both" | "left" | "right" }) {
       )}
       {left && <path d="M3 24 L14 43" stroke={cuff} strokeWidth="8" />}
       {right && <path d="M97 24 L86 43" stroke={cuff} strokeWidth="8" />}
-      <path d="M43 2 Q50 9 57 2" stroke={trim} strokeWidth="6" fill="none" />
+      {kit.collar === "polo" ? (
+        // A fold-down collar, lying over the shoulders.
+        <path d="M32 5 L43 1 Q50 9 57 1 L68 5 L63 16 Q50 21 37 16 Z" fill={trim} stroke="#0c1330" strokeOpacity="0.35" strokeWidth="1" />
+      ) : (
+        <path d="M43 2 Q50 9 57 2" stroke={trim} strokeWidth="6" fill="none" />
+      )}
     </>
   );
 }
@@ -89,7 +100,7 @@ function KitShirt({ kit, name, num, tag, lettering, className }: { kit: Kit; nam
   const clip = useId();
   const halfClip = useId();
   const numText = String(num);
-  const busy = Boolean(kit.half) || kit.pattern === "stripes" || kit.pattern === "band";
+  const busy = Boolean(kit.half) || ["stripes", "bars", "pinstripes", "band"].includes(kit.pattern ?? "plain");
   const type = { className: "font-display", fontWeight: 900, textAnchor: "middle" as const };
   // Sized from the text's natural width, never squeezed.
   const fit = (text: string, width: number, max: number) => Math.min(max, width / Math.max(1, text.length * 0.5));

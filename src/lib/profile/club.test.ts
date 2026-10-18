@@ -9,6 +9,7 @@ const spurs: Club = {
   number_colour: "#132257",
   trim_colour: "#132257",
   kit_pattern: "plain",
+  kit_collar: "crew",
   in_premier_league: true,
 };
 
