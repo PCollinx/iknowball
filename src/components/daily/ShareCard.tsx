@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { ShirtBack, type Kit } from "./ShirtBack";
 import { fitWidth } from "./FixtureTitle";
 import { headlineFixture, splitFixture } from "./fixture";
@@ -43,11 +44,11 @@ function linesAt(fixture: string, size: number): number {
   return lines;
 }
 
-/** The fixture's size in cqw: as big as 10.5, one line if it can be, two at
- * most, never wider than the card. */
+/** The fixture's size in cqw: as big as 10.5, one line if it fits at 7 or
+ * more, else two lines at most, never wider than the card. */
 export function fixtureSize(fixture: string): number {
-  const oneLine = 90 / (fixture.length * LINE_EM);
-  let size = Math.min(10.5, 90 / fitWidth(fixture), oneLine >= 7 ? oneLine : 7);
+  let size = Math.min(10.5, 90 / fitWidth(fixture));
+  while (size > 7 && linesAt(fixture, size) > 1) size -= 0.25;
   while (size > 4 && linesAt(fixture, size) > 2) size -= 0.25;
   return size;
 }
@@ -96,10 +97,12 @@ export function ShareCard(d: ShareCardData) {
             <span className="sc-lab">Free Recall · {d.timeUsed} used</span>
           </div>
           <div className="sc-right">
-            <div className="sc-kit">
-              {Array.from({ length: d.total }, (_, k) =>
-                k < d.found ? <ShirtBack key={k} kit={d.kit ?? undefined} num={k + 1} /> : <ShirtBack key={k} state="empty" />,
-              )}
+            <div className="sc-kitbox">
+              <div className="sc-kit" style={{ "--rows": Math.ceil(d.total / 6) } as CSSProperties}>
+                {Array.from({ length: d.total }, (_, k) =>
+                  k < d.found ? <ShirtBack key={k} kit={d.kit ?? undefined} num={k + 1} /> : <ShirtBack key={k} state="empty" />,
+                )}
+              </div>
             </div>
             <span className={`${d900} sc-stamp`}>{stampText(d.total - d.found)}</span>
           </div>
