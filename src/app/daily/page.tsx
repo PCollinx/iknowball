@@ -9,7 +9,7 @@ import { Masthead, shortDate } from "@/components/daily/Masthead";
 import { currentUserId, getDailyView } from "@/lib/daily/data";
 import { splitFixture } from "@/components/daily/fixture";
 import type { Kit } from "@/components/daily/ShirtBack";
-import { clubInTitle, fixtureKit } from "@/lib/profile/club";
+import { clubInTitle, fixtureKit, kitOf } from "@/lib/profile/club";
 import { clubChoices, clubsNamed, getSupporter } from "@/lib/profile/data";
 import { publicEnv } from "@/lib/env";
 import { gameDate } from "@/lib/time";
@@ -106,6 +106,7 @@ async function DailyScreen() {
           siteUrl={publicEnv().NEXT_PUBLIC_SITE_URL}
           clubChoices={choices}
           kit={kit}
+          myKit={kitOf(supporter?.club ?? null)}
           fanOf={clubInTitle(supporter?.club ?? null, title) ? supporter!.club!.name : null}
         />
       );
