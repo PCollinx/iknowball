@@ -7,6 +7,9 @@ const display = Big_Shoulders({
   subsets: ["latin"],
   weight: "900",
   variable: "--font-big-shoulders",
+  // next/font has no fallback metrics for Big Shoulders, so it can't size a fallback to match.
+  adjustFontFallback: false,
+  fallback: ["Impact", "Arial Narrow", "sans-serif"],
 });
 
 const body = Barlow({
