@@ -3,7 +3,7 @@ import { Masthead } from "./Masthead";
 import { RecallGrid } from "./RecallGrid";
 import type { Kit } from "./ShirtBack";
 import { SubmitButton } from "./SubmitButton";
-import { splitFixture } from "./fixture";
+import { FixtureTitle } from "./FixtureTitle";
 import type { DailyRow, RecallReveal } from "@/lib/daily/data";
 import { clubInTitle, type Club } from "@/lib/profile/club";
 
@@ -17,7 +17,6 @@ type Props = { issue: number; dateLabel: string; daily: DailyRow; total: number;
 
 export function KickOff({ issue, dateLabel, daily, total, before, club, kit }: Props) {
   const fixture = before ? before.daily.title : daily.title;
-  const [home, away] = splitFixture(fixture);
   const yourLot = clubInTitle(club, fixture);
   return (
     <main className="mx-auto min-h-dvh max-w-[560px] px-4 pb-8">
@@ -25,17 +24,9 @@ export function KickOff({ issue, dateLabel, daily, total, before, club, kit }: P
       {before && (
         <section className="border-b-[3px] border-double border-navy pb-4">
           <div className="flex items-end justify-between gap-3 py-3.5">
-            <div>
+            <div className="@container min-w-0 flex-1">
               <span className="label">Part 1 · {FORMAT.free_recall}</span>
-              <h2 className="mt-1 font-display text-[40px] leading-[0.9] uppercase">
-                {home}
-                {away && (
-                  <>
-                    {" "}
-                    <span className="text-royal">v</span> {away}
-                  </>
-                )}
-              </h2>
+              <FixtureTitle as="h2" title={fixture} className="mt-1 text-[min(40px,var(--fit))]" />
             </div>
             <span className="font-display text-[56px] leading-[0.8] text-royal tabular-nums">
               {before.found.length}
@@ -45,27 +36,17 @@ export function KickOff({ issue, dateLabel, daily, total, before, club, kit }: P
           <RecallGrid reveal={before} kit={kit} />
         </section>
       )}
-      <section className="py-5">
+      <section className="@container py-5">
         <span className="label">
           Part {daily.part} of {total} · {FORMAT[daily.format]}
         </span>
-        <h1 className="mt-1 font-display text-[64px] leading-[0.9] uppercase">
-          {daily.format === "in_order" ? (
-            <>
-              In <span className="text-royal">order</span>
-            </>
-          ) : (
-            <>
-              {home}
-              {away && (
-                <>
-                  {" "}
-                  <span className="text-royal">v</span> {away}
-                </>
-              )}
-            </>
-          )}
-        </h1>
+        {daily.format === "in_order" ? (
+          <h1 className="mt-1 font-display text-[64px] leading-[0.9] uppercase">
+            In <span className="text-royal">order</span>
+          </h1>
+        ) : (
+          <FixtureTitle title={fixture} className="mt-1 text-[min(64px,var(--fit))]" />
+        )}
         <p className="mt-3 max-w-[40ch] text-lg">{daily.prompt}</p>
         {yourLot && (
           <p className="mt-3 border-l-[6px] border-teal px-3 py-2 font-semibold">
