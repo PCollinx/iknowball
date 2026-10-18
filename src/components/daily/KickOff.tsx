@@ -1,6 +1,7 @@
 import { startPart } from "@/app/daily/actions";
 import { Masthead } from "./Masthead";
 import { RecallGrid } from "./RecallGrid";
+import type { Kit } from "./ShirtBack";
 import { SubmitButton } from "./SubmitButton";
 import { splitFixture } from "./fixture";
 import type { DailyRow, RecallReveal } from "@/lib/daily/data";
@@ -12,9 +13,9 @@ const RULE = {
   in_order: (n: number) => `Put all ${n} in the right order.`,
 };
 
-type Props = { issue: number; dateLabel: string; daily: DailyRow; total: number; before: RecallReveal | null; club: Club | null };
+type Props = { issue: number; dateLabel: string; daily: DailyRow; total: number; before: RecallReveal | null; club: Club | null; kit: Kit | null };
 
-export function KickOff({ issue, dateLabel, daily, total, before, club }: Props) {
+export function KickOff({ issue, dateLabel, daily, total, before, club, kit }: Props) {
   const fixture = before ? before.daily.title : daily.title;
   const [home, away] = splitFixture(fixture);
   const yourLot = clubInTitle(club, fixture);
@@ -41,7 +42,7 @@ export function KickOff({ issue, dateLabel, daily, total, before, club }: Props)
               <small className="text-2xl text-navy">/{before.found.length + before.missed.length}</small>
             </span>
           </div>
-          <RecallGrid reveal={before} />
+          <RecallGrid reveal={before} kit={kit} />
         </section>
       )}
       <section className="py-5">

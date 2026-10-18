@@ -8,7 +8,7 @@ import { NextDaily } from "./NextDaily";
 import { RecallGrid } from "./RecallGrid";
 import { ShareButtons } from "./ShareButtons";
 import { ShareCard, stampText } from "./ShareCard";
-import { shirtName } from "./ShirtBack";
+import { shirtName, type Kit } from "./ShirtBack";
 import { clock } from "./clock";
 
 type Props = {
@@ -23,6 +23,8 @@ type Props = {
   clubChoices: Club[] | null;
   /** Your club, when it's in today's fixture: tagged on the share card. */
   fanOf: string | null;
+  /** The fixture's kit for the answer shirts. */
+  kit: Kit | null;
 };
 
 function banter(recall: RecallReveal): string {
@@ -32,7 +34,7 @@ function banter(recall: RecallReveal): string {
   return `${short} missing. ${shirtName(recall.missed[0])} was right there.`;
 }
 
-export function FullTime({ issue, playDate, recall, order, points, topPercent, siteUrl, clubChoices, fanOf }: Props) {
+export function FullTime({ issue, playDate, recall, order, points, topPercent, siteUrl, clubChoices, fanOf, kit }: Props) {
   const found = recall?.found.length ?? 0;
   const total = recall ? found + recall.missed.length : 0;
   const host = new URL(siteUrl).host;
@@ -111,6 +113,7 @@ export function FullTime({ issue, playDate, recall, order, points, topPercent, s
             stats={stats}
             host={host}
             fanOf={fanOf}
+            kit={kit}
           />
         )}
         <ShareButtons text={shareText} />
@@ -160,7 +163,7 @@ export function FullTime({ issue, playDate, recall, order, points, topPercent, s
           <div className="py-4">
             <span className="label">The squad</span>
             <div className="mt-2">
-              <RecallGrid reveal={recall} wide />
+              <RecallGrid reveal={recall} kit={kit} wide />
             </div>
           </div>
         )}

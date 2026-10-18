@@ -83,7 +83,7 @@ async function ProfileScreen({ searchParams }: { searchParams: SearchParams }) {
       <section className="lg:col-start-1">
         {authError && <Alert>{authError}</Alert>}
         <div className="mx-auto mt-5 w-[72%] max-w-[300px] lg:w-full">
-          <ShirtBack kit={kitOf(view.club)} name={view.username ?? "Guest"} num={view.rating} />
+          <ShirtBack kit={kitOf(view.club)} lettering="tag" name={view.username ?? "Guest"} num={`${view.tier ?? "Unplaced"} · ${view.rating}`} />
         </div>
         <div className="mt-4 flex items-end justify-between gap-3 border-b-[3px] border-double border-navy pb-2.5">
           <div className="min-w-0">

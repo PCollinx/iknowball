@@ -25,6 +25,7 @@ Project memory for Claude Code, carried over from the Claude project where the p
 - Type: **Big Shoulders** 900 (`font-display`, uppercase) for headings, numbers and shirt names; **Barlow** 400 and 600 (`font-sans`) for everything else. Both self-hosted by `next/font` in `src/app/layout.tsx`.
 - Screen layouts are designed screen by screen as clickable mocks, then built. Rule from Collins: nothing that looks like a generic AI-built app (no soft rounded card stacks, gradients, emoji icons or centred everything); borrow from football itself.
 - **The Daily uses the "Programme" layout** (picked 15 Oct 2026): a printed matchday programme with an issue-number masthead, double rules, a huge fixture headline, a teal scoreboard clock that turns red near the end, answers as a grid of shirt-backs and a royal answer box. Desktop is the programme opened flat (fixture left, squad right). Mocks: https://claude.ai/artifact/VdB3kEGoVSK2XcQ7hB8BVh
+- **Shirts are drawn as kits** (18 Oct 2026, `src/components/daily/ShirtBack.tsx`): club pattern (`clubs.kit_pattern`: plain, stripes, sleeves, band) in `shirt_colour`/`trim_colour`, collar, cuffs, hem, flat shading, navy outline. Lettering is the nameplate: a navy tag on the hem with the name; text is sized to fit, never squeezed. The Daily's answer shirts wear the fixture's two clubs half and half (royal if a club isn't known), with a big number and the surname on the tag. Collins wants this level of refinement across the whole app.
 - **Share card: "Programme cover"**, square 1:1: masthead, fixture, big score beside numbered and empty shirts (how many, never who), a red "N short" stamp, a stats strip and a teal "Think you know ball? Beat N." footer. Code: `src/components/daily/ShareCard.tsx`. A server-rendered 1080 × 1080 image is still to do.
 - Picker page with all rounds: https://claude.ai/artifact/99Qnj4Vm79G3JeDY24KUTp
 
@@ -92,7 +93,7 @@ Replanned 16 Oct 2026 because the build is ahead (plan doc: https://claude.ai/co
 
 - `profiles.favourite_club_id` stays and is optional. Ask once, skippable, after a guest's first Daily ("Who do you support?"); neutrals allowed; list = PL clubs plus a few big non-PL clubs followed in Nigeria.
 - It is used in exactly three ways, and never changes questions, scores or rating:
-  1. **Your shirt**: the profile is a shirt-back card in the club's `shirt_colour`/`number_colour`/`trim_colour`, username across the back, tier as the number.
+  1. **Your shirt**: the profile is a shirt-back card in the club's kit, with a navy nameplate on the hem carrying the username, then tier and rating ("C2", picked 18 Oct 2026; the earlier "tier as the number" was replaced).
   2. **Fanbase table**: a weekly League table of clubs ranked by their fans' average score.
   3. **Matchday nudge**: when your club is in that day's Daily, the page says so and the share card tags it.
 - A player can switch club **once a season**, so nobody hops clubs to climb the fanbase table.

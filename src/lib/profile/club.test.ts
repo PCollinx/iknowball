@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clubInTitle, type Club } from "./club";
+import { clubInTitle, fixtureKit, type Club } from "./club";
 
 const spurs: Club = {
   id: 1,
@@ -25,5 +25,20 @@ describe("clubInTitle", () => {
 
   it("is false for neutrals", () => {
     expect(clubInTitle(null, "Spurs v Arsenal")).toBe(false);
+  });
+});
+
+describe("fixtureKit", () => {
+  const arsenal: Club = { ...spurs, id: 2, name: "Arsenal", shirt_colour: "#EF0107", kit_pattern: "sleeves" };
+
+  it("goes half and half when both clubs are known", () => {
+    const kit = fixtureKit(spurs, arsenal)!;
+    expect(kit.shirt).toBe("#FFFFFF");
+    expect(kit.half?.shirt).toBe("#EF0107");
+  });
+
+  it("falls back to one club, then to none", () => {
+    expect(fixtureKit(null, arsenal)?.shirt).toBe("#EF0107");
+    expect(fixtureKit(null, null)).toBeNull();
   });
 });

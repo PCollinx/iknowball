@@ -59,7 +59,7 @@ function Option({ value, label, club, checked }: { value: string; label: string;
     <label className="group relative cursor-pointer px-1 pt-1.5 pb-1 text-center outline-royal has-checked:bg-mist has-checked:outline-3 has-focus-visible:outline-3 has-focus-visible:outline-teal">
       <input type="radio" name="club" value={value} defaultChecked={checked} required className="sr-only" />
       <span className="block transition-transform duration-150 group-hover:-translate-y-1 group-has-checked:-translate-y-1 group-has-checked:-rotate-3">
-        <ShirtBack kit={kitOf(club)} num={club ? club.short_name : "?"} />
+        <ShirtBack kit={kitOf(club)} lettering="tag" num={club ? club.short_name : "Neutral"} />
       </span>
       <span className="mt-1 block truncate font-display text-[15px] leading-none uppercase group-has-checked:text-royal">{label}</span>
       <span

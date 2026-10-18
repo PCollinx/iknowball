@@ -7,8 +7,10 @@ import { InOrder } from "@/components/daily/InOrder";
 import { KickOff } from "@/components/daily/KickOff";
 import { Masthead, shortDate } from "@/components/daily/Masthead";
 import { currentUserId, getDailyView } from "@/lib/daily/data";
-import { clubInTitle } from "@/lib/profile/club";
-import { clubChoices, getSupporter } from "@/lib/profile/data";
+import { splitFixture } from "@/components/daily/fixture";
+import type { Kit } from "@/components/daily/ShirtBack";
+import { clubInTitle, fixtureKit } from "@/lib/profile/club";
+import { clubChoices, clubsNamed, getSupporter } from "@/lib/profile/data";
 import { publicEnv } from "@/lib/env";
 import { gameDate } from "@/lib/time";
 
@@ -30,7 +32,10 @@ async function DailyScreen() {
   await connection();
   const [view, userId] = await Promise.all([getDailyView(), currentUserId()]);
   const dateLabel = shortDate(gameDate());
-  const supporter = userId && (view.kind === "kickoff" || view.kind === "fulltime") ? await getSupporter(userId) : null;
+  const [supporter, kit] = await Promise.all([
+    userId && (view.kind === "kickoff" || view.kind === "fulltime") ? getSupporter(userId) : null,
+    kitFor(fixtureTitle(view)),
+  ]);
 
   switch (view.kind) {
     case "none":
@@ -52,6 +57,7 @@ async function DailyScreen() {
           total={view.total}
           before={view.before}
           club={supporter?.club ?? null}
+          kit={kit}
         />
       );
     case "recall":
@@ -68,6 +74,7 @@ async function DailyScreen() {
           deadlineAt={view.deadlineAt}
           serverNow={view.serverNow}
           found={view.found}
+          kit={kit}
         />
       );
     case "order":
@@ -98,11 +105,34 @@ async function DailyScreen() {
           topPercent={view.topPercent}
           siteUrl={publicEnv().NEXT_PUBLIC_SITE_URL}
           clubChoices={choices}
+          kit={kit}
           fanOf={clubInTitle(supporter?.club ?? null, title) ? supporter!.club!.name : null}
         />
       );
     }
   }
+}
+
+/** The fixture the day is themed on ("Chelsea v Arsenal"), from Part 1. */
+function fixtureTitle(view: Awaited<ReturnType<typeof getDailyView>>): string | null {
+  switch (view.kind) {
+    case "kickoff":
+      return view.before?.daily.title ?? (view.daily.part === 1 ? view.daily.title : null);
+    case "recall":
+      return view.daily.title;
+    case "fulltime":
+      return view.recall?.daily.title ?? null;
+    default:
+      return null;
+  }
+}
+
+/** Answer shirts wear the fixture's clubs, half and half. */
+async function kitFor(title: string | null): Promise<Kit | null> {
+  if (!title) return null;
+  const [home, away] = splitFixture(title);
+  const clubs = await clubsNamed([home, away].filter((n): n is string => Boolean(n)));
+  return fixtureKit(clubs.get(home.toLowerCase()) ?? null, away ? (clubs.get(away.toLowerCase()) ?? null) : null);
 }
 
 function Loading() {

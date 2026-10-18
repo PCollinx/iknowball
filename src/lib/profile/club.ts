@@ -13,6 +13,13 @@ export type Club = {
   in_premier_league: boolean;
 };
 
+/** The kit the Daily's answer shirts wear: half-and-half in the fixture's two
+ * clubs ("played for both"), one club's kit if only one is known, else none. */
+export function fixtureKit(home: Club | null, away: Club | null): Kit | null {
+  if (home && away) return { ...kitOf(home), half: kitOf(away) };
+  return home || away ? kitOf(home ?? away) : null;
+}
+
 /** True when a Daily title ("Chelsea v Arsenal") names the club. */
 export function clubInTitle(club: Club | null, title: string): boolean {
   if (!club) return false;

@@ -112,3 +112,11 @@ export async function getProfileView(userId: string): Promise<ProfileView> {
       .filter((l): l is { id: number; name: string } => l !== null),
   };
 }
+
+/** Clubs by display name ("Chelsea"), for dressing a fixture's shirts. */
+export async function clubsNamed(names: string[]): Promise<Map<string, Club>> {
+  if (!names.length) return new Map();
+  const { data, error } = await createAdminClient().from("clubs").select(CLUB_COLUMNS).in("name", names);
+  if (error) throw error;
+  return new Map(((data ?? []) as Club[]).map((c) => [c.name.toLowerCase(), c]));
+}
