@@ -24,6 +24,11 @@ const SHORT: Record<string, string> = {
   "wolverhampton wanderers": "Wolves",
 };
 
+/** The name fans use for a club: "Spurs" for Tottenham Hotspur. */
+export function fanName(name: string): string {
+  return SHORT[name.trim().toLowerCase()] ?? name.trim();
+}
+
 /** Fixtures longer than this use the short names in headings. */
 const LONG = 22;
 
@@ -31,6 +36,5 @@ const LONG = 22;
 export function headlineFixture(title: string): string {
   if (title.length <= LONG) return title;
   const [home, away] = splitFixture(title);
-  const short = (name: string) => SHORT[name.trim().toLowerCase()] ?? name;
-  return away ? `${short(home)} v ${short(away)}` : title;
+  return away ? `${fanName(home)} v ${fanName(away)}` : title;
 }
