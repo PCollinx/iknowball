@@ -34,7 +34,11 @@ export async function chooseClub(_prev: FormState, formData: FormData): Promise<
     .from("profiles")
     .update({ favourite_club_id: choice.data === "neutral" ? null : choice.data, club_asked_at: now })
     .eq("id", user.id);
-  if (error) return { error: error.code === CHECK_VIOLATION ? error.message : "Couldn't save your club. Try again." };
+  if (error?.code === CHECK_VIOLATION) return { error: error.message };
+  if (error) {
+    console.error("chooseClub", error);
+    return { error: "Couldn't save your club. Try again." };
+  }
   refresh();
   return { ok: "Saved." };
 }
@@ -51,7 +55,11 @@ export async function setUsername(_prev: FormState, formData: FormData): Promise
   const parsed = username.safeParse(formData.get("username"));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const { error } = await (await createClient()).from("profiles").update({ username: parsed.data }).eq("id", user.id);
-  if (error) return { error: error.code === UNIQUE_VIOLATION ? "That name's taken. Try another." : "Couldn't save your name. Try again." };
+  if (error?.code === UNIQUE_VIOLATION) return { error: "That name's taken. Try another." };
+  if (error) {
+    console.error("setUsername", error);
+    return { error: "Couldn't save your name. Try again." };
+  }
   refresh();
   return { ok: "Saved." };
 }
