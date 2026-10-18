@@ -25,7 +25,7 @@ async function TeaserMaker({ searchParams }: { searchParams: Promise<Search> }) 
   await requireAdmin();
   const params = await searchParams;
   const drawn = Object.keys(params).length > 0;
-  const t: Teaser = parseTeaser(drawn ? params : { when: shortDate(gameDate()), dare: "Think you know ball?", aside: "Answers tomorrow" });
+  const t: Teaser = parseTeaser(drawn ? params : { when: shortDate(gameDate()), dare: "Think you know ball?" });
   const clubs = await allClubs();
   const picked = [t.home, t.away].map((id) => clubs.find((c) => c.id === id)).filter((c) => c !== undefined);
   const full = withHeadline(
