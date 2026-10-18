@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { splitFixture } from "./fixture";
+import { headlineFixture, splitFixture } from "./fixture";
 
 // Big Shoulders 900 capitals run about 0.56em wide; a little spare so the
 // longest word never touches the edge.
@@ -11,11 +11,6 @@ export function fitWidth(title: string): number {
   return longest * CAP_WIDTH;
 }
 
-/** The whole title on one line, in em. */
-export function lineWidth(title: string): number {
-  return title.length * CAP_WIDTH;
-}
-
 type Props = {
   title: string;
   /** Tailwind font-size classes using var(--fit), e.g. "text-[min(64px,var(--fit))]". */
@@ -23,9 +18,10 @@ type Props = {
   as?: "h1" | "h2" | "div";
 };
 
-/** "Home v Away" with a royal v, sized so the longest club name fits its column.
+/** "Home v Away" with a royal v (short names when it's long), sized so the longest club name fits its column.
  * The parent must be an @container. Never squeezed: it gets smaller instead. */
-export function FixtureTitle({ title, className, as: Tag = "h1" }: Props) {
+export function FixtureTitle({ title: full, className, as: Tag = "h1" }: Props) {
+  const title = headlineFixture(full);
   const [home, away] = splitFixture(title);
   const style = { "--fit": `calc(100cqw / ${fitWidth(title)})` } as CSSProperties;
   return (
