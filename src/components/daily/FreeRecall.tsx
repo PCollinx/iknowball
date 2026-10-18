@@ -6,7 +6,7 @@ import { Masthead } from "./Masthead";
 import { ShirtBack, shirtName, type Kit } from "./ShirtBack";
 import { useCountdown } from "./useCountdown";
 import { clock } from "./clock";
-import { splitFixture } from "./fixture";
+import { FixtureTitle } from "./FixtureTitle";
 
 const RIGHT = ["Ball knowledge.", "Correct. Next one.", "Sharp. Keep going.", "You know ball.", "Oya, next."];
 const WRONG = ["Not on the list. Try again.", "Not on the list, chief.", "Who told you that one?", "E no dey the list."];
@@ -61,23 +61,14 @@ export function FreeRecall(props: Props) {
   }
 
   const over = left === 0 || closing;
-  const [home, away] = splitFixture(props.title);
 
   return (
     <main className="mx-auto grid min-h-dvh max-w-[1200px] grid-rows-[auto_1fr_auto] [grid-template-areas:'head'_'squad'_'answer'] lg:h-dvh lg:grid-cols-[440px_1fr] lg:grid-rows-[1fr_auto] lg:[grid-template-areas:'head_squad'_'answer_squad']">
       <section className="px-4 [grid-area:head] lg:px-8">
         <Masthead issue={props.issue} right={`${props.dateLabel} · ${props.partLabel}`} />
         <div className="grid grid-cols-[1fr_auto] items-start gap-3 border-b-[3px] border-double border-navy py-3.5 lg:grid-cols-1 lg:border-b-0">
-          <div>
-            <h1 className="font-display text-[52px] leading-[0.9] uppercase lg:text-[80px]">
-              {home}
-              {away && (
-                <>
-                  {" "}
-                  <span className="text-royal">v</span> {away}
-                </>
-              )}
-            </h1>
+          <div className="@container min-w-0">
+            <FixtureTitle title={props.title} className="text-[min(52px,var(--fit))] lg:text-[min(80px,var(--fit))]" />
             <p className="mt-2 max-w-[32ch] text-[15px] lg:text-lg">{props.prompt}</p>
           </div>
           <div

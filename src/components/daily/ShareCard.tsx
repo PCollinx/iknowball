@@ -1,4 +1,5 @@
 import { ShirtBack, type Kit } from "./ShirtBack";
+import { fitWidth, lineWidth } from "./FixtureTitle";
 import { splitFixture } from "./fixture";
 import "./share-card.css";
 
@@ -45,7 +46,11 @@ export function ShareCard(d: ShareCardData) {
             )}
           </span>
         </div>
-        <div className={`${d900} sc-fix`}>
+        {/* The longest club name fits the card's width, and the fixture stays within two lines. */}
+        <div
+          className={`${d900} sc-fix`}
+          style={{ fontSize: `min(10.5cqw, calc(90cqw / ${fitWidth(d.title)}), calc(150cqw / ${lineWidth(d.title)}))` }}
+        >
           {home}
           {away && (
             <>
@@ -82,7 +87,11 @@ export function ShareCard(d: ShareCardData) {
         </div>
       </div>
       <div className="sc-foot">
-        <span className={`${d900} sc-dare`}>Think you know ball? Beat {d.found}.</span>
+        <span className={`${d900} sc-dare`}>
+          Think you know ball?
+          <br />
+          Beat {d.found}.
+        </span>
         <span className="sc-url">{d.host.toUpperCase()}</span>
       </div>
     </div>
