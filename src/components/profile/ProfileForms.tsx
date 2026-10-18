@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { saveWithEmail, setUsername, signInWithEmail, type FormState } from "@/app/profile/actions";
+import { saveWithEmail, setPassword, setUsername, signInWithEmail, signInWithPassword, type FormState } from "@/app/profile/actions";
 
 function Message({ state }: { state: FormState }) {
   return (
@@ -43,36 +43,110 @@ export function UsernameForm({ current }: { current: string | null }) {
   );
 }
 
-/** Email link: saves a guest's account in place, or signs in. A full-width
- * button like Google's that opens the address box; works without JavaScript. */
-export function EmailForm({ mode }: { mode: "save" | "signin" }) {
-  const [state, action, pending] = useActionState(mode === "save" ? saveWithEmail : signInWithEmail, null);
-  const label = mode === "save" ? "Save with email" : "Sign in with email";
-  const sent = Boolean(state && "ok" in state);
+const boxInput = "mt-1.5 block w-full border-2 border-navy p-3 text-lg";
+
+/** A full-width button like Google's that opens its form; works without JavaScript. */
+function Drawer({ label, open, children }: { label: string; open: boolean; children: React.ReactNode }) {
   return (
-    <details className="group border-2 border-navy open:p-3">
+    // Kept open once there's a message, or a re-render would fold it away.
+    <details open={open || undefined} className="group border-2 border-navy open:p-3">
       <summary className="cursor-pointer list-none p-3 text-center font-display text-2xl uppercase group-open:p-0 group-open:pb-1 group-open:text-left group-open:text-lg [&::-webkit-details-marker]:hidden">
         {label}
       </summary>
+      {children}
+    </details>
+  );
+}
+
+/** Saves a guest's account in place by email link (same id, so every Daily stays). */
+export function SaveWithEmailForm() {
+  const [state, action, pending] = useActionState(saveWithEmail, null);
+  const sent = Boolean(state && "ok" in state);
+  return (
+    <Drawer label="Save with email" open={state !== null}>
       <form action={action}>
-        <label className="label" htmlFor={`email-${mode}`}>
+        <label className="label" htmlFor="email-save">
+          Your email
+        </label>
+        <input id="email-save" name="email" type="email" autoComplete="email" required placeholder="you@example.com" className={boxInput} />
+        <button type="submit" disabled={pending} className={`mt-2 w-full py-3 ${button}`}>
+          {pending ? "Sending…" : sent ? "Send again" : "Email me a link"}
+        </button>
+        <p className="mt-1.5 text-sm text-navy/70">Open the link to save your shirt, then set a password here.</p>
+        <Message state={state} />
+      </form>
+    </Drawer>
+  );
+}
+
+/** Email and password, with an email link for a forgotten password. */
+export function SignInWithEmailForm() {
+  const [state, action, pending] = useActionState(signInWithPassword, null);
+  const [linkState, linkAction, linkPending] = useActionState(signInWithEmail, null);
+  return (
+    <Drawer label="Sign in with email" open={state !== null || linkState !== null}>
+      <form action={action}>
+        <label className="label" htmlFor="email-signin">
           Your email
         </label>
         <input
-          id={`email-${mode}`}
+          id="email-signin"
           name="email"
           type="email"
           autoComplete="email"
           required
           placeholder="you@example.com"
-          className="mt-1.5 block w-full border-2 border-navy p-3 text-lg"
+          defaultValue={state && "email" in state ? state.email : undefined}
+          className={boxInput}
         />
-        <button type="submit" disabled={pending} className={`mt-2 w-full py-3 ${button}`}>
-          {pending ? "Sending…" : sent ? "Send again" : "Email me a sign-in link"}
+        <label className="label mt-3 block" htmlFor="password-signin">
+          Password
+        </label>
+        <input id="password-signin" name="password" type="password" autoComplete="current-password" className={boxInput} />
+        <button type="submit" disabled={pending || linkPending} className={`mt-2 w-full py-3 ${button}`}>
+          {pending ? "Signing in…" : "Sign in"}
         </button>
-        <p className="mt-1.5 text-sm text-navy/70">No password. Tap the link we send and you&apos;re in.</p>
         <Message state={state} />
+        <button
+          type="submit"
+          formAction={linkAction}
+          formNoValidate
+          disabled={pending || linkPending}
+          className="text-sm font-semibold underline underline-offset-4"
+        >
+          {linkPending ? "Sending…" : "Forgot it? Email me a sign-in link"}
+        </button>
+        <Message state={linkState} />
       </form>
-    </details>
+    </Drawer>
+  );
+}
+
+/** Sets or changes the password on a saved account. */
+export function PasswordForm() {
+  const [state, action, pending] = useActionState(setPassword, null);
+  return (
+    <form action={action}>
+      <label className="label" htmlFor="password-new">
+        Password
+      </label>
+      <div className="mt-1.5 flex gap-2">
+        <input
+          id="password-new"
+          name="password"
+          type="password"
+          autoComplete="new-password"
+          minLength={8}
+          maxLength={72}
+          required
+          placeholder="8 characters or more"
+          className={input}
+        />
+        <button type="submit" disabled={pending} className={button}>
+          {pending ? "…" : "Save"}
+        </button>
+      </div>
+      <Message state={state} />
+    </form>
   );
 }

@@ -5,7 +5,7 @@ import { connection } from "next/server";
 import { continueWithGoogle, signOut } from "@/app/profile/actions";
 import { ShirtBack } from "@/components/daily/ShirtBack";
 import { ClubPicker } from "@/components/profile/ClubPicker";
-import { EmailForm, UsernameForm } from "@/components/profile/ProfileForms";
+import { PasswordForm, SaveWithEmailForm, SignInWithEmailForm, UsernameForm } from "@/components/profile/ProfileForms";
 import { currentUser } from "@/lib/daily/data";
 import { kitOf } from "@/lib/profile/club";
 import { clubChoices, getProfileView, type ProfileView } from "@/lib/profile/data";
@@ -66,7 +66,7 @@ async function ProfileScreen({ searchParams }: { searchParams: SearchParams }) {
           <span className="label">Played before?</span>
           <GoogleButton label="Sign in with Google" />
           <div className="mt-2">
-            <EmailForm mode="signin" />
+            <SignInWithEmailForm />
           </div>
         </section>
       </main>
@@ -127,16 +127,21 @@ async function ProfileScreen({ searchParams }: { searchParams: SearchParams }) {
               </p>
               <GoogleButton label="Save with Google" />
               <div className="mt-2">
-                <EmailForm mode="save" />
+                <SaveWithEmailForm />
               </div>
             </>
           ) : (
-            <form action={signOut} className="flex items-center justify-between gap-3">
-              <span className="min-w-0 truncate">Signed in as {user.email}</span>
-              <button type="submit" className="shrink-0 font-semibold underline underline-offset-4">
-                Sign out
-              </button>
-            </form>
+            <>
+              <form action={signOut} className="flex items-center justify-between gap-3">
+                <span className="min-w-0 truncate">Signed in as {user.email}</span>
+                <button type="submit" className="shrink-0 font-semibold underline underline-offset-4">
+                  Sign out
+                </button>
+              </form>
+              <div className="mt-4">
+                <PasswordForm />
+              </div>
+            </>
           )}
         </Block>
       </section>
