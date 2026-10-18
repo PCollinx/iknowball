@@ -20,9 +20,17 @@ const serverSchema = z.object({
   CRON_SECRET: z.string().min(16),
 });
 
+// A Vercel preview serves on its branch URL, so sign-in links and share links
+// come back to the preview (and its dev database), never to the live site.
+function siteUrl() {
+  const branch = process.env.NEXT_PUBLIC_VERCEL_BRANCH_URL;
+  if (process.env.NEXT_PUBLIC_VERCEL_ENV === "preview" && branch) return `https://${branch}`;
+  return process.env.NEXT_PUBLIC_SITE_URL;
+}
+
 export function publicEnv() {
   return publicSchema.parse({
-    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+    NEXT_PUBLIC_SITE_URL: siteUrl(),
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY || undefined,

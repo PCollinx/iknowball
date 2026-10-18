@@ -43,21 +43,36 @@ export function UsernameForm({ current }: { current: string | null }) {
   );
 }
 
-/** Email link: saves a guest's account in place, or signs in. */
+/** Email link: saves a guest's account in place, or signs in. A full-width
+ * button like Google's that opens the address box; works without JavaScript. */
 export function EmailForm({ mode }: { mode: "save" | "signin" }) {
   const [state, action, pending] = useActionState(mode === "save" ? saveWithEmail : signInWithEmail, null);
+  const label = mode === "save" ? "Save with email" : "Sign in with email";
+  const sent = Boolean(state && "ok" in state);
   return (
-    <form action={action}>
-      <label className="label" htmlFor={`email-${mode}`}>
-        {mode === "save" ? "Or with your email" : "Sign in with your email"}
-      </label>
-      <div className="mt-1.5 flex gap-2">
-        <input id={`email-${mode}`} name="email" type="email" autoComplete="email" required className={input} />
-        <button type="submit" disabled={pending} className={button}>
-          {pending ? "…" : "Send link"}
+    <details className="group border-2 border-navy open:p-3">
+      <summary className="cursor-pointer list-none p-3 text-center font-display text-2xl uppercase group-open:p-0 group-open:pb-1 group-open:text-left group-open:text-lg [&::-webkit-details-marker]:hidden">
+        {label}
+      </summary>
+      <form action={action}>
+        <label className="label" htmlFor={`email-${mode}`}>
+          Your email
+        </label>
+        <input
+          id={`email-${mode}`}
+          name="email"
+          type="email"
+          autoComplete="email"
+          required
+          placeholder="you@example.com"
+          className="mt-1.5 block w-full border-2 border-navy p-3 text-lg"
+        />
+        <button type="submit" disabled={pending} className={`mt-2 w-full py-3 ${button}`}>
+          {pending ? "Sending…" : sent ? "Send again" : "Email me a sign-in link"}
         </button>
-      </div>
-      <Message state={state} />
-    </form>
+        <p className="mt-1.5 text-sm text-navy/70">No password. Tap the link we send and you&apos;re in.</p>
+        <Message state={state} />
+      </form>
+    </details>
   );
 }

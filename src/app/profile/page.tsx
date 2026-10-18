@@ -65,7 +65,7 @@ async function ProfileScreen({ searchParams }: { searchParams: SearchParams }) {
         <section className="mt-8 border-t-[3px] border-double border-navy pt-4">
           <span className="label">Played before?</span>
           <GoogleButton label="Sign in with Google" />
-          <div className="mt-4">
+          <div className="mt-2">
             <EmailForm mode="signin" />
           </div>
         </section>
@@ -126,7 +126,7 @@ async function ProfileScreen({ searchParams }: { searchParams: SearchParams }) {
                 anywhere.
               </p>
               <GoogleButton label="Save with Google" />
-              <div className="mt-4">
+              <div className="mt-2">
                 <EmailForm mode="save" />
               </div>
             </>

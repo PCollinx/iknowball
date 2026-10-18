@@ -8,7 +8,7 @@ import { NextDaily } from "./NextDaily";
 import { RecallGrid } from "./RecallGrid";
 import { ShareButtons } from "./ShareButtons";
 import { ShareCard, stampText } from "./ShareCard";
-import { shirtName, type Kit } from "./ShirtBack";
+import { ShirtBack, shirtName, type Kit } from "./ShirtBack";
 import { clock } from "./clock";
 
 type Props = {
@@ -25,6 +25,8 @@ type Props = {
   fanOf: string | null;
   /** The fixture's kit for the answer shirts. */
   kit: Kit | null;
+  /** Your own shirt: your club's kit, or the neutral one. */
+  myKit: Kit;
 };
 
 function banter(recall: RecallReveal): string {
@@ -34,7 +36,7 @@ function banter(recall: RecallReveal): string {
   return `${short} missing. ${shirtName(recall.missed[0])} was right there.`;
 }
 
-export function FullTime({ issue, playDate, recall, order, points, topPercent, siteUrl, clubChoices, fanOf, kit }: Props) {
+export function FullTime({ issue, playDate, recall, order, points, topPercent, siteUrl, clubChoices, fanOf, kit, myKit }: Props) {
   const found = recall?.found.length ?? 0;
   const total = recall ? found + recall.missed.length : 0;
   const host = new URL(siteUrl).host;
@@ -98,6 +100,18 @@ export function FullTime({ issue, playDate, recall, order, points, topPercent, s
             <ClubPicker clubs={clubChoices} current={null} mode="prompt" />
           </div>
         )}
+        <Link href="/profile" className="group mt-4 flex items-center gap-3 bg-navy py-2 pr-4 pl-2 text-white">
+          <span className="w-14 shrink-0 transition-transform duration-150 group-hover:-translate-y-0.5 group-hover:-rotate-3">
+            <ShirtBack kit={myKit} lettering="tag" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block font-display text-[32px] leading-[0.9] uppercase">Your shirt</span>
+            <span className="block text-sm text-white/80">Rating, streak and this week&apos;s score</span>
+          </span>
+          <span aria-hidden="true" className="font-display text-[32px] text-teal-light">
+            →
+          </span>
+        </Link>
       </section>
 
       <aside className="mt-4 lg:sticky lg:top-4 lg:col-start-2 lg:row-span-2 lg:row-start-2 lg:mt-0 lg:self-start lg:pt-3.5">
@@ -121,9 +135,6 @@ export function FullTime({ issue, playDate, recall, order, points, topPercent, s
           <span className="label">Next Daily in</span>
           <NextDaily closesAt={gameDateClosesAt(playDate).toISOString()} />
         </div>
-        <Link href="/profile" className="flex items-center justify-between border-t border-track py-3 font-semibold">
-          Your shirt, streak and week <span aria-hidden="true">→</span>
-        </Link>
       </aside>
 
       <section className="lg:col-start-1">
