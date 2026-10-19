@@ -29,7 +29,10 @@ export async function startPart(formData: FormData) {
   let userId = await currentUserId();
   if (!userId) {
     const { data, error } = await (await createClient()).auth.signInAnonymously();
-    if (error || !data.user) throw new Error("Couldn't start a guest session. Try again.");
+    if (error || !data.user) {
+      console.error("Guest sign-in failed:", error?.message ?? "no user returned");
+      throw new Error("Couldn't start a guest session. Try again.");
+    }
     userId = data.user.id;
   }
 
