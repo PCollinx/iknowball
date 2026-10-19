@@ -15,6 +15,7 @@ Project memory for Claude Code, carried over from the Claude project where the p
   - **Clash**: 60-second duels (Higher/Lower facts, skill-specific player comparisons, crowd vs data). At launch: solo sprint plus async challenge links. Rate mode feeds the vote pool (about 100 votes for a comparison to enter play).
   - **The League**: mini-leagues with invite codes, scored per PL matchweek (Mon to Sun), plus a global weekly table and an all-time rating.
   - Predictions come after launch.
+- **Waitlist** (built 19 Oct 2026, public from Nov 1): the front page `/` until launch. "Think you know ball?", the tier ladder as shirts, the three pillars and a "Team sheet" form (email, name on your shirt, club, "bring your league" name and mates) whose shirt preview dresses as you type. Rows go to `public.waitlist` through `joinWaitlist` (`src/app/waitlist/actions.ts`, service role, honeypot field); you get your place in the queue on your own shirt. The sign-up count shows from 25. Test sites add links to the Daily and profile under the form.
 - Web app first, mobile-first, with its own desktop layout from about 1024px.
 - No Premier League branding or club crests. Player cards are code-generated shirt-back cards, never faces.
 
