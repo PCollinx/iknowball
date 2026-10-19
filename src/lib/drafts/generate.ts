@@ -249,16 +249,30 @@ export type PickData = { decoys: Decoy[]; spells: Map<number, DatedSpell[]>; now
 const pickAnswers = (lines: PickLine[]): DraftAnswer[] =>
   lines.map((l, i) => ({ answer_text: l.answer, extra_aliases: [], position: i + 1, reveal_note: null, question: l.question, choices: shownChoices(l) }));
 
-/**
- * Part 1 is Rapid picks when the data allows (Collins, 19 Oct 2026), else Free
- * Recall. Part 2 is Era picks on some days, In Order on the rest.
- */
+/** The day's round types, mixed (Collins, 19 Oct 2026): the four pairings take
+ * turns by date, so every week gets each of them and Part 1 and Part 2 both
+ * change from one day to the next. */
+const PAIRINGS = [
+  { rapid: true, era: false },
+  { rapid: false, era: true },
+  { rapid: true, era: true },
+  { rapid: false, era: false },
+] as const;
+
+export function pairingFor(date: string): (typeof PAIRINGS)[number] {
+  const day = Math.round(Date.parse(`${date}T00:00:00Z`) / 86_400_000);
+  return PAIRINGS[((day % 4) + 4) % 4];
+}
+
+/** Part 1 is Rapid picks or Free Recall, Part 2 Era picks or In Order, by
+ * `pairingFor`. A picks round the data can't fill falls back to the typed one. */
 export function draftDay(date: string, home: Club, away: Club, players: SharedPlayer[], recent: Set<string>, picks?: PickData): DraftDay {
   const typed = typedDay(date, home, away, players, recent);
   if (!picks) return typed;
   const seed = hash(date);
+  const pairing = pairingFor(date);
 
-  const rapid = rapidPicks(players, picks.decoys, home, away, recent, seed);
+  const rapid = pairing.rapid ? rapidPicks(players, picks.decoys, home, away, recent, seed) : [];
   const part1: DraftPart = rapid.length
     ? {
         format: "pick",
@@ -269,8 +283,7 @@ export function draftDay(date: string, home: Club, away: Club, players: SharedPl
       }
     : typed.part1;
 
-  // Every other day or so, by the date, so a rerun drafts the same.
-  if ((seed >>> 1) % 2) {
+  if (pairing.era) {
     for (const club of seed % 2 ? [away, home] : [home, away]) {
       const era = eraPicks(picks.spells.get(club.id) ?? [], club, recent, seed, picks.nowYear);
       if (era.length)

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { recallIssues } from "@/lib/maker/parse";
-import { draftDay, eraDecoys, eraPicks, orderAnswers, pickPair, rapidPicks, recallAnswers, recallSeconds, type SharedPlayer } from "./generate";
+import { draftDay, eraDecoys, eraPicks, orderAnswers, pairingFor, pickPair, rapidPicks, recallAnswers, recallSeconds, type SharedPlayer } from "./generate";
 
 const player = (id: number, name: string, aliases: string[] = [], joinedA: string | null = null, joinedB: string | null = null): SharedPlayer => ({
   id,
@@ -174,10 +174,25 @@ describe("draftDay with picks data", () => {
   it("makes Part 1 Rapid picks with the right option among the choices", () => {
     const shared = Array.from({ length: 8 }, (_, i) => player(i + 1, `Both ${i + 1}`, [], `${1995 + i}-07-01`, `${1996 + i}-07-01`));
     const decoys = Array.from({ length: 30 }, (_, i) => ({ id: 100 + i, name: `Only ${i + 1}`, club: i % 2 ? 2 : 1 }));
-    const day = draftDay("2026-10-17", { id: 1, name: "Chelsea" }, { id: 2, name: "Arsenal" }, shared, new Set(), { decoys, spells: new Map(), nowYear: 2026 });
+    // 22 Oct 2026 pairs Rapid picks with In Order.
+    const day = draftDay("2026-10-22", { id: 1, name: "Chelsea" }, { id: 2, name: "Arsenal" }, shared, new Set(), { decoys, spells: new Map(), nowYear: 2026 });
     expect(day.part1.format).toBe("pick");
     expect(day.part1.answers).toHaveLength(8);
     for (const a of day.part1.answers) expect(a.choices).toContain(a.answer_text);
     expect(day.part2?.format).toBe("in_order");
+  });
+});
+
+describe("pairingFor", () => {
+  it("gives every week all four pairings, changing both parts day to day", () => {
+    const week = ["2026-10-19", "2026-10-20", "2026-10-21", "2026-10-22", "2026-10-23", "2026-10-24", "2026-10-25"].map(pairingFor);
+    expect(new Set(week.map((p) => `${p.rapid}-${p.era}`)).size).toBe(4);
+    for (let i = 1; i < week.length; i++) expect(`${week[i].rapid}-${week[i].era}`).not.toBe(`${week[i - 1].rapid}-${week[i - 1].era}`);
+  });
+
+  it("falls back to Free Recall on a Rapid picks day without decoys", () => {
+    const shared = Array.from({ length: 8 }, (_, i) => player(i + 1, `Both ${i + 1}`, [], `${1995 + i}-07-01`, `${1996 + i}-07-01`));
+    const day = draftDay("2026-10-22", { id: 1, name: "Chelsea" }, { id: 2, name: "Arsenal" }, shared, new Set(), { decoys: [], spells: new Map(), nowYear: 2026 });
+    expect(day.part1.format).toBe("free_recall");
   });
 });
