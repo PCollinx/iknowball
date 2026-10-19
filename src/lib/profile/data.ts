@@ -1,6 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { gameDate, matchweekBounds, seasonOf } from "@/lib/time";
+import { CLASH_MAX, COUNTED_SPRINTS } from "@/lib/league/week";
+import { addDays, gameDate, gameDateClosesAt, matchweekBounds, seasonOf } from "@/lib/time";
 import { splitFixture } from "@/components/daily/fixture";
 import type { Kit } from "@/components/daily/ShirtBack";
 import { fixtureKit, type Club } from "./club";
@@ -69,8 +70,10 @@ export type ProfileView = Supporter & {
   tier: TierName | null;
   daysPlayed: number;
   streak: number;
+  /** Best 5 Daily days plus Clash, out of 600, as on the League tables. */
   weekScore: number;
   weekDays: number;
+  weekClash: number;
   leagues: { id: number; name: string; invite_code: string }[];
 };
 
@@ -100,13 +103,22 @@ export async function getRating(userId: string): Promise<number | null> {
 
 export async function getProfileView(userId: string): Promise<ProfileView> {
   const admin = createAdminClient();
-  const [row, days, leagues] = await Promise.all([
+  const today = gameDate();
+  const { startsOn, endsOn } = matchweekBounds(today);
+  const [row, days, leagues, sprints] = await Promise.all([
     profileRow(userId),
     playedDays(userId),
     admin.from("league_members").select("leagues(id, name, invite_code)").eq("user_id", userId),
+    admin
+      .from("clash_runs")
+      .select("right_count")
+      .eq("user_id", userId)
+      .gte("started_at", gameDateClosesAt(addDays(startsOn, -1)).toISOString())
+      .lt("started_at", gameDateClosesAt(endsOn).toISOString()),
   ]);
-  const today = gameDate();
-  const { startsOn, endsOn } = matchweekBounds(today);
+  // Clash adds the right answers of the week's best 3 sprints, as on the League tables.
+  const best = (sprints.data ?? []).map((r) => r.right_count).sort((a, b) => b - a).slice(0, COUNTED_SPRINTS);
+  const weekClash = Math.min(CLASH_MAX, best.reduce((sum, r) => sum + r, 0));
   const thisWeek = [...days].filter(([date]) => date >= startsOn && date <= endsOn).map(([, score]) => score);
   const rating = overallRating(days);
 
@@ -117,8 +129,9 @@ export async function getProfileView(userId: string): Promise<ProfileView> {
     tier: rating !== null && days.size >= PLACEMENT_DAYS ? tierFor(rating) : null,
     daysPlayed: days.size,
     streak: streak(days.keys(), today),
-    weekScore: bestFive(thisWeek),
+    weekScore: bestFive(thisWeek) + weekClash,
     weekDays: thisWeek.length,
+    weekClash,
     leagues: ((leagues.data ?? []) as unknown as { leagues: { id: number; name: string; invite_code: string } | null }[])
       .map((m) => m.leagues)
       .filter((l): l is { id: number; name: string; invite_code: string } => l !== null),

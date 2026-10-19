@@ -163,7 +163,11 @@ function Stats({ view }: { view: ProfileView }) {
       ? { key: "Tier", value: view.tier! }
       : { key: "Placement", value: `${view.daysPlayed} of ${PLACEMENT_DAYS}`, note: `${PLACEMENT_DAYS - view.daysPlayed} more ${PLACEMENT_DAYS - view.daysPlayed === 1 ? "Daily" : "Dailies"} to get placed` },
     { key: "Streak", value: view.streak === 1 ? "1 day" : `${view.streak} days` },
-    { key: "This week", value: `${view.weekScore} / 500`, note: `Best 5 days count · ${view.weekDays} played` },
+    {
+      key: "This week",
+      value: `${view.weekScore} / 600`,
+      note: `Best 5 Dailies · ${view.weekDays} played${view.weekClash ? ` · +${view.weekClash} Clash` : " · Clash adds up to 100"}`,
+    },
   ];
   return (
     <table className="mt-1 w-full border-collapse tabular-nums">
