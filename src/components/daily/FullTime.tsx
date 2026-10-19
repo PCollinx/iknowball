@@ -5,6 +5,7 @@ import { gameDateClosesAt } from "@/lib/time";
 import type { OrderReveal, RecallReveal } from "@/lib/daily/data";
 import { Masthead } from "./Masthead";
 import { NextDaily } from "./NextDaily";
+import { replayToday } from "@/app/daily/actions";
 import { RecallGrid } from "./RecallGrid";
 import { ShareButtons } from "./ShareButtons";
 import { ShareCard } from "./ShareCard";
@@ -27,6 +28,8 @@ type Props = {
   kit: Kit | null;
   /** Your own shirt: your club's kit, or the neutral one. */
   myKit: Kit;
+  /** Previews and local runs, where today's Daily can be replayed. */
+  testSite?: boolean;
 };
 
 function banter(recall: RecallReveal): string {
@@ -36,7 +39,7 @@ function banter(recall: RecallReveal): string {
   return `${short} missing. ${shirtName(recall.missed[0])} was right there.`;
 }
 
-export function FullTime({ issue, playDate, recall, order, points, topPercent, siteUrl, clubChoices, fanOf, kit, myKit }: Props) {
+export function FullTime({ issue, playDate, recall, order, points, topPercent, siteUrl, clubChoices, fanOf, kit, myKit, testSite = false }: Props) {
   const found = recall?.found.length ?? 0;
   const total = recall ? found + recall.missed.length : 0;
   const card = recall ? shareCardData({ issue, playDate, recall, order, points, topPercent, siteUrl, fanOf, kit }) : null;
@@ -108,6 +111,14 @@ export function FullTime({ issue, playDate, recall, order, points, topPercent, s
           <span className="label">Next Daily in</span>
           <NextDaily closesAt={gameDateClosesAt(playDate).toISOString()} />
         </div>
+        {testSite && (
+          <form action={replayToday} className="flex items-center justify-between gap-3 border-2 border-dashed border-red-card p-3">
+            <span className="text-sm font-semibold text-red-card">Test site only. Live players get one try.</span>
+            <button type="submit" className="shrink-0 bg-red-card px-4 py-1.5 font-display text-lg text-white uppercase">
+              Play it again
+            </button>
+          </form>
+        )}
       </aside>
 
       <section className="lg:col-start-1">

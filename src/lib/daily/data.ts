@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { gameDate } from "@/lib/time";
 import { buildKeys, type AnswerKeys } from "./match";
+import { ensureTestDaily } from "./sample";
 import { seededShuffle, topPercent, type DailyFormat } from "./score";
 
 // Data access for The Daily. Reads the answer key and writes attempts with the
@@ -267,6 +268,9 @@ async function todaysTopPercent(dailyIds: number[], userId: string): Promise<num
 }
 
 export async function getDailyView(): Promise<DailyView> {
+  // Test sites never go without: they get today's drafts or a sample. This
+  // runs first, since a repeat of the same read in one render is deduped.
+  await ensureTestDaily();
   const parts = await todaysParts();
   if (!parts.length) return { kind: "none" };
   const [issue, userId] = await Promise.all([issueNumber(), currentUserId()]);
