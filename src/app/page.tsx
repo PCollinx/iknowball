@@ -46,12 +46,12 @@ export default function Home() {
         <h1 className="border-b-[3px] border-double border-navy pt-5 pb-4 font-display text-[76px] leading-[0.82] uppercase sm:text-[104px] lg:text-[136px]">
           Think you know <span className="text-royal">ball?</span>
         </h1>
-        <p className="mt-4 max-w-[34ch] text-xl font-semibold">Prove it. One rating, six tiers, and a table that settles every argument.</p>
+        <p className="mt-4 max-w-[34ch] text-xl font-semibold">Prove it. One rating out of 10, six tiers, and a table that settles every argument.</p>
 
         <ol className="mt-5 grid grid-cols-3 gap-x-2 gap-y-3 sm:grid-cols-6" aria-label="The tiers">
           {TIERS.map((t, i) => (
             <li key={t.name}>
-              <ShirtBack kit={TIER_KITS[i]} lettering="tag" name={t.name} num={i === 0 ? "Start here" : `${t.from}+`} />
+              <ShirtBack kit={TIER_KITS[i]} lettering="tag" name={t.name} num={i === 0 ? "Start here" : `${t.from.toFixed(1)}+`} />
             </li>
           ))}
         </ol>
