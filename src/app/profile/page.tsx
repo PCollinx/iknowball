@@ -5,10 +5,12 @@ import { connection } from "next/server";
 import { continueWithGoogle, signOut } from "@/app/profile/actions";
 import { ShirtBack } from "@/components/daily/ShirtBack";
 import { ClubPicker } from "@/components/profile/ClubPicker";
+import { RatingBadge } from "@/components/profile/RatingBadge";
 import { EmailForm, UsernameForm } from "@/components/profile/ProfileForms";
 import { currentUser } from "@/lib/daily/data";
 import { kitOf } from "@/lib/profile/club";
 import { clubChoices, getProfileView, type ProfileView } from "@/lib/profile/data";
+import { formatRating, RATING_DAYS } from "@/lib/profile/rating";
 import { PLACEMENT_DAYS } from "@/lib/profile/stats";
 import { gameDate, seasonLabel, seasonOf } from "@/lib/time";
 
@@ -82,8 +84,9 @@ async function ProfileScreen({ searchParams }: { searchParams: SearchParams }) {
 
       <section className="lg:col-start-1">
         {authError && <Alert>{authError}</Alert>}
-        <div className="mx-auto mt-5 w-[72%] max-w-[300px] lg:w-full">
-          <ShirtBack kit={kitOf(view.club)} lettering="tag" name={view.username ?? "Guest"} num={`${view.tier ?? "Unplaced"} · ${view.rating}`} />
+        <div className="relative mx-auto mt-5 w-[72%] max-w-[300px] @container lg:w-full">
+          <ShirtBack kit={kitOf(view.club)} lettering="tag" name={view.username ?? "Guest"} num={view.tier ?? "Unplaced"} />
+          <RatingBadge rating={view.rating} className="absolute top-0 right-0 w-[27cqw] border-[1cqw] text-[12cqw]" />
         </div>
         <div className="mt-4 flex items-end justify-between gap-3 border-b-[3px] border-double border-navy pb-2.5">
           <div className="min-w-0">
@@ -147,7 +150,7 @@ async function ProfileScreen({ searchParams }: { searchParams: SearchParams }) {
 function Stats({ view }: { view: ProfileView }) {
   const placed = view.tier !== null;
   const rows = [
-    { key: "Rating", value: String(view.rating) },
+    { key: "Rating", value: `${formatRating(view.rating)} / 10`, note: `Your last ${RATING_DAYS} days played, newest counting most` },
     placed
       ? { key: "Tier", value: view.tier! }
       : { key: "Placement", value: `${view.daysPlayed} of ${PLACEMENT_DAYS}`, note: `${PLACEMENT_DAYS - view.daysPlayed} more ${PLACEMENT_DAYS - view.daysPlayed === 1 ? "Daily" : "Dailies"} to get placed` },

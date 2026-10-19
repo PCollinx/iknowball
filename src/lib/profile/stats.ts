@@ -4,13 +4,14 @@ import { addDays } from "@/lib/time";
 // What the profile page shows, worked out from a player's finished attempts.
 // Rules decided 16 Oct 2026 (see CLAUDE.md, "Rating and scoring").
 
+/** Tiers by overall rating out of 10 (see rating.ts). Cut-offs to tune in the beta. */
 export const TIERS = [
   { name: "Plastic", from: -Infinity },
-  { name: "Casual", from: 900 },
-  { name: "Supporter", from: 1100 },
-  { name: "Ball Knower", from: 1300 },
-  { name: "Pundit", from: 1500 },
-  { name: "Ball God", from: 1750 },
+  { name: "Casual", from: 4 },
+  { name: "Supporter", from: 5.5 },
+  { name: "Ball Knower", from: 7 },
+  { name: "Pundit", from: 8 },
+  { name: "Ball God", from: 9 },
 ] as const;
 
 export type TierName = (typeof TIERS)[number]["name"];

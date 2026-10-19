@@ -4,6 +4,7 @@ import { gameDate, matchweekBounds, seasonOf } from "@/lib/time";
 import { splitFixture } from "@/components/daily/fixture";
 import type { Kit } from "@/components/daily/ShirtBack";
 import { fixtureKit, type Club } from "./club";
+import { overallRating } from "./rating";
 import { bestFive, dayScores, PLACEMENT_DAYS, streak, tierFor, type PlayedPart, type TierName } from "./stats";
 
 // Data access for the profile and the favourite club. Reads with the service
@@ -62,7 +63,8 @@ export async function getSupporter(userId: string): Promise<Supporter> {
 
 export type ProfileView = Supporter & {
   username: string | null;
-  rating: number;
+  /** Out of 10, null before a first Daily. */
+  rating: number | null;
   /** Null until the player is placed. */
   tier: TierName | null;
   daysPlayed: number;
@@ -74,37 +76,45 @@ export type ProfileView = Supporter & {
 
 type AttemptJoin = { correct_count: number; dailies: { play_date: string; part: number; answer_count: number } };
 
-export async function getProfileView(userId: string): Promise<ProfileView> {
-  const admin = createAdminClient();
-  const [row, rating, attempts, leagues] = await Promise.all([
-    profileRow(userId),
-    admin.from("ratings").select("rating").eq("user_id", userId).maybeSingle(),
-    admin
-      .from("attempts")
-      .select("correct_count, dailies!inner(play_date, part, answer_count)")
-      .eq("user_id", userId)
-      .not("submitted_at", "is", null),
-    admin.from("league_members").select("leagues(id, name)").eq("user_id", userId),
-  ]);
-  if (attempts.error) throw attempts.error;
-
-  const parts: PlayedPart[] = ((attempts.data ?? []) as unknown as AttemptJoin[]).map((a) => ({
+/** A player's day scores (out of 100) by date, from every finished part. */
+async function playedDays(userId: string): Promise<Map<string, number>> {
+  const { data, error } = await createAdminClient()
+    .from("attempts")
+    .select("correct_count, dailies!inner(play_date, part, answer_count)")
+    .eq("user_id", userId)
+    .not("submitted_at", "is", null);
+  if (error) throw error;
+  const parts: PlayedPart[] = ((data ?? []) as unknown as AttemptJoin[]).map((a) => ({
     playDate: a.dailies.play_date,
     part: a.dailies.part,
     correct: a.correct_count,
     answerCount: a.dailies.answer_count,
   }));
-  const days = dayScores(parts);
+  return dayScores(parts);
+}
+
+/** A player's overall rating out of 10, or null before a first Daily. */
+export async function getRating(userId: string): Promise<number | null> {
+  return overallRating(await playedDays(userId));
+}
+
+export async function getProfileView(userId: string): Promise<ProfileView> {
+  const admin = createAdminClient();
+  const [row, days, leagues] = await Promise.all([
+    profileRow(userId),
+    playedDays(userId),
+    admin.from("league_members").select("leagues(id, name)").eq("user_id", userId),
+  ]);
   const today = gameDate();
   const { startsOn, endsOn } = matchweekBounds(today);
   const thisWeek = [...days].filter(([date]) => date >= startsOn && date <= endsOn).map(([, score]) => score);
-  const ratingValue = (rating.data?.rating as number | undefined) ?? 1000;
+  const rating = overallRating(days);
 
   return {
     ...supporterOf(row),
     username: row?.username ?? null,
-    rating: ratingValue,
-    tier: days.size >= PLACEMENT_DAYS ? tierFor(ratingValue) : null,
+    rating,
+    tier: rating !== null && days.size >= PLACEMENT_DAYS ? tierFor(rating) : null,
     daysPlayed: days.size,
     streak: streak(days.keys(), today),
     weekScore: bestFive(thisWeek),

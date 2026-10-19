@@ -17,6 +17,9 @@
 .sc-logo { font-size: 7cqw; line-height: 0.9; }
 .sc-logo b { color: var(--color-royal); text-transform: none; }
 .sc-meta { text-align: right; font-size: 2.4cqw; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; line-height: 1.35; }
+.sc-right-mast { display: flex; align-items: end; gap: 2cqw; }
+/* The overall rating, top right, coloured like a match rating. */
+.sc-rate { width: 9cqw; border-width: 0.45cqw; font-size: 4.4cqw; flex: none; }
 .sc-fan { color: var(--color-teal); }
 .sc-fix { font-size: 10.5cqw; line-height: 0.9; margin-top: 2.6cqw; }
 .sc-fix span { color: var(--color-royal); }

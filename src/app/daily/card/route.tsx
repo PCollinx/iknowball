@@ -5,7 +5,7 @@ import { SHARE_SIZE, ShareImage } from "@/lib/daily/ShareImage";
 import { publicEnv } from "@/lib/env";
 import { ogFonts } from "@/lib/og/fonts";
 import { clubInTitle } from "@/lib/profile/club";
-import { getSupporter, kitForFixture } from "@/lib/profile/data";
+import { getRating, getSupporter, kitForFixture } from "@/lib/profile/data";
 
 // Your share card for today's Daily as a 1080 x 1080 PNG, once you've reached
 // full time. It's yours alone (it reads your session), so it's never cached.
@@ -16,7 +16,7 @@ export async function GET() {
   if (view.kind !== "fulltime" || !view.recall) return new Response("Finish today's Daily first", { status: 404 });
 
   const title = view.recall.daily.title;
-  const [supporter, kit] = await Promise.all([getSupporter(userId), kitForFixture(title)]);
+  const [supporter, kit, rating] = await Promise.all([getSupporter(userId), kitForFixture(title), getRating(userId)]);
   const club = supporter.club ?? null;
   const card = shareCardData({
     issue: view.issue,
@@ -28,6 +28,7 @@ export async function GET() {
     siteUrl: publicEnv().NEXT_PUBLIC_SITE_URL,
     fanOf: club && clubInTitle(club, title) ? club.name : null,
     kit,
+    rating,
   });
   return new ImageResponse(<ShareImage d={card} />, {
     width: SHARE_SIZE,
