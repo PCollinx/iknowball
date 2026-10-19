@@ -3,11 +3,11 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { ChallengeButton } from "@/components/clash/ChallengeButton";
-import { ShirtBack, ROYAL_KIT, shirtName } from "@/components/daily/ShirtBack";
+import { ShirtBack, shirtName, type Kit } from "@/components/daily/ShirtBack";
 import { JoinButton, JoinLeague } from "@/components/league/Forms";
 import { LeagueLoading, LeagueMasthead } from "@/components/league/Masthead";
-import { WeekTable } from "@/components/league/WeekTable";
-import { weekDay, weekLabel } from "@/components/league/format";
+import { ShirtLadder } from "@/components/league/ShirtLadder";
+import { weekLabel } from "@/components/league/format";
 import { publicEnv } from "@/lib/env";
 import { getLeagueView, LEAGUE_MAX, type League, type Player } from "@/lib/league/data";
 import { kitOf } from "@/lib/profile/club";
@@ -39,7 +39,7 @@ function Rules() {
   );
 }
 
-function Invite({ league }: { league: League }) {
+function Invite({ league, kit }: { league: League; kit: Kit }) {
   const url = `${publicEnv().NEXT_PUBLIC_SITE_URL.replace(/\/$/, "")}/league/${league.invite_code}`;
   return (
     <section aria-label="Invite">
@@ -47,7 +47,7 @@ function Invite({ league }: { league: League }) {
       <div className="mt-2 flex justify-center gap-1.5" aria-label={`Invite code ${league.invite_code}`}>
         {[...league.invite_code].map((ch, i) => (
           <span key={i} aria-hidden="true" className="w-[52px] max-w-full">
-            <ShirtBack kit={ROYAL_KIT} num={ch} />
+            <ShirtBack kit={kit} num={ch} />
           </span>
         ))}
       </div>
@@ -123,15 +123,15 @@ async function LeagueScreen({ params, searchParams }: { params: Params; searchPa
           <p className="mt-1.5 text-navy/75">
             {fresh ? "You're in. Get your mates on the team sheet." : `${weekLabel(week)}. Best 5 Dailies and 3 sprints count.`}
           </p>
-          <div className="mt-4">
-            <WeekTable rows={rows} today={weekDay(week)} cut={rows.length > 4 ? 3 : 0} />
+          <div className="mt-3">
+            <ShirtLadder rows={rows} />
           </div>
-          <Link href="/daily" className="mt-2 block bg-navy p-3 text-center font-display text-[22px] text-white uppercase">
+          <Link href="/daily" className="mt-4 block bg-navy p-3 text-center font-display text-[22px] text-white uppercase">
             Play today&apos;s Daily
           </Link>
         </section>
         <aside className="mt-7 lg:mt-[22px]">
-          {rows.length < LEAGUE_MAX && <Invite league={league} />}
+          {rows.length < LEAGUE_MAX && <Invite league={league} kit={kitOf(rows.find((r) => r.mine)?.club ?? null)} />}
           <span className="label mt-3 block">
             Team sheet · {rows.length} of {LEAGUE_MAX}
           </span>

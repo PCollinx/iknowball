@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fanbaseTable, weekTable, type WeekPart } from "./week";
+import { fanbaseTable, movement, weekTable, type WeekPart } from "./week";
 
 const MON = "2026-10-12";
 const day = (n: number) => `2026-10-${String(12 + n).padStart(2, "0")}`;
@@ -73,17 +73,31 @@ describe("fanbaseTable", () => {
 
 describe("weekTable with Clash", () => {
   it("adds the best 3 sprints, capped at 100", () => {
-    const sprints = [12, 30, 25, 40, 5].map((right) => ({ userId: "a", right }));
+    const sprints = [12, 30, 25, 40, 5].map((right) => ({ userId: "a", right, playDate: day(0) }));
     const [row] = weekTable([part("a", 0, 1, 10)], MON, sprints);
     expect(row.clash).toBe(95);
     expect(row.points).toBe(60 + 95);
-    const [capped] = weekTable([], MON, [40, 40, 40].map((right) => ({ userId: "b", right })));
+    const [capped] = weekTable([], MON, [40, 40, 40].map((right) => ({ userId: "b", right, playDate: day(0) })));
     expect(capped.clash).toBe(100);
   });
 
   it("puts a sprint-only player on the table", () => {
-    const rows = weekTable([part("a", 0, 1, 1)], MON, [{ userId: "b", right: 20 }]);
+    const rows = weekTable([part("a", 0, 1, 1)], MON, [{ userId: "b", right: 20, playDate: day(0) }]);
     expect(rows.map((r) => [r.userId, r.points])).toEqual([["b", 20], ["a", 6]]);
     expect(rows[0].days).toEqual(Array(7).fill(null));
+  });
+});
+
+describe("movement", () => {
+  it("compares with the table at yesterday's close", () => {
+    const parts = [part("a", 0, 1, 10), part("b", 0, 1, 5), part("b", 1, 1, 10)];
+    const moved = movement(parts, [], MON, day(1));
+    expect(moved.get("b")).toBe(1);
+    expect(moved.get("a")).toBe(-1);
+  });
+
+  it("has nothing on a Monday or for a player new today", () => {
+    expect(movement([part("a", 0, 1, 10)], [], MON, MON).size).toBe(0);
+    expect(movement([part("a", 1, 1, 10)], [], MON, day(1)).has("a")).toBe(false);
   });
 });

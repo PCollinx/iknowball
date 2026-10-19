@@ -11,8 +11,8 @@ export const COUNTED_DAYS = 5;
 export const COUNTED_SPRINTS = 3;
 export const CLASH_MAX = 100;
 
-/** One Clash sprint started in the week: its right answers. */
-export type WeekSprint = { userId: string; right: number };
+/** One Clash sprint started in the week: its right answers and its game date. */
+export type WeekSprint = { userId: string; right: number; playDate: string };
 
 /** One finished part of a Daily, as the week reads it. */
 export type WeekPart = {
@@ -99,4 +99,17 @@ export function fanbaseTable(rows: { points: number; clubId: number | null }[], 
     .map(([clubId, pts]) => ({ clubId, fans: pts.length, average: Math.round(pts.reduce((s, p) => s + p, 0) / pts.length) }))
     .sort((a, b) => b.average - a.average || b.fans - a.fans);
   return ranked.map((r) => ({ ...r, position: ranked.findIndex((x) => x.average === r.average) + 1 }));
+}
+
+/** Places gained (positive) or lost since yesterday's close, by player. Empty on a Monday. */
+export function movement(parts: WeekPart[], sprints: WeekSprint[], startsOn: string, today: string): Map<string, number> {
+  if (today <= startsOn) return new Map();
+  const before = weekTable(
+    parts.filter((p) => p.playDate < today),
+    startsOn,
+    sprints.filter((s) => s.playDate < today),
+  );
+  const now = weekTable(parts, startsOn, sprints);
+  const was = new Map(before.map((r) => [r.userId, r.position]));
+  return new Map(now.filter((r) => was.has(r.userId)).map((r) => [r.userId, was.get(r.userId)! - r.position]));
 }

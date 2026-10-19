@@ -4,7 +4,7 @@ import type { Club } from "@/lib/profile/club";
 import { clubsByIds } from "@/lib/profile/data";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addDays, gameDate, gameDateClosesAt, matchweekBounds } from "@/lib/time";
-import { fanbaseTable, weekTable, type FanbaseRow, type WeekPart, type WeekRow, type WeekSprint } from "./week";
+import { fanbaseTable, movement, weekTable, type FanbaseRow, type WeekPart, type WeekRow, type WeekSprint } from "./week";
 
 // The League reads straight from finished attempts: a past day can't change
 // once the Daily has closed, so a week's table is final at Sunday midnight
@@ -25,7 +25,8 @@ export function currentWeek(): Week {
 }
 
 export type Player = { userId: string; name: string; club: Club | null };
-export type TableLine = WeekRow & Player & { mine: boolean };
+/** moved: places gained (or lost, negative) since yesterday; null when new today or on a Monday. */
+export type TableLine = WeekRow & Player & { mine: boolean; moved: number | null };
 export type League = { id: number; name: string; invite_code: string; owner_id: string };
 
 type AttemptJoin = {
@@ -75,11 +76,11 @@ async function weekSprints(week: Week, userIds?: string[]): Promise<(WeekSprint 
   if (userIds && !userIds.length) return [];
   const from = gameDateClosesAt(addDays(week.startsOn, -1)).toISOString();
   const to = gameDateClosesAt(week.endsOn).toISOString();
-  const rows: { user_id: string; right_count: number; profiles: { favourite_club_id: number | null } | null }[] = [];
+  const rows: { user_id: string; right_count: number; started_at: string; profiles: { favourite_club_id: number | null } | null }[] = [];
   for (let start = 0; ; start += PAGE) {
     let q = createAdminClient()
       .from("clash_runs")
-      .select("id, user_id, right_count, profiles(favourite_club_id)")
+      .select("id, user_id, right_count, started_at, profiles(favourite_club_id)")
       .gte("started_at", from)
       .lt("started_at", to)
       .order("id")
@@ -90,7 +91,7 @@ async function weekSprints(week: Week, userIds?: string[]): Promise<(WeekSprint 
     rows.push(...((data ?? []) as unknown as typeof rows));
     if (!data || data.length < PAGE) break;
   }
-  return rows.map((r) => ({ userId: r.user_id, right: r.right_count, clubId: r.profiles?.favourite_club_id ?? null }));
+  return rows.map((r) => ({ userId: r.user_id, right: r.right_count, playDate: gameDate(new Date(r.started_at)), clubId: r.profiles?.favourite_club_id ?? null }));
 }
 
 /** Everyone's week: Daily days plus Clash, with each player's club. */
@@ -114,8 +115,13 @@ async function players(userIds: string[]): Promise<Map<string, Player>> {
   );
 }
 
-function withPlayers(rows: WeekRow[], people: Map<string, Player>, me: string | null): TableLine[] {
-  return rows.map((r) => ({ ...r, ...(people.get(r.userId) ?? { userId: r.userId, name: guestName(r.userId), club: null }), mine: r.userId === me }));
+function withPlayers(rows: WeekRow[], people: Map<string, Player>, me: string | null, moved = new Map<string, number>()): TableLine[] {
+  return rows.map((r) => ({
+    ...r,
+    ...(people.get(r.userId) ?? { userId: r.userId, name: guestName(r.userId), club: null }),
+    mine: r.userId === me,
+    moved: moved.get(r.userId) ?? null,
+  }));
 }
 
 /** A league's members on this week's table. Members yet to play sit at the bottom on 0. */
@@ -125,6 +131,7 @@ async function membersTable(leagueId: number, week: Week, me: string | null): Pr
   const ids = (data ?? []).map((m) => m.user_id);
   const [parts, sprints, people] = await Promise.all([weekParts(week, ids), weekSprints(week, ids), players(ids)]);
   const rows = weekTable(parts, week.startsOn, sprints);
+  const moved = movement(parts, sprints, week.startsOn, week.today);
   const played = new Set(rows.map((r) => r.userId));
   const idle = ids.filter((id) => !played.has(id));
   const bottom = rows.length + 1;
@@ -132,7 +139,7 @@ async function membersTable(leagueId: number, week: Week, me: string | null): Pr
     ...rows,
     ...idle.map((userId) => ({ userId, days: Array(7).fill(null), counted: [], clash: 0, points: 0, seconds: 0, position: bottom })),
   ];
-  return withPlayers(all, people, me).sort((a, b) => a.position - b.position || a.name.localeCompare(b.name));
+  return withPlayers(all, people, me, moved).sort((a, b) => a.position - b.position || a.name.localeCompare(b.name));
 }
 
 export async function leagueByCode(code: string): Promise<League | null> {

@@ -1,5 +1,4 @@
 import type { Week } from "@/lib/league/data";
-import { addDays } from "@/lib/time";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const parts = (date: string) => date.split("-").map(Number);
@@ -9,12 +8,4 @@ export function weekLabel(week: Pick<Week, "startsOn" | "endsOn">): string {
   const [, m1, d1] = parts(week.startsOn);
   const [, m2, d2] = parts(week.endsOn);
   return m1 === m2 ? `Mon ${d1} to Sun ${d2} ${MONTHS[m2 - 1]}` : `Mon ${d1} ${MONTHS[m1 - 1]} to Sun ${d2} ${MONTHS[m2 - 1]}`;
-}
-
-/** Monday to Sunday column heads. */
-export const DAY_HEADS = ["M", "T", "W", "T", "F", "S", "S"];
-
-/** Today's column in the week: 0 Monday … 6 Sunday. */
-export function weekDay(week: Pick<Week, "startsOn" | "today">): number {
-  return Array.from({ length: 7 }, (_, i) => addDays(week.startsOn, i)).indexOf(week.today);
 }
