@@ -7,9 +7,9 @@ import { Masthead } from "./Masthead";
 import { NextDaily } from "./NextDaily";
 import { RecallGrid } from "./RecallGrid";
 import { ShareButtons } from "./ShareButtons";
-import { ShareCard, stampText } from "./ShareCard";
+import { ShareCard } from "./ShareCard";
+import { shareCardData, stampText } from "./share";
 import { ShirtBack, shirtName, type Kit } from "./ShirtBack";
-import { clock } from "./clock";
 
 type Props = {
   issue: number;
@@ -39,20 +39,7 @@ function banter(recall: RecallReveal): string {
 export function FullTime({ issue, playDate, recall, order, points, topPercent, siteUrl, clubChoices, fanOf, kit, myKit }: Props) {
   const found = recall?.found.length ?? 0;
   const total = recall ? found + recall.missed.length : 0;
-  const host = new URL(siteUrl).host;
-  const longDate = new Date(`${playDate}T12:00:00Z`).toLocaleDateString("en-GB", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  });
-  const stats = [
-    ...(order ? [{ value: `${order.correct}/${order.slots.length}`, key: "In Order" }] : []),
-    { value: String(points), key: "Points" },
-    { value: topPercent ? `Top ${topPercent}%` : "Early", key: "Today" },
-    { value: recall ? clock(recall.timeUsedSeconds) : "-", key: "Time used" },
-  ];
+  const card = recall ? shareCardData({ issue, playDate, recall, order, points, topPercent, siteUrl, fanOf, kit }) : null;
   const shareText = [
     `iKnowBall · The Daily No. ${String(issue).padStart(3, "0")}`,
     recall?.daily.title ?? "",
@@ -115,22 +102,8 @@ export function FullTime({ issue, playDate, recall, order, points, topPercent, s
       </section>
 
       <aside className="mt-4 lg:sticky lg:top-4 lg:col-start-2 lg:row-span-2 lg:row-start-2 lg:mt-0 lg:self-start lg:pt-3.5">
-        {recall && (
-          <ShareCard
-            issue={issue}
-            dateLabel={longDate}
-            title={recall.daily.title}
-            prompt={recall.daily.prompt}
-            found={found}
-            total={total}
-            timeUsed={clock(recall.timeUsedSeconds)}
-            stats={stats}
-            host={host}
-            fanOf={fanOf}
-            kit={kit}
-          />
-        )}
-        <ShareButtons text={shareText} />
+        {card && <ShareCard {...card} />}
+        <ShareButtons text={shareText} image={card ? { url: "/daily/card", name: `iknowball-daily-${String(issue).padStart(3, "0")}.png` } : null} />
         <div className="mt-2 flex items-center justify-between border-t-2 border-navy pt-3 pb-4">
           <span className="label">Next Daily in</span>
           <NextDaily closesAt={gameDateClosesAt(playDate).toISOString()} />

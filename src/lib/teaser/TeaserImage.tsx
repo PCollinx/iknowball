@@ -1,23 +1,13 @@
 import type { Kit } from "@/components/daily/ShirtBack";
 import { FORMATS, fitSize, linesAt, shirtGrid, shirtLabels, type Teaser } from "./layout";
-import { shirtSvg } from "./shirt-svg";
+import { BODY, C, DISPLAY } from "@/lib/og/fonts";
+import { Shirt } from "@/lib/og/Shirt";
+import { shirtSvg } from "@/lib/og/shirt-svg";
 
 // A teaser quiz for X, drawn by next/og (Satori: flexbox and inline styles
 // only). It's the Daily's matchday programme without the app's name: the name
 // is revealed on 1 Nov. Shirts are the Daily's kit shirts, half and half in
 // the two clubs, with the nameplate on the hem.
-
-const C = {
-  navy: "#0C1330",
-  royal: "#1F48D6",
-  teal: "#00A3A3",
-  tealLight: "#7FE3E0",
-  mist: "#EEF2FB",
-  track: "#DCE3F5",
-  red: "#D7263D",
-};
-const DISPLAY = "Big Shoulders";
-const BODY = "Barlow";
 
 type Box = { pad: number; mastGap: number; foot: number; gap: number };
 const BOX: Record<Teaser["format"], Box> = {
@@ -135,64 +125,6 @@ export function TeaserImage({ t, kit }: { t: Teaser; kit: Kit }) {
         {t.aside && (
           <span style={{ display: "flex", fontSize: 24, fontWeight: 600, letterSpacing: 3, textTransform: "uppercase", color: C.navy }}>{t.aside}</span>
         )}
-      </div>
-    </div>
-  );
-}
-
-/** One kit shirt with its number and nameplate, set in real type over the
- * drawing at the same places ShirtBack sets them (in its 100 x 104 units). */
-function Shirt({ src, size, big, plate, kit, style }: { src: string; size: number; big: string; plate: string; kit: Kit; style?: React.CSSProperties }) {
-  const u = size / 100;
-  const h = Math.round(size * 1.04);
-  // Sized from the text's natural width, never squeezed (as in ShirtBack).
-  const fit = (text: string, w: number, max: number) => Math.min(max, w / Math.max(1, text.length * 0.5));
-  const busy = Boolean(kit.half) || ["stripes", "bars", "pinstripes", "band"].includes(kit.pattern ?? "plain");
-  const numSize = fit(big, 36, 38) * u;
-  const edge = Math.max(1, 2.4 * u);
-  return (
-    <div style={{ display: "flex", position: "relative", width: size, height: h, ...style }}>
-      {/* eslint-disable-next-line @next/next/no-img-element -- Satori draws <img>, not next/image */}
-      <img src={src} width={size} height={h} style={{ position: "absolute", left: 0, top: 0 }} alt="" />
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          width: size,
-          top: 30 * u,
-          height: 34 * u,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily: DISPLAY,
-          fontSize: numSize,
-          lineHeight: 1,
-          color: kit.half ? "#FFFFFF" : kit.number,
-          // On stripes or halves the number gets a navy edge so it reads on both colours.
-          WebkitTextStroke: busy ? `${edge}px ${C.navy}` : undefined,
-        }}
-      >
-        {big}
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          left: 18 * u,
-          top: 74 * u,
-          width: 64 * u,
-          height: 24 * u,
-          background: C.navy,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily: DISPLAY,
-          fontSize: fit(plate, 58, 12) * u * (plate === "?" ? 1.4 : 1),
-          lineHeight: 1,
-          color: plate === "?" ? C.tealLight : "#FFFFFF",
-          textTransform: "uppercase",
-        }}
-      >
-        {plate}
       </div>
     </div>
   );
