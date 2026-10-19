@@ -19,7 +19,7 @@ export default function Home() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-4 px-4">
       <h1 className="font-display text-5xl uppercase text-royal">iKnowBall</h1>
-      <p>One Daily, one try. Then settle it in a Clash.</p>
+      <p>One Daily, one try. Then settle it in a Clash and your league.</p>
       <Link href="/daily" className="bg-royal p-3.5 text-center font-display text-[28px] text-white uppercase">
         Play today&apos;s Daily
       </Link>
@@ -29,6 +29,17 @@ export default function Home() {
             Clash <span className="text-royal">sprint</span>
           </span>
           <span className="block text-sm text-navy/70">Sixty seconds of Higher or Lower. Send the link and settle it.</span>
+        </span>
+        <span aria-hidden="true" className="font-display text-[32px] text-royal transition-transform duration-150 group-hover:translate-x-1">
+          →
+        </span>
+      </Link>
+      <Link href="/league" className="group flex items-center gap-3 border-b-[3px] border-double border-navy pb-2.5">
+        <span className="min-w-0 flex-1">
+          <span className="block font-display text-[32px] leading-[0.9] uppercase">
+            The <span className="text-royal">League</span>
+          </span>
+          <span className="block text-sm text-navy/70">Mini-leagues with your mates. Best 5 Dailies a week count.</span>
         </span>
         <span aria-hidden="true" className="font-display text-[32px] text-royal transition-transform duration-150 group-hover:translate-x-1">
           →
