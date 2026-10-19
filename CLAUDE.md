@@ -108,3 +108,4 @@ Replanned 16 Oct 2026 because the build is ahead (plan doc: https://claude.ai/co
 - Whether to buy iknowball.com.
 - Clash at launch or 18 Dec: settled at the Nov 15 check.
 - Switch Vercel to Pro ($20/mo) before launch: Hobby is non-commercial only.
+- Send auth emails through Resend SMTP (decided 18 Oct 2026): Supabase's built-in mailer allows only a few emails an hour ("email rate limit exceeded"). Dev first, live before the waitlist (Nov 1) and beta: verify playiknowball.com in Resend (DNS in Cloudflare), then Supabase > Authentication > Emails > SMTP (smtp.resend.com, port 465, user `resend`, API key as password, sender noreply@playiknowball.com), then raise the limit under Rate Limits.
