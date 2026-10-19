@@ -2,8 +2,9 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { DayEditor, type EditorPart } from "@/components/maker/DayEditor";
-import { getDay, requireAdmin } from "@/lib/maker/data";
-import { orderToText, recallToText } from "@/lib/maker/parse";
+import { getDay, requireAdmin, type MakerAnswer } from "@/lib/maker/data";
+import type { DailyFormat } from "@/lib/daily/score";
+import { orderToText, picksToText, recallToText } from "@/lib/maker/parse";
 import { gameDate } from "@/lib/time";
 
 export default function MakerDayPage({ searchParams }: { searchParams: Promise<{ date?: string }> }) {
@@ -15,9 +16,14 @@ export default function MakerDayPage({ searchParams }: { searchParams: Promise<{
 }
 
 const BLANK: Record<1 | 2, Omit<EditorPart, "part">> = {
-  1: { title: "", prompt: "", time: 120, source: "", answers: "", plays: 0, exists: false },
-  2: { title: "In order", prompt: "", time: 60, source: "", answers: "", plays: 0, exists: false },
+  1: { format: "free_recall", title: "", prompt: "", time: 120, source: "", answers: "", plays: 0, exists: false },
+  2: { format: "in_order", title: "In order", prompt: "", time: 60, source: "", answers: "", plays: 0, exists: false },
 };
+
+function answersText(format: DailyFormat, answers: MakerAnswer[]): string {
+  if (format === "pick" || format === "era") return picksToText(answers);
+  return format === "free_recall" ? recallToText(answers) : orderToText(answers);
+}
 
 async function MakerDay({ searchParams }: { searchParams: Promise<{ date?: string }> }) {
   await connection();
@@ -31,11 +37,12 @@ async function MakerDay({ searchParams }: { searchParams: Promise<{ date?: strin
     if (!p) return { part: n, ...BLANK[n] };
     return {
       part: n,
+      format: p.format,
       title: p.title,
       prompt: p.prompt,
       time: p.time_limit_seconds,
       source: p.source_note ?? "",
-      answers: n === 1 ? recallToText(p.answers) : orderToText(p.answers),
+      answers: answersText(p.format, p.answers),
       plays: p.plays,
       exists: true,
     };

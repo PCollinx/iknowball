@@ -4,14 +4,10 @@ import { RecallGrid } from "./RecallGrid";
 import type { Kit } from "./ShirtBack";
 import { SubmitButton } from "./SubmitButton";
 import { FixtureTitle } from "./FixtureTitle";
+import { FORMAT_NAME, FORMAT_RULE } from "./formats";
 import type { DailyRow, RecallReveal } from "@/lib/daily/data";
 import { clubInTitle, type Club } from "@/lib/profile/club";
 
-const FORMAT = { free_recall: "Free Recall", in_order: "In Order" } as const;
-const RULE = {
-  free_recall: (n: number) => `Name as many as you can. ${n} to find.`,
-  in_order: (n: number) => `Put all ${n} in the right order.`,
-};
 
 type Props = { issue: number; dateLabel: string; daily: DailyRow; total: number; before: RecallReveal | null; club: Club | null; kit: Kit | null };
 
@@ -25,7 +21,7 @@ export function KickOff({ issue, dateLabel, daily, total, before, club, kit }: P
         <section className="border-b-[3px] border-double border-navy pb-4">
           <div className="flex items-end justify-between gap-3 py-3.5">
             <div className="@container min-w-0 flex-1">
-              <span className="label">Part 1 · {FORMAT.free_recall}</span>
+              <span className="label">Part 1 · {FORMAT_NAME[before.daily.format]}</span>
               <FixtureTitle as="h2" title={fixture} className="mt-1 text-[min(40px,var(--fit))]" />
             </div>
             <span className="font-display text-[56px] leading-[0.8] text-royal tabular-nums">
@@ -38,11 +34,11 @@ export function KickOff({ issue, dateLabel, daily, total, before, club, kit }: P
       )}
       <section className="@container py-5">
         <span className="label">
-          Part {daily.part} of {total} · {FORMAT[daily.format]}
+          Part {daily.part} of {total} · {FORMAT_NAME[daily.format]}
         </span>
-        {daily.format === "in_order" ? (
+        {daily.part === 2 ? (
           <h1 className="mt-1 font-display text-[64px] leading-[0.9] uppercase">
-            In <span className="text-royal">order</span>
+            {daily.format === "era" ? "Era" : "In"} <span className="text-royal">{daily.format === "era" ? "picks" : "order"}</span>
           </h1>
         ) : (
           <FixtureTitle title={fixture} className="mt-1 text-[min(64px,var(--fit))]" />
@@ -61,7 +57,7 @@ export function KickOff({ issue, dateLabel, daily, total, before, club, kit }: P
             </tr>
             <tr className="border-b border-track">
               <th className="label py-2.5 font-semibold">Task</th>
-              <td className="py-2.5 text-right">{RULE[daily.format](daily.answer_count)}</td>
+              <td className="py-2.5 text-right">{FORMAT_RULE[daily.format](daily.answer_count)}</td>
             </tr>
             <tr className="border-b border-track">
               <th className="label py-2.5 font-semibold">Tries</th>

@@ -45,7 +45,9 @@ export function ShareCard(d: ShareCardData) {
               {d.found}
               <small>/{d.total}</small>
             </div>
-            <span className="sc-lab">Free Recall · {d.timeUsed} used</span>
+            <span className="sc-lab">
+              {d.partLabel} · {d.timeUsed} used
+            </span>
           </div>
           <div className="sc-right">
             <div className="sc-kitbox">

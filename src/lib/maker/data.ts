@@ -2,6 +2,7 @@ import "server-only";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { currentUserId } from "@/lib/daily/data";
+import type { DailyFormat } from "@/lib/daily/score";
 
 // Data access for the Daily maker. Every read goes through requireAdmin first:
 // the maker shows answer keys, so a page or action that skips it leaks them.
@@ -21,6 +22,7 @@ export async function requireAdmin(): Promise<string> {
 export type MakerPart = {
   id: number;
   part: number;
+  format: DailyFormat;
   title: string;
   prompt: string;
   time_limit_seconds: number;
@@ -37,7 +39,7 @@ async function playCounts(ids: number[]): Promise<Map<number, number>> {
   return new Map((data ?? []).map((r) => [r.daily_id as number, r.plays as number]));
 }
 
-const PART_COLUMNS = "id, play_date, part, title, prompt, time_limit_seconds, answer_count, status, source_note";
+const PART_COLUMNS = "id, play_date, part, format, title, prompt, time_limit_seconds, answer_count, status, source_note";
 
 /** Every part dated between two game dates (inclusive), by date. */
 export async function listParts(from: string, to: string): Promise<Map<string, MakerPart[]>> {
@@ -57,7 +59,13 @@ export async function listParts(from: string, to: string): Promise<Map<string, M
   return days;
 }
 
-export type MakerAnswer = { answer_text: string; extra_aliases: string[]; reveal_note: string | null };
+export type MakerAnswer = {
+  answer_text: string;
+  extra_aliases: string[];
+  reveal_note: string | null;
+  question: string | null;
+  choices: string[];
+};
 export type MakerDay = { parts: (MakerPart & { answers: MakerAnswer[] })[] };
 
 export async function getDay(date: string): Promise<MakerDay> {
@@ -65,7 +73,7 @@ export async function getDay(date: string): Promise<MakerDay> {
   if (!parts.length) return { parts: [] };
   const { data, error } = await createAdminClient()
     .from("daily_answers")
-    .select("daily_id, position, answer_text, extra_aliases, reveal_note")
+    .select("daily_id, position, answer_text, extra_aliases, reveal_note, question, choices")
     .in("daily_id", parts.map((p) => p.id))
     .order("position", { nullsFirst: true })
     .order("id");
@@ -75,7 +83,13 @@ export async function getDay(date: string): Promise<MakerDay> {
       ...p,
       answers: (data ?? [])
         .filter((a) => a.daily_id === p.id)
-        .map((a) => ({ answer_text: a.answer_text, extra_aliases: a.extra_aliases ?? [], reveal_note: a.reveal_note })),
+        .map((a) => ({
+          answer_text: a.answer_text,
+          extra_aliases: a.extra_aliases ?? [],
+          reveal_note: a.reveal_note,
+          question: a.question,
+          choices: a.choices ?? [],
+        })),
     })),
   };
 }

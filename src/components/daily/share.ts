@@ -2,6 +2,7 @@ import type { OrderReveal, RecallReveal } from "@/lib/daily/data";
 import { fitWidth } from "./FixtureTitle";
 import type { Kit } from "./ShirtBack";
 import { clock } from "./clock";
+import { FORMAT_NAME } from "./formats";
 
 // The share card's content and sizing, shared by the card on the full-time
 // screen and the 1080 x 1080 image drawn on the server.
@@ -14,6 +15,8 @@ export type ShareCardData = {
   found: number;
   total: number;
   timeUsed: string;
+  /** Part 1's round, "Free Recall" or "Rapid picks". */
+  partLabel: string;
   stats: { value: string; key: string }[];
   host: string;
   /** Your club, when it's in the fixture. */
@@ -88,8 +91,9 @@ export function shareCardData({ issue, playDate, recall, order, points, topPerce
     found: recall.found.length,
     total: recall.found.length + recall.missed.length,
     timeUsed: clock(recall.timeUsedSeconds),
+    partLabel: FORMAT_NAME[recall.daily.format],
     stats: [
-      ...(order ? [{ value: `${order.correct}/${order.slots.length}`, key: "In Order" }] : []),
+      ...(order ? [{ value: `${order.correct}/${order.slots.length}`, key: FORMAT_NAME[order.daily.format] }] : []),
       { value: String(points), key: "Points" },
       { value: topPercent ? `Top ${topPercent}%` : "Early", key: "Today" },
       { value: clock(recall.timeUsedSeconds), key: "Time used" },

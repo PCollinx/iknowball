@@ -9,6 +9,7 @@ import { replayToday } from "@/app/daily/actions";
 import { RecallGrid } from "./RecallGrid";
 import { ShareButtons } from "./ShareButtons";
 import { ShareCard } from "./ShareCard";
+import { FORMAT_NAME } from "./formats";
 import { shareCardData, stampText } from "./share";
 import { ShirtBack, shirtName, type Kit } from "./ShirtBack";
 
@@ -47,7 +48,7 @@ export function FullTime({ issue, playDate, recall, order, points, topPercent, s
     `iKnowBall · The Daily No. ${String(issue).padStart(3, "0")}`,
     recall?.daily.title ?? "",
     recall ? `${"■".repeat(found)}${"□".repeat(total - found)} ${found}/${total}` : "",
-    order ? `In Order ${order.correct}/${order.slots.length}` : "",
+    order ? `${FORMAT_NAME[order.daily.format]} ${order.correct}/${order.slots.length}` : "",
     `Beat me: ${siteUrl.replace(/\/$/, "")}/daily`,
   ]
     .filter(Boolean)
@@ -133,7 +134,7 @@ export function FullTime({ issue, playDate, recall, order, points, topPercent, s
           <tbody>
             {recall && (
               <tr className="border-b border-track">
-                <td className="py-2">Free Recall</td>
+                <td className="py-2">{FORMAT_NAME[recall.daily.format]}</td>
                 <td className="py-2 text-right font-display text-2xl">
                   {found} / {total}
                 </td>
@@ -141,7 +142,7 @@ export function FullTime({ issue, playDate, recall, order, points, topPercent, s
             )}
             {order && (
               <tr className="border-b border-track">
-                <td className="py-2">In Order</td>
+                <td className="py-2">{FORMAT_NAME[order.daily.format]}</td>
                 <td className="py-2 text-right font-display text-2xl">
                   {order.correct} / {order.slots.length}
                 </td>
@@ -165,9 +166,20 @@ export function FullTime({ issue, playDate, recall, order, points, topPercent, s
 
         {order && (
           <div className="pb-4">
-            <span className="label">In Order · the right answer</span>
+            <span className="label">{FORMAT_NAME[order.daily.format]} · the right answer</span>
             <ol className="mt-1">
-              {order.slots.map((s, i) => (
+              {order.daily.format === "era" ? order.slots.map((s, i) => (
+                <li key={i} className="grid grid-cols-[34px_1fr_auto] items-baseline gap-2 border-b border-track py-1.5">
+                  <span className="font-display text-2xl">{i + 1}</span>
+                  <span>
+                    <span className="font-display text-xl uppercase">{s.note}</span>
+                    {!s.right && (
+                      <span className="block text-[13px] font-semibold text-red-card">You said {s.placed || "nothing"}</span>
+                    )}
+                  </span>
+                  <span className={`font-display text-xl tabular-nums ${s.right ? "text-royal" : "text-red-card"}`}>{s.correct}</span>
+                </li>
+              )) : order.slots.map((s, i) => (
                 <li key={i} className="grid grid-cols-[34px_1fr_auto] items-baseline gap-2 border-b border-track py-1.5">
                   <span className="font-display text-2xl">{i + 1}</span>
                   <span>

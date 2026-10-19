@@ -2,7 +2,7 @@ import "server-only";
 import { normalizeName } from "@/lib/daily/match";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addDays, gameDate, matchweekBounds } from "@/lib/time";
-import { draftDay, pairKey, pickPair, type Club, type SharedPlayer } from "./generate";
+import { draftDay, pairKey, pickPair, type Club, type PickData, type SharedPlayer } from "./generate";
 
 /** Days ahead the job keeps drafted, so there is about a week to review. */
 export const DRAFT_DAYS_AHEAD = 8;
@@ -70,29 +70,16 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
       continue;
     }
     const [home, away] = pair.map((id) => clubs.get(id)!);
-    const players = await sharedPlayers(home.id, away.id);
-    const day = draftDay(date, home, away, players, recent);
+    const [players, picks] = await Promise.all([sharedPlayers(home.id, away.id), pickData(home.id, away.id, date)]);
+    const day = draftDay(date, home, away, players, recent, picks);
 
     const { error: saveError } = await admin.rpc("maker_save_day", {
       p_play_date: date,
       p_status: "draft",
       p_checked_by: null,
-      p_parts: [
-        {
-          title: day.part1.title,
-          prompt: day.part1.prompt,
-          time_limit_seconds: day.part1.time,
-          source_note: SOURCE,
-          answers: day.part1.answers.map((a) => ({ answer_text: a.text, extra_aliases: a.aliases, position: null, reveal_note: null })),
-        },
-        day.part2 && {
-          title: day.part2.title,
-          prompt: day.part2.prompt,
-          time_limit_seconds: day.part2.time,
-          source_note: SOURCE,
-          answers: day.part2.answers.map((a, i) => ({ answer_text: a.text, extra_aliases: [], position: i + 1, reveal_note: a.note })),
-        },
-      ],
+      p_parts: [day.part1, day.part2].map(
+        (p) => p && { format: p.format, title: p.title, prompt: p.prompt, time_limit_seconds: p.time, source_note: SOURCE, answers: p.answers },
+      ),
     });
     if (saveError) {
       result.skipped.push({ date, reason: saveError.message });
@@ -100,7 +87,7 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
     }
     used.add(pairKey(home.id, away.id));
     clubsOn.set(date, [home.id, away.id]);
-    day.part2?.answers.forEach((a) => recent.add(normalizeName(a.text)));
+    for (const a of [...day.part1.answers, ...(day.part2?.answers ?? [])]) recent.add(normalizeName(playerIn(a)));
     result.drafted.push({ date, title: day.part1.title, answers: day.part1.answers.length });
   }
   return result;
@@ -132,13 +119,40 @@ async function sharedPlayers(a: number, b: number): Promise<SharedPlayer[]> {
   return rows.map((r) => ({ id: r.player_id, name: r.known_as, aliases: aliases.get(r.player_id) ?? [], joinedA: r.joined_a, joinedB: r.joined_b }));
 }
 
+/** The player an answer is about: the answer, or for Era picks the name in the question. */
+function playerIn(a: { answer_text: string; question?: string | null }): string {
+  return a.question ? a.question.split(" at ")[0] : a.answer_text;
+}
+
 async function recentAnswerNames(from: string, to: string): Promise<Set<string>> {
   const { data } = await createAdminClient()
     .from("daily_answers")
-    .select("answer_text, dailies!inner(play_date)")
+    .select("answer_text, question, dailies!inner(play_date)")
     .gte("dailies.play_date", from)
     .lte("dailies.play_date", to);
-  return new Set((data ?? []).map((r) => normalizeName(r.answer_text)));
+  return new Set((data ?? []).map((r) => normalizeName(playerIn(r))));
+}
+
+/** Wrong options for Rapid picks, and both clubs' dated spells for Era picks. */
+async function pickData(a: number, b: number, date: string): Promise<PickData> {
+  const admin = createAdminClient();
+  const [decoys, spellsA, spellsB] = await Promise.all([
+    admin.rpc("club_pair_decoys", { p_a: a, p_b: b }),
+    admin.rpc("club_dated_spells", { p_club: a }),
+    admin.rpc("club_dated_spells", { p_club: b }),
+  ]);
+  for (const r of [decoys, spellsA, spellsB]) if (r.error) throw r.error;
+  type SpellRow = { player_id: number; known_as: string; joined_on: string; left_on: string };
+  const spells = (rows: SpellRow[]) => rows.map((r) => ({ id: r.player_id, name: r.known_as, joined: r.joined_on, left: r.left_on }));
+  return {
+    decoys: ((decoys.data ?? []) as { player_id: number; known_as: string; club_id: number }[]).map((d) => ({ id: d.player_id, name: d.known_as, club: d.club_id })),
+    spells: new Map([
+      [a, spells((spellsA.data ?? []) as SpellRow[])],
+      [b, spells((spellsB.data ?? []) as SpellRow[])],
+    ]),
+    // A spell that ends after the day it's asked about would give the game away.
+    nowYear: Number(date.slice(0, 4)),
+  };
 }
 
 /** Fixtures by game date (Lagos time), as [date, [home club, away club]]. */

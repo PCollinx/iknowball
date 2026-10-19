@@ -6,7 +6,7 @@ import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getDay, isAdmin, requireAdmin } from "@/lib/maker/data";
-import { orderIssues, parseOrder, parseRecall, recallIssues } from "@/lib/maker/parse";
+import { orderIssues, parseOrder, parsePicks, parseRecall, pickIssues, recallIssues, shownChoices } from "@/lib/maker/parse";
 
 export type SignInState = { error: string; email: string } | null;
 
@@ -74,7 +74,20 @@ export async function saveDay(_prev: SaveState, formData: FormData): Promise<Sav
       continue;
     }
     const { title, prompt, time, source } = parsed.data;
-    if (part === 1) {
+    const asked = field(formData, part, "format");
+    const format = part === 1 ? (asked === "pick" ? "pick" : "free_recall") : asked === "era" ? "era" : "in_order";
+    if (format === "pick" || format === "era") {
+      const lines = parsePicks(parsed.data.answers);
+      errors.push(...pickIssues(lines, format).errors.map((e) => `${label}: ${e}`));
+      specs.push({
+        format,
+        title,
+        prompt,
+        time_limit_seconds: time,
+        source_note: source,
+        answers: lines.map((l, i) => ({ answer_text: l.answer, extra_aliases: [], position: i + 1, reveal_note: null, question: l.question, choices: shownChoices(l) })),
+      });
+    } else if (part === 1) {
       const answers = parseRecall(parsed.data.answers);
       errors.push(...recallIssues(answers).errors.map((e) => `${label}: ${e}`));
       specs.push({

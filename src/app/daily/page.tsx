@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { FreeRecall } from "@/components/daily/FreeRecall";
 import { FullTime } from "@/components/daily/FullTime";
 import { InOrder } from "@/components/daily/InOrder";
+import { PickRound } from "@/components/daily/PickRound";
 import { KickOff } from "@/components/daily/KickOff";
 import { Masthead, shortDate } from "@/components/daily/Masthead";
 import { currentUserId, getDailyView } from "@/lib/daily/data";
@@ -76,6 +77,24 @@ async function DailyScreen() {
           kit={kit}
         />
       );
+    case "pick":
+      return (
+        <PickRound
+          key={view.attemptId}
+          issue={view.issue}
+          dateLabel={dateLabel}
+          partLabel={`Part ${view.daily.part}`}
+          format={view.daily.format === "era" ? "era" : "pick"}
+          title={view.daily.title}
+          prompt={view.daily.prompt}
+          attemptId={view.attemptId}
+          deadlineAt={view.deadlineAt}
+          serverNow={view.serverNow}
+          questions={view.questions}
+          answered={view.answered}
+          kit={kit}
+        />
+      );
     case "order":
       return (
         <InOrder
@@ -121,6 +140,8 @@ function fixtureTitle(view: Awaited<ReturnType<typeof getDailyView>>): string | 
       return view.before?.daily.title ?? (view.daily.part === 1 ? view.daily.title : null);
     case "recall":
       return view.daily.title;
+    case "pick":
+      return view.daily.part === 1 ? view.daily.title : null;
     case "fulltime":
       return view.recall?.daily.title ?? null;
     default:
