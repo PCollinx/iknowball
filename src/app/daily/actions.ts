@@ -15,6 +15,7 @@ import {
   MAX_GUESSES,
 } from "@/lib/daily/data";
 import { matchAnswer } from "@/lib/daily/match";
+import { clearTodaysAttempts } from "@/lib/daily/sample";
 import { partScore } from "@/lib/daily/score";
 
 // Every action re-reads the player from the session and the attempt from the
@@ -170,5 +171,12 @@ export async function submitOrder(attemptId: number, order: number[]) {
       .from("attempt_guesses")
       .insert(placed.map((answerId, i) => ({ attempt_id: attempt.id, raw_input: String(i + 1), answer_id: answerId })));
   }
+  refresh();
+}
+
+/** Test sites only: clears your tries at today's Daily so you can play again. */
+export async function replayToday() {
+  const userId = await currentUserId();
+  if (userId) await clearTodaysAttempts(userId);
   refresh();
 }

@@ -10,6 +10,7 @@ import { currentUserId, getDailyView } from "@/lib/daily/data";
 import { clubInTitle, kitOf } from "@/lib/profile/club";
 import { clubChoices, getSupporter, kitForFixture } from "@/lib/profile/data";
 import { publicEnv } from "@/lib/env";
+import { isTestSite } from "@/lib/daily/sample";
 import { gameDate } from "@/lib/time";
 
 export const metadata: Metadata = {
@@ -106,6 +107,7 @@ async function DailyScreen() {
           kit={kit}
           myKit={kitOf(supporter?.club ?? null)}
           fanOf={clubInTitle(supporter?.club ?? null, title) ? supporter!.club!.name : null}
+          testSite={isTestSite()}
         />
       );
     }
