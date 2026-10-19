@@ -3,10 +3,13 @@ import { buildKeys, normalizeName } from "@/lib/daily/match";
 // The maker's answer boxes are plain text, one answer per line:
 //   Free Recall:  Name | alias, alias
 //   In Order:     Name | reveal note        (top line is first)
+//   Rapid picks:  Right option | wrong | wrong | wrong
+//   Era picks:    Question :: right option | wrong | wrong | wrong
 // Shared by the editor (live preview) and the save action (the real check).
 
 export const MAX_RECALL_ANSWERS = 60;
 export const MAX_ORDER_ANSWERS = 10;
+export const MAX_PICK_QUESTIONS = 20;
 const MAX_TEXT = 60;
 
 export type RecallLine = { text: string; aliases: string[] };
@@ -103,4 +106,60 @@ export function orderIssues(answers: OrderLine[]): Issues {
     seen.add(k);
   }
   return { errors, warnings: [] };
+}
+
+// ---------------------------------------------------------------------------
+// Rapid picks and Era picks
+// ---------------------------------------------------------------------------
+
+export type PickLine = { question: string | null; answer: string; wrong: string[] };
+
+export function parsePicks(source: string): PickLine[] {
+  return source
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean)
+    .map((l) => {
+      const ask = l.indexOf("::");
+      const question = ask === -1 ? null : l.slice(0, ask).trim() || null;
+      const [answer = "", ...wrong] = (ask === -1 ? l : l.slice(ask + 2)).split("|").map((o) => o.trim());
+      return { question, answer, wrong: wrong.filter(Boolean) };
+    });
+}
+
+/** The editor's text for saved questions: the right option first. */
+export function picksToText(answers: { question: string | null; answer_text: string; choices: string[] }[]): string {
+  return answers
+    .map((a) => {
+      const options = [a.answer_text, ...a.choices.filter((c) => c !== a.answer_text)].join(" | ");
+      return a.question ? `${a.question} :: ${options}` : options;
+    })
+    .join("\n");
+}
+
+/** Problems that would make a question unfair or unplayable. */
+export function pickIssues(lines: PickLine[], format: "pick" | "era"): Issues {
+  const errors: string[] = [];
+  if (!lines.length) errors.push("Add at least one question.");
+  if (lines.length > MAX_PICK_QUESTIONS) errors.push(`Keep it to ${MAX_PICK_QUESTIONS} questions or fewer.`);
+  lines.forEach((l, i) => {
+    const n = `Question ${i + 1}`;
+    if (format === "era" && !l.question) errors.push(`${n} needs the player before "::", e.g. "Thierry Henry at Arsenal :: 1999–2007 | …".`);
+    const options = [l.answer, ...l.wrong];
+    if (!l.answer) errors.push(`${n} has no right option.`);
+    if (l.wrong.length < 1 || l.wrong.length > 3) errors.push(`${n} needs two to four options in all.`);
+    if (options.some((o) => o.length > MAX_TEXT)) errors.push(`${n} has an option longer than ${MAX_TEXT} characters.`);
+    if (new Set(options.map(normalizeName)).size < options.length) errors.push(`${n} has the same option twice.`);
+  });
+  return { errors, warnings: [] };
+}
+
+/** Every option in the order shown: the right one lands in a different place
+ * question to question, the same every time the day is saved. */
+export function shownChoices(line: PickLine): string[] {
+  const options = [...line.wrong];
+  let h = 2166136261;
+  for (const ch of `${line.question ?? ""}|${line.answer}`) h = Math.imul(h ^ ch.charCodeAt(0), 16777619);
+  options.splice((h >>> 0) % (options.length + 1), 0, line.answer);
+  return options;
 }

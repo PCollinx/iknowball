@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { orderIssues, orderToText, parseOrder, parseRecall, recallIssues, recallToText } from "./parse";
+import { orderIssues, orderToText, parseOrder, parsePicks, parseRecall, pickIssues, picksToText, recallIssues, recallToText, shownChoices } from "./parse";
 
 describe("parseRecall", () => {
   it("reads names and comma-separated aliases, skipping blank lines", () => {
@@ -54,5 +54,30 @@ describe("orderIssues", () => {
   it("needs two answers and no repeats", () => {
     expect(orderIssues(parseOrder("Petit")).errors).toContain("In Order needs at least two answers.");
     expect(orderIssues(parseOrder("Petit\npetit")).errors[0]).toContain("twice");
+  });
+});
+
+describe("picks", () => {
+  it("reads questions, right option first, and writes them back", () => {
+    const lines = parsePicks("Ashley Cole | Thierry Henry | Frank Lampard\nHenry at Arsenal :: 1999–2007 | 1995–2003 | 2003–2011");
+    expect(lines).toEqual([
+      { question: null, answer: "Ashley Cole", wrong: ["Thierry Henry", "Frank Lampard"] },
+      { question: "Henry at Arsenal", answer: "1999–2007", wrong: ["1995–2003", "2003–2011"] },
+    ]);
+    const saved = lines.map((l) => ({ question: l.question, answer_text: l.answer, choices: shownChoices(l) }));
+    expect(parsePicks(picksToText(saved))).toEqual(lines);
+  });
+
+  it("puts the right option somewhere among the choices, the same each time", () => {
+    const line = { question: null, answer: "Ashley Cole", wrong: ["A", "B", "C"] };
+    expect(shownChoices(line)).toEqual(shownChoices(line));
+    expect([...shownChoices(line)].sort()).toEqual(["A", "Ashley Cole", "B", "C"]);
+  });
+
+  it("flags unplayable questions", () => {
+    expect(pickIssues(parsePicks("Only one"), "pick").errors).toHaveLength(1);
+    expect(pickIssues(parsePicks("A | A | B"), "pick").errors).toHaveLength(1);
+    expect(pickIssues(parsePicks("1999–2007 | 1995–2003"), "era").errors).toHaveLength(1);
+    expect(pickIssues(parsePicks("Henry at Arsenal :: 1999–2007 | 1995–2003"), "era").errors).toEqual([]);
   });
 });

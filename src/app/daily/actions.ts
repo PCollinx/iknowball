@@ -17,6 +17,7 @@ import {
 import { matchAnswer } from "@/lib/daily/match";
 import { clearTodaysAttempts } from "@/lib/daily/sample";
 import { partScore } from "@/lib/daily/score";
+import { isPick } from "@/components/daily/formats";
 
 // Every action re-reads the player from the session and the attempt from the
 // database: the browser only ever sends ids and what the player typed.
@@ -119,6 +120,51 @@ export async function submitGuess(attemptId: number, input: string): Promise<Gue
       .eq("id", attempt.id),
   ]);
   return { status: "correct", id: matched, text, found: total, done };
+}
+
+export type PickResult = { status: "answered"; right: boolean; answer: string; done: boolean } | { status: "closed" };
+
+/** Records one Rapid or Era picks tap. Each question takes one tap, checked here. */
+export async function submitPick(attemptId: number, questionId: number, choice: string): Promise<PickResult> {
+  const parsed = z.object({ attemptId: id, questionId: id, choice: z.string().min(1).max(60) }).safeParse({ attemptId, questionId, choice });
+  if (!parsed.success) return { status: "closed" };
+  const userId = await currentUserId();
+  if (!userId) return { status: "closed" };
+
+  const admin = createAdminClient();
+  const { data: row } = await admin
+    .from("attempts")
+    .select("*, dailies!inner(format), attempt_guesses(answer_id, raw_input)")
+    .eq("id", parsed.data.attemptId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!row) return { status: "closed" };
+  const { dailies, attempt_guesses: tapped, ...attempt } = row;
+  if (!isOpen(attempt) || !isPick(dailies.format)) return { status: "closed" };
+
+  const { answers } = await cachedAnswerKeys(attempt.daily_id);
+  const question = answers.find((a) => a.id === parsed.data.questionId);
+  if (!question || !question.choices.includes(parsed.data.choice)) return { status: "closed" };
+  const guesses = tapped as { answer_id: number | null; raw_input: string }[];
+  const before = guesses.find((g) => g.answer_id === question.id);
+  // A question already answered keeps its first tap.
+  if (before) return { status: "answered", right: before.raw_input === question.answer_text, answer: question.answer_text, done: false };
+
+  const right = parsed.data.choice === question.answer_text;
+  const correct = guesses.filter((g) => answers.some((a) => a.id === g.answer_id && a.answer_text === g.raw_input)).length + (right ? 1 : 0);
+  const done = guesses.length + 1 >= answers.length;
+  await Promise.all([
+    admin.from("attempt_guesses").insert({ attempt_id: attempt.id, raw_input: parsed.data.choice, answer_id: question.id }),
+    admin
+      .from("attempts")
+      .update({
+        correct_count: correct,
+        score: partScore(dailies.format, correct),
+        ...(done ? { submitted_at: new Date().toISOString() } : {}),
+      })
+      .eq("id", attempt.id),
+  ]);
+  return { status: "answered", right, answer: question.answer_text, done };
 }
 
 /** Ends a part early ("give up"), or closes it when the clock hits zero. */

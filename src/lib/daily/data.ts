@@ -46,6 +46,10 @@ export type AnswerRow = {
   extra_aliases: string[];
   reveal_note: string | null;
   player_id: number | null;
+  /** Rapid and Era picks: the line above the options, when there is one. */
+  question: string | null;
+  /** Rapid and Era picks: every option, in the order shown. */
+  choices: string[];
 };
 
 const DAILY_COLUMNS = "id, play_date, part, format, title, prompt, time_limit_seconds, answer_count";
@@ -95,7 +99,7 @@ export async function getDaily(id: number): Promise<DailyRow | null> {
 export async function getAnswers(dailyId: number): Promise<AnswerRow[]> {
   const { data, error } = await createAdminClient()
     .from("daily_answers")
-    .select("id, position, answer_text, extra_aliases, reveal_note, player_id")
+    .select("id, position, answer_text, extra_aliases, reveal_note, player_id, question, choices")
     .eq("daily_id", dailyId)
     .order("id");
   if (error) throw error;
@@ -149,6 +153,31 @@ export async function getAttempt(attemptId: number, userId: string): Promise<Att
     .eq("user_id", userId)
     .maybeSingle();
   return (data as AttemptRow | null) ?? null;
+}
+
+/** Rapid and Era picks answered so far: which option was tapped for which question. */
+export async function pickGuesses(attemptId: number): Promise<{ answer_id: number; raw_input: string }[]> {
+  const { data, error } = await createAdminClient()
+    .from("attempt_guesses")
+    .select("answer_id, raw_input")
+    .eq("attempt_id", attemptId)
+    .not("answer_id", "is", null)
+    .order("id");
+  if (error) throw error;
+  return (data ?? []) as { answer_id: number; raw_input: string }[];
+}
+
+/** Questions by number. */
+const byPosition = (answers: AnswerRow[]) => [...answers].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+
+/** Each question's tapped option (or "" when it wasn't reached), in order. */
+async function pickResults(daily: DailyRow, attempt: AttemptRow) {
+  const [answers, guesses] = await Promise.all([getAnswers(daily.id), pickGuesses(attempt.id)]);
+  const tapped = new Map(guesses.map((g) => [g.answer_id, g.raw_input]));
+  return byPosition(answers).map((a) => {
+    const choice = tapped.get(a.id) ?? "";
+    return { answer: a, choice, right: choice === a.answer_text };
+  });
 }
 
 export function isOpen(attempt: AttemptRow, now = Date.now()): boolean {
@@ -208,11 +237,24 @@ export type OrderReveal = {
   score: number;
 };
 
+export type PickQuestion = { id: number; question: string | null; choices: string[] };
+export type PickAnswered = { id: number; choice: string; answer: string; right: boolean };
+
 export type DailyView =
   | { kind: "none" }
   | { kind: "kickoff"; issue: number; daily: DailyRow; total: number; before: RecallReveal | null }
   | { kind: "recall"; issue: number; daily: DailyRow; attemptId: number; deadlineAt: string; serverNow: number; found: Shown[] }
   | { kind: "order"; issue: number; daily: DailyRow; attemptId: number; deadlineAt: string; serverNow: number; items: Shown[] }
+  | {
+      kind: "pick";
+      issue: number;
+      daily: DailyRow;
+      attemptId: number;
+      deadlineAt: string;
+      serverNow: number;
+      questions: PickQuestion[];
+      answered: PickAnswered[];
+    }
   | {
       kind: "fulltime";
       issue: number;
@@ -224,18 +266,40 @@ export type DailyView =
     };
 
 async function recallReveal(daily: DailyRow, attempt: AttemptRow): Promise<RecallReveal> {
+  const timeUsedSeconds = Math.round((Date.parse(attempt.submitted_at!) - Date.parse(attempt.started_at)) / 1000);
+  if (daily.format === "pick") {
+    // The same squad as Free Recall: the players you picked right, then the rest.
+    const results = await pickResults(daily, attempt);
+    return {
+      daily,
+      found: results.filter((r) => r.right).map((r) => ({ id: r.answer.id, text: r.answer.answer_text })),
+      missed: results.filter((r) => !r.right).map((r) => r.answer.answer_text),
+      timeUsedSeconds,
+      score: attempt.score,
+    };
+  }
   const [answers, foundIds] = await Promise.all([getAnswers(daily.id), foundAnswerIds(attempt.id)]);
   const byId = new Map(answers.map((a) => [a.id, a.answer_text]));
   return {
     daily,
     found: foundIds.map((id) => ({ id, text: byId.get(id) ?? "" })),
     missed: answers.filter((a) => !foundIds.includes(a.id)).map((a) => a.answer_text),
-    timeUsedSeconds: Math.round((Date.parse(attempt.submitted_at!) - Date.parse(attempt.started_at)) / 1000),
+    timeUsedSeconds,
     score: attempt.score,
   };
 }
 
 async function orderReveal(daily: DailyRow, attempt: AttemptRow): Promise<OrderReveal> {
+  if (daily.format === "era") {
+    // A slot per question: the period you tapped against the right one.
+    const results = await pickResults(daily, attempt);
+    return {
+      daily,
+      slots: results.map((r) => ({ placed: r.choice, correct: r.answer.answer_text, note: r.answer.question, right: r.right })),
+      correct: attempt.correct_count,
+      score: attempt.score,
+    };
+  }
   const answers = (await getAnswers(daily.id)).sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
   const { data } = await createAdminClient()
     .from("attempt_guesses")
@@ -282,6 +346,23 @@ export async function getDailyView(): Promise<DailyView> {
     const attempt = attempts.get(daily.id);
     if (!attempt) return { kind: "kickoff", issue, daily, total: parts.length, before };
     if (!attempt.submitted_at) {
+      if (daily.format === "pick" || daily.format === "era") {
+        const [answers, guesses] = await Promise.all([getAnswers(daily.id), pickGuesses(attempt.id)]);
+        const byId = new Map(answers.map((a) => [a.id, a]));
+        return {
+          kind: "pick",
+          issue,
+          daily,
+          attemptId: attempt.id,
+          deadlineAt: attempt.deadline_at,
+          serverNow,
+          questions: byPosition(answers).map((a) => ({ id: a.id, question: a.question, choices: a.choices })),
+          answered: guesses.map((g) => {
+            const answer = byId.get(g.answer_id)?.answer_text ?? "";
+            return { id: g.answer_id, choice: g.raw_input, answer, right: g.raw_input === answer };
+          }),
+        };
+      }
       if (daily.format === "free_recall") {
         const answers = await getAnswers(daily.id);
         const byId = new Map(answers.map((a) => [a.id, a.answer_text]));
@@ -294,11 +375,12 @@ export async function getDailyView(): Promise<DailyView> {
       );
       return { kind: "order", issue, daily, attemptId: attempt.id, deadlineAt: attempt.deadline_at, serverNow, items };
     }
-    if (daily.format === "free_recall") before = await recallReveal(daily, attempt);
+    if (daily.part === 1) before = await recallReveal(daily, attempt);
   }
 
-  const recallPart = parts.find((p) => p.format === "free_recall");
-  const orderPart = parts.find((p) => p.format === "in_order");
+  // Part 1 (Free Recall or Rapid picks) and Part 2 (In Order or Era picks).
+  const recallPart = parts.find((p) => p.part === 1);
+  const orderPart = parts.find((p) => p.part === 2);
   const [recall, order, top] = await Promise.all([
     recallPart ? recallReveal(recallPart, attempts.get(recallPart.id)!) : null,
     orderPart ? orderReveal(orderPart, attempts.get(orderPart.id)!) : null,

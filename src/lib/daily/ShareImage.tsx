@@ -102,7 +102,7 @@ export function ShareImage({ d }: { d: ShareCardData }) {
               <span style={{ fontSize: 26 * u, color: C.royal }}>{String(d.found)}</span>
               <span style={{ fontSize: 10 * u }}>{`/${d.total}`}</span>
             </div>
-            <span style={{ display: "flex", marginTop: 1.6 * u, fontSize: 2.4 * u, ...label }}>{`Free Recall · ${d.timeUsed} used`}</span>
+            <span style={{ display: "flex", marginTop: 1.6 * u, fontSize: 2.4 * u, ...label }}>{`${d.partLabel} · ${d.timeUsed} used`}</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", width: right }}>
             <div style={{ display: "flex", flexDirection: "column" }}>

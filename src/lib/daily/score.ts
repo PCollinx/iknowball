@@ -1,6 +1,7 @@
 // Points for one part of The Daily. Provisional: the matchweek scoring formula
 // is still an open item, so this only has to rank today's players sensibly.
-export const POINTS_PER_CORRECT = { free_recall: 40, in_order: 30 } as const;
+// Multiple choice can be guessed, so a right tap is worth a little less.
+export const POINTS_PER_CORRECT = { free_recall: 40, in_order: 30, pick: 25, era: 25 } as const;
 
 export type DailyFormat = keyof typeof POINTS_PER_CORRECT;
 

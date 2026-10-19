@@ -1,5 +1,5 @@
 import { normalizeName } from "@/lib/daily/match";
-import { recallIssues, type OrderLine, type RecallLine } from "@/lib/maker/parse";
+import { pickIssues, recallIssues, shownChoices, type OrderLine, type PickLine, type RecallLine } from "@/lib/maker/parse";
 
 // Builds a day's two parts from shared club histories. Pure, so the choices
 // can be tested; the job in draft-job.ts feeds it data and saves the result.
@@ -8,6 +8,12 @@ import { recallIssues, type OrderLine, type RecallLine } from "@/lib/maker/parse
 export const MIN_SHARED = 6;
 export const MAX_SHARED = 25;
 export const ORDER_SIZE = 5;
+/** Rapid picks: questions in a round, and the fewest worth playing. */
+export const PICK_SIZE = 10;
+export const MIN_PICKS = 5;
+/** Era picks: questions in a round, and the fewest worth playing. */
+export const ERA_SIZE = 5;
+export const MIN_ERAS = 4;
 
 export type Club = { id: number; name: string };
 export type PairCandidate = { a: number; b: number; players: number };
@@ -111,12 +117,174 @@ export function recallSeconds(answers: number): number {
   return Math.min(180, Math.max(60, Math.round((45 + answers * 5) / 5) * 5));
 }
 
-export type DraftDay = {
-  part1: { title: string; prompt: string; time: number; answers: RecallLine[] };
-  part2: { title: string; prompt: string; time: number; answers: OrderLine[] } | null;
-};
+// ---------------------------------------------------------------------------
+// Rapid picks and Era picks
+// ---------------------------------------------------------------------------
 
-export function draftDay(date: string, home: Club, away: Club, players: SharedPlayer[], recent: Set<string>): DraftDay {
+/** A player who played for only one of the two clubs: a wrong option. */
+export type Decoy = { id: number; name: string; club: number };
+/** A dated spell at one club: an Era picks question. */
+export type DatedSpell = { id: number; name: string; joined: string; left: string };
+
+/** Rotates a list by a seed, so a rerun picks the same items. */
+function rotate<T>(items: T[], seed: number): T[] {
+  if (!items.length) return items;
+  const k = seed % items.length;
+  return [...items.slice(k), ...items.slice(0, k)];
+}
+
+/**
+ * Part 1 as Rapid picks: each question has one player who played for both
+ * clubs and three who played for just one of them, so nobody wins on club
+ * alone. Players used lately are picked last; no option repeats in a round.
+ */
+export function rapidPicks(shared: SharedPlayer[], decoys: Decoy[], home: Club, away: Club, recent: Set<string>, seed: number): PickLine[] {
+  const sharedNames = new Set(shared.map((p) => normalizeName(p.name)));
+  const right = rotate(shared, seed).sort((p, q) => Number(recent.has(normalizeName(p.name))) - Number(recent.has(normalizeName(q.name))));
+  const seen = new Set<string>();
+  const pool = (club: number) =>
+    rotate(
+      decoys.filter((d) => {
+        const k = normalizeName(d.name);
+        return d.club === club && k && !sharedNames.has(k);
+      }),
+      seed,
+    );
+  const sides = [pool(home.id), pool(away.id)];
+  const take = (i: number): string | null => {
+    // Alternate clubs, falling back to the other when one runs dry.
+    for (const side of [sides[i % 2], sides[(i + 1) % 2]]) {
+      while (side.length) {
+        const d = side.shift()!;
+        const k = normalizeName(d.name);
+        if (!seen.has(k)) {
+          seen.add(k);
+          return d.name;
+        }
+      }
+    }
+    return null;
+  };
+
+  const lines: PickLine[] = [];
+  for (const p of right) {
+    if (lines.length === PICK_SIZE) break;
+    const k = normalizeName(p.name);
+    if (!k || seen.has(k)) continue;
+    const wrong = [take(lines.length), take(lines.length + 1), take(lines.length + 2)].filter((x): x is string => x !== null);
+    if (wrong.length < 3) break;
+    seen.add(k);
+    lines.push({ question: null, answer: p.name, wrong });
+  }
+  return lines.length >= MIN_PICKS && !pickIssues(lines, "pick").errors.length ? lines : [];
+}
+
+const period = (from: number, to: number) => `${from}–${to}`;
+
+/** Three wrong periods as long as the real one, before and after it, inside the Premier League era. */
+export function eraDecoys(from: number, to: number, seed: number, nowYear: number): string[] | null {
+  const span = to - from;
+  const step = Math.max(2, Math.ceil(span / 2));
+  const offsets = [step, -step, 2 * step, -2 * step, 3 * step, -3 * step];
+  const valid = offsets.map((o) => from + o).filter((f) => f >= 1990 && f + span <= nowYear);
+  if (valid.length < 3) return null;
+  return rotate(valid, seed).slice(0, 3).map((f) => period(f, f + span));
+}
+
+/**
+ * Part 2 as Era picks: players at one club with both dates known, spread
+ * across the era, each asked when they were there.
+ */
+export function eraPicks(spells: DatedSpell[], club: Club, recent: Set<string>, seed: number, nowYear: number): PickLine[] {
+  // One spell a player (the longest), at least a year long, in the Premier League era.
+  const byPlayer = new Map<number, { name: string; from: number; to: number }>();
+  for (const s of spells) {
+    const from = Number(s.joined.slice(0, 4));
+    const to = Number(s.left.slice(0, 4));
+    if (from < 1992 || to <= from || to > nowYear) continue;
+    const had = byPlayer.get(s.id);
+    if (!had || to - from > had.to - had.from) byPlayer.set(s.id, { name: s.name, from, to });
+  }
+  const fresh = (n: string) => !recent.has(normalizeName(n));
+  const all = [...byPlayer.values()].sort((a, b) => a.from - b.from || a.name.localeCompare(b.name));
+  const pool = all.filter((p) => fresh(p.name)).length >= ERA_SIZE ? all.filter((p) => fresh(p.name)) : all;
+  if (pool.length < MIN_ERAS) return [];
+
+  // Evenly spread through the years, like In Order.
+  const n = Math.min(ERA_SIZE, pool.length);
+  const offset = seed % Math.max(1, Math.floor(pool.length / n));
+  const picks = Array.from({ length: n }, (_, i) => pool[Math.min(pool.length - 1, Math.floor((i * pool.length) / n) + offset)]);
+  const lines: PickLine[] = [];
+  for (const [i, p] of [...new Set(picks)].entries()) {
+    const wrong = eraDecoys(p.from, p.to, seed + i, nowYear);
+    if (wrong) lines.push({ question: `${p.name} at ${club.name}`, answer: period(p.from, p.to), wrong });
+  }
+  return lines.length >= MIN_ERAS && !pickIssues(lines, "era").errors.length ? lines : [];
+}
+
+/** Seconds for a picks round: about six a question, at least 30. */
+export function pickSeconds(questions: number, era = false): number {
+  return Math.max(30, Math.round(((era ? 9 : 6) * questions) / 5) * 5);
+}
+
+// ---------------------------------------------------------------------------
+// A whole day
+// ---------------------------------------------------------------------------
+
+/** One answer row, as public.maker_save_day takes it. */
+export type DraftAnswer = {
+  answer_text: string;
+  extra_aliases: string[];
+  position: number | null;
+  reveal_note: string | null;
+  question?: string | null;
+  choices?: string[];
+};
+export type DraftPart = { format: "free_recall" | "pick" | "in_order" | "era"; title: string; prompt: string; time: number; answers: DraftAnswer[] };
+export type DraftDay = { part1: DraftPart; part2: DraftPart | null };
+
+/** What the picks rounds are built from. Without it, a day gets the typed rounds. */
+export type PickData = { decoys: Decoy[]; spells: Map<number, DatedSpell[]>; nowYear: number };
+
+const pickAnswers = (lines: PickLine[]): DraftAnswer[] =>
+  lines.map((l, i) => ({ answer_text: l.answer, extra_aliases: [], position: i + 1, reveal_note: null, question: l.question, choices: shownChoices(l) }));
+
+/**
+ * Part 1 is Rapid picks when the data allows (Collins, 19 Oct 2026), else Free
+ * Recall. Part 2 is Era picks on some days, In Order on the rest.
+ */
+export function draftDay(date: string, home: Club, away: Club, players: SharedPlayer[], recent: Set<string>, picks?: PickData): DraftDay {
+  const typed = typedDay(date, home, away, players, recent);
+  if (!picks) return typed;
+  const seed = hash(date);
+
+  const rapid = rapidPicks(players, picks.decoys, home, away, recent, seed);
+  const part1: DraftPart = rapid.length
+    ? {
+        format: "pick",
+        title: `${home.name} v ${away.name}`,
+        prompt: `Tap the player who's played for both ${home.name} and ${away.name} since 1992.`,
+        time: pickSeconds(rapid.length),
+        answers: pickAnswers(rapid),
+      }
+    : typed.part1;
+
+  // Every other day or so, by the date, so a rerun drafts the same.
+  if ((seed >>> 1) % 2) {
+    for (const club of seed % 2 ? [away, home] : [home, away]) {
+      const era = eraPicks(picks.spells.get(club.id) ?? [], club, recent, seed, picks.nowYear);
+      if (era.length)
+        return {
+          part1,
+          part2: { format: "era", title: "Era picks", prompt: `When were they at ${club.name}? Tap the right years.`, time: pickSeconds(era.length, true), answers: pickAnswers(era) },
+        };
+    }
+  }
+  return { part1, part2: typed.part2 };
+}
+
+/** Free Recall and In Order. */
+function typedDay(date: string, home: Club, away: Club, players: SharedPlayer[], recent: Set<string>): DraftDay {
   const answers = recallAnswers(players);
   const seed = hash(date);
   // Part 2 is about whichever club gives the better spread of signing years.
@@ -129,13 +297,20 @@ export function draftDay(date: string, home: Club, away: Club, players: SharedPl
   }
   return {
     part1: {
+      format: "free_recall",
       title: `${home.name} v ${away.name}`,
       prompt: `Name the ${answers.length} players who've played for both ${home.name} and ${away.name} since 1992.`,
       time: recallSeconds(answers.length),
-      answers,
+      answers: answers.map((a) => ({ answer_text: a.text, extra_aliases: a.aliases, position: null, reveal_note: null })),
     },
     part2: order.length
-      ? { title: "In order", prompt: `They all played for ${club.name}. Who joined first? Earliest at the top.`, time: 60, answers: order }
+      ? {
+          format: "in_order",
+          title: "In order",
+          prompt: `They all played for ${club.name}. Who joined first? Earliest at the top.`,
+          time: 60,
+          answers: order.map((a, i) => ({ answer_text: a.text, extra_aliases: [], position: i + 1, reveal_note: a.note })),
+        }
       : null,
   };
 }

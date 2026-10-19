@@ -37,6 +37,19 @@
       opacity: 1;
     }
   }
+
+  /* The next question slides in, like the next page of the programme. */
+  --animate-deal-in: deal-in 0.22s ease-out;
+  @keyframes deal-in {
+    from {
+      transform: translateX(24px);
+      opacity: 0;
+    }
+    to {
+      transform: none;
+      opacity: 1;
+    }
+  }
 }
 
 html {
