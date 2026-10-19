@@ -100,7 +100,7 @@ async function Hub() {
             </p>
           )}
         </section>
-        <aside className="mt-6 grid content-start gap-3 lg:mt-[22px]">
+        <aside className="mt-6 grid grid-cols-[minmax(0,1fr)] content-start gap-3 lg:mt-[22px]">
           <StartLeague />
           <JoinLeague />
           <Link href="/daily" className="block bg-navy p-3 text-center font-display text-[22px] text-white uppercase">

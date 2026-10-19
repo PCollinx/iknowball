@@ -28,7 +28,7 @@ function PlayerRow({ r }: { r: TableLine }) {
     <tr className="border-b border-track">
       <td className={`w-11 py-2 pl-1 font-display text-[22px] leading-none ${cell}`}>{r.position}</td>
       <td className={`max-w-0 truncate py-2 font-semibold ${cell}`}>
-        <span className="mr-1.5 inline-block w-[22px] align-[-6px]">
+        <span className={`mr-1.5 inline-block w-[22px] align-[-6px] ${r.mine ? "[filter:drop-shadow(0_0_1px_#fff)_drop-shadow(0_0_1px_#fff)]" : ""}`}>
           <ShirtBack kit={kitOf(r.club)} />
         </span>
         {r.mine ? "You" : r.name}
@@ -72,7 +72,7 @@ export function FanRanks({ rows }: { rows: FanbaseLine[] }) {
             <tr key={r.clubId} className="border-b border-track">
               <td className={`w-11 py-2 pl-1 font-display text-[22px] leading-none ${cell}`}>{r.position}</td>
               <td className={`max-w-0 truncate py-2 font-semibold ${cell}`}>
-                <span className="mr-1.5 inline-block w-[22px] align-[-6px]">
+                <span className={`mr-1.5 inline-block w-[22px] align-[-6px] ${r.mine ? "[filter:drop-shadow(0_0_1px_#fff)_drop-shadow(0_0_1px_#fff)]" : ""}`}>
                   <ShirtBack kit={kitOf(r.club)} />
                 </span>
                 {r.club.name}

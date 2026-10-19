@@ -3,13 +3,14 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { ChallengeButton } from "@/components/clash/ChallengeButton";
-import { ShirtBack, ROYAL_KIT } from "@/components/daily/ShirtBack";
+import { ShirtBack, ROYAL_KIT, shirtName } from "@/components/daily/ShirtBack";
 import { JoinButton, JoinLeague } from "@/components/league/Forms";
 import { LeagueLoading, LeagueMasthead } from "@/components/league/Masthead";
 import { WeekTable } from "@/components/league/WeekTable";
 import { weekDay, weekLabel } from "@/components/league/format";
 import { publicEnv } from "@/lib/env";
-import { getLeagueView, LEAGUE_MAX, type League } from "@/lib/league/data";
+import { getLeagueView, LEAGUE_MAX, type League, type Player } from "@/lib/league/data";
+import { kitOf } from "@/lib/profile/club";
 import { leaveLeague } from "../actions";
 
 export const metadata: Metadata = {
@@ -56,6 +57,18 @@ function Invite({ league }: { league: League }) {
   );
 }
 
+function TeamSheet({ players }: { players: Player[] }) {
+  return (
+    <ul className="mt-4 grid grid-cols-4 gap-x-2 gap-y-3 sm:grid-cols-5" aria-label="Team sheet">
+      {players.map((p) => (
+        <li key={p.userId}>
+          <ShirtBack kit={kitOf(p.club)} name={shirtName(p.name)} lettering="tag" />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 // Reads the session and the week, so it renders per request.
 async function LeagueScreen({ params, searchParams }: { params: Params; searchParams: Search }) {
   await connection();
@@ -84,8 +97,9 @@ async function LeagueScreen({ params, searchParams }: { params: Params; searchPa
         <span className="label mt-5 block text-royal">You&apos;re invited</span>
         <h1 className="mt-1 font-display text-[56px] leading-[0.9] break-words uppercase">{view.league.name}</h1>
         <p className="mt-2 text-lg">
-          {view.members} {view.members === 1 ? "player" : "players"} on the team sheet. Think you know ball? Prove it every week.
+          {view.members.length} {view.members.length === 1 ? "player" : "players"} on the team sheet. Think you know ball? Prove it every week.
         </p>
+        <TeamSheet players={view.members} />
         <div className="mt-5">
           {view.full ? (
             <p className="border-l-[3px] border-red-card pl-3 font-semibold text-red-card">This league is full: {LEAGUE_MAX} players is the most.</p>
@@ -98,7 +112,7 @@ async function LeagueScreen({ params, searchParams }: { params: Params; searchPa
     );
   }
 
-  const { league, week, rows, owner } = view;
+  const { league, week, rows } = view;
   const fresh = search.new === "1";
   return (
     <main className="mx-auto min-h-dvh max-w-[560px] px-4 pb-10 lg:max-w-[1040px]">
@@ -117,7 +131,7 @@ async function LeagueScreen({ params, searchParams }: { params: Params; searchPa
           </Link>
         </section>
         <aside className="mt-7 lg:mt-[22px]">
-          {(fresh || owner || rows.length < LEAGUE_MAX) && <Invite league={league} />}
+          {rows.length < LEAGUE_MAX && <Invite league={league} />}
           <span className="label mt-3 block">
             Team sheet · {rows.length} of {LEAGUE_MAX}
           </span>

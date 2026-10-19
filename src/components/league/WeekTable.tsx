@@ -19,7 +19,7 @@ export function WeekTable({ rows, today, cut = 3 }: Props) {
       <table className="w-full table-fixed border-collapse tabular-nums">
         <thead>
           <tr className="border-b-2 border-navy">
-            <th className="label w-7 py-1.5 text-left text-[10px] text-navy/60 sm:w-10" />
+            <th className="label w-8 py-1.5 text-left text-[10px] text-navy/60 sm:w-11" />
             <th className="label py-1.5 text-left text-[10px] text-navy/60">Player</th>
             {DAY_HEADS.map((d, i) => (
               <th key={i} className={`label w-[22px] py-1.5 text-center text-[10px] text-navy/60 sm:w-9 ${i === today ? "bg-mist" : ""}`}>
@@ -38,9 +38,9 @@ export function WeekTable({ rows, today, cut = 3 }: Props) {
                 key={r.userId}
                 className={`${r.mine ? "bg-royal text-white" : ""} ${cutHere ? "border-b-2 border-dashed border-red-card" : r.mine ? "" : "border-b border-track"}`}
               >
-                <td className="py-1.5 font-display text-[22px] leading-none sm:text-[26px]">{r.points > 0 ? r.position : "–"}</td>
+                <td className="py-1.5 pl-1 font-display text-[22px] leading-none sm:pl-1.5 sm:text-[26px]">{r.points > 0 ? r.position : "–"}</td>
                 <td className="truncate py-1.5 pr-1 text-sm font-semibold sm:text-base">
-                  <span className="mr-1.5 inline-block w-[18px] align-[-5px] sm:w-6 sm:align-[-7px]">
+                  <span className={`mr-1.5 inline-block w-[18px] align-[-5px] sm:w-6 sm:align-[-7px] ${r.mine ? "[filter:drop-shadow(0_0_1px_#fff)_drop-shadow(0_0_1px_#fff)]" : ""}`}>
                     <ShirtBack kit={kitOf(r.club)} />
                   </span>
                   {r.mine ? "You" : r.name}
@@ -58,7 +58,7 @@ export function WeekTable({ rows, today, cut = 3 }: Props) {
                     </td>
                   );
                 })}
-                <td className="py-1.5 text-right font-display text-[24px] leading-none sm:text-[30px]">{r.points}</td>
+                <td className="py-1.5 pr-1 text-right font-display text-[24px] leading-none sm:pr-1.5 sm:text-[30px]">{r.points}</td>
               </tr>
             );
           })}

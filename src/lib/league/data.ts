@@ -114,7 +114,7 @@ export async function leagueByCode(code: string): Promise<League | null> {
 
 export type LeagueView =
   | { kind: "missing" }
-  | { kind: "invite"; league: League; members: number; full: boolean }
+  | { kind: "invite"; league: League; members: Player[]; full: boolean }
   | { kind: "table"; league: League; week: Week; rows: TableLine[]; owner: boolean };
 
 /** A league's page: its table for members, an invite to join for anyone else. */
@@ -123,7 +123,7 @@ export async function getLeagueView(code: string): Promise<LeagueView> {
   if (!league) return { kind: "missing" };
   const week = currentWeek();
   const rows = await membersTable(league.id, week, me);
-  if (!me || !rows.some((r) => r.userId === me)) return { kind: "invite", league, members: rows.length, full: rows.length >= LEAGUE_MAX };
+  if (!me || !rows.some((r) => r.userId === me)) return { kind: "invite", league, members: rows.map(({ userId, name, club }) => ({ userId, name, club })), full: rows.length >= LEAGUE_MAX };
   return { kind: "table", league, week, rows, owner: league.owner_id === me };
 }
 
