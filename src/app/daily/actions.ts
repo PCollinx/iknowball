@@ -6,9 +6,8 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { gameDate } from "@/lib/time";
 import {
+  cachedAnswerKeys,
   currentUserId,
-  foundAnswerIds,
-  getAnswerKeys,
   getAnswers,
   getAttempt,
   getDaily,
@@ -71,43 +70,53 @@ export type GuessResult =
   | { status: "wrong" }
   | { status: "closed" };
 
-/** Checks one Free Recall guess against the answer key. */
+/** Checks one Free Recall guess against the answer key. Built for speed, since
+ * the player is racing the clock: one read for the attempt, its Daily and its
+ * guesses so far, the answer key from the server's cache, and both writes at once. */
 export async function submitGuess(attemptId: number, input: string): Promise<GuessResult> {
   const parsed = z.object({ attemptId: id, input: z.string().trim().min(1).max(60) }).safeParse({ attemptId, input });
   if (!parsed.success) return { status: "wrong" };
   const userId = await currentUserId();
   if (!userId) return { status: "closed" };
-  const attempt = await getAttempt(parsed.data.attemptId, userId);
-  if (!attempt || !isOpen(attempt)) return { status: "closed" };
-  const daily = await getDaily(attempt.daily_id);
-  if (!daily || daily.format !== "free_recall") return { status: "closed" };
 
   const admin = createAdminClient();
-  const { count } = await admin
-    .from("attempt_guesses")
-    .select("id", { count: "exact", head: true })
-    .eq("attempt_id", attempt.id);
-  if ((count ?? 0) >= MAX_GUESSES) return { status: "closed" };
+  const { data: row } = await admin
+    .from("attempts")
+    .select("*, dailies!inner(format), attempt_guesses(id, answer_id)")
+    .eq("id", parsed.data.attemptId)
+    .eq("user_id", userId)
+    .order("id", { referencedTable: "attempt_guesses" })
+    .maybeSingle();
+  if (!row) return { status: "closed" };
+  const { dailies, attempt_guesses: guesses, ...attempt } = row;
+  if (!isOpen(attempt) || dailies.format !== "free_recall") return { status: "closed" };
+  if (guesses.length >= MAX_GUESSES) return { status: "closed" };
 
-  const answers = await getAnswers(daily.id);
-  const [keys, found] = await Promise.all([getAnswerKeys(answers), foundAnswerIds(attempt.id)]);
+  const { answers, keys } = await cachedAnswerKeys(attempt.daily_id);
+  const found = [...new Set((guesses as { answer_id: number | null }[]).map((g) => g.answer_id).filter((x) => x !== null))];
   const matched = matchAnswer(parsed.data.input, keys);
-  await admin.from("attempt_guesses").insert({ attempt_id: attempt.id, raw_input: parsed.data.input, answer_id: matched });
+  const logGuess = admin.from("attempt_guesses").insert({ attempt_id: attempt.id, raw_input: parsed.data.input, answer_id: matched });
 
-  if (matched === null) return { status: "wrong" };
+  if (matched === null || found.includes(matched)) {
+    await logGuess;
+    if (matched === null) return { status: "wrong" };
+    return { status: "duplicate", text: answers.find((a) => a.id === matched)!.answer_text };
+  }
+
   const text = answers.find((a) => a.id === matched)!.answer_text;
-  if (found.includes(matched)) return { status: "duplicate", text };
-
   const total = found.length + 1;
   const done = total >= answers.length;
-  await admin
-    .from("attempts")
-    .update({
-      correct_count: total,
-      score: partScore("free_recall", total),
-      ...(done ? { submitted_at: new Date().toISOString() } : {}),
-    })
-    .eq("id", attempt.id);
+  await Promise.all([
+    logGuess,
+    admin
+      .from("attempts")
+      .update({
+        correct_count: total,
+        score: partScore("free_recall", total),
+        ...(done ? { submitted_at: new Date().toISOString() } : {}),
+      })
+      .eq("id", attempt.id),
+  ]);
   return { status: "correct", id: matched, text, found: total, done };
 }
 

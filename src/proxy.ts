@@ -18,7 +18,9 @@ export async function proxy(request: NextRequest) {
       },
     },
   });
-  await supabase.auth.getUser();
+  // Verifies the token locally (refreshing it when it has expired) rather than
+  // asking Supabase on every request.
+  await supabase.auth.getClaims();
   return response;
 }
 

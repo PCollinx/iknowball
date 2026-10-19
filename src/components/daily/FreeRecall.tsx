@@ -33,7 +33,8 @@ export function FreeRecall(props: Props) {
   const [fresh, setFresh] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<Feedback>(null);
   const [closing, startClosing] = useTransition();
-  const [, startGuess] = useTransition();
+  const [checking, startGuess] = useTransition();
+  const [pending, setPending] = useState("");
   const input = useRef<HTMLInputElement>(null);
 
   const close = () => startClosing(() => endPart(props.attemptId));
@@ -43,6 +44,8 @@ export function FreeRecall(props: Props) {
     const value = String(formData.get("guess") ?? "").trim();
     if (!value || closing) return;
     input.current?.focus();
+    // Say at once what's being checked, so the box never looks stuck.
+    setPending(value);
     startGuess(async () => {
       const r = await submitGuess(props.attemptId, value);
       if (r.status === "correct") {
@@ -132,7 +135,7 @@ export function FreeRecall(props: Props) {
           role="status"
           className={`min-h-[22px] text-[15px] font-semibold ${feedback?.tone === "ok" ? "text-royal" : feedback?.tone === "no" ? "text-red-card" : "text-navy/70"}`}
         >
-          {over ? "Full time on this part." : feedback?.text}
+          {over ? "Full time on this part." : checking ? `Checking ${pending}…` : feedback?.text}
         </p>
         <div>
           <button
