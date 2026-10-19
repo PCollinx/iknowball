@@ -56,9 +56,12 @@ export const currentUser = cache(async (): Promise<User | null> => {
   return data.user ?? null;
 });
 
-export async function currentUserId(): Promise<string | null> {
-  return (await currentUser())?.id ?? null;
-}
+/** The signed-in player's id, from the session token verified on this server
+ * (no call to Supabase), so answering a question stays fast. */
+export const currentUserId = cache(async (): Promise<string | null> => {
+  const { data } = await (await createClient()).auth.getClaims();
+  return data?.claims.sub ?? null;
+});
 
 export async function todaysParts(): Promise<DailyRow[]> {
   const { data, error } = await createAdminClient()
@@ -118,6 +121,23 @@ export async function getAnswerKeys(answers: AnswerRow[]): Promise<AnswerKeys[]>
       aliases: [...a.extra_aliases, ...(a.player_id ? aliases.get(a.player_id) ?? [] : [])],
     })),
   );
+}
+
+// Answer keys don't change once a part is under way (the maker locks a part as
+// soon as anyone starts it), so each server keeps them for a while instead of
+// reading three tables on every guess.
+const KEY_TTL_MS = 10 * 60 * 1000;
+const keyCache = new Map<number, { at: number; answers: AnswerRow[]; keys: AnswerKeys[] }>();
+
+/** The answers and their match keys for a Daily, kept for a few minutes. */
+export async function cachedAnswerKeys(dailyId: number): Promise<{ answers: AnswerRow[]; keys: AnswerKeys[] }> {
+  const hit = keyCache.get(dailyId);
+  if (hit && Date.now() - hit.at < KEY_TTL_MS) return hit;
+  const answers = await getAnswers(dailyId);
+  const entry = { at: Date.now(), answers, keys: await getAnswerKeys(answers) };
+  if (keyCache.size > 20) keyCache.clear();
+  keyCache.set(dailyId, entry);
+  return entry;
 }
 
 export async function getAttempt(attemptId: number, userId: string): Promise<AttemptRow | null> {
