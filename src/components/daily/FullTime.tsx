@@ -9,7 +9,7 @@ import { replayToday } from "@/app/daily/actions";
 import { RecallGrid } from "./RecallGrid";
 import { ShareButtons } from "./ShareButtons";
 import { ShareCard } from "./ShareCard";
-import { FORMAT_NAME } from "./formats";
+import { FORMAT_NAME, ordinal } from "./formats";
 import { shareCardData, stampText } from "./share";
 import { ShirtBack, shirtName, type Kit } from "./ShirtBack";
 
@@ -20,6 +20,9 @@ type Props = {
   order: OrderReveal | null;
   points: number;
   topPercent: number | null;
+  /** Your place in today's table, and how many are in it. */
+  position: number | null;
+  players: number;
   siteUrl: string;
   /** The clubs to pick from when "Who do you support?" hasn't been asked yet. */
   clubChoices: Club[] | null;
@@ -40,7 +43,7 @@ function banter(recall: RecallReveal): string {
   return `${short} missing. ${shirtName(recall.missed[0])} was right there.`;
 }
 
-export function FullTime({ issue, playDate, recall, order, points, topPercent, siteUrl, clubChoices, fanOf, kit, myKit, testSite = false }: Props) {
+export function FullTime({ issue, playDate, recall, order, points, topPercent, position, players, siteUrl, clubChoices, fanOf, kit, myKit, testSite = false }: Props) {
   const found = recall?.found.length ?? 0;
   const total = recall ? found + recall.missed.length : 0;
   const card = recall ? shareCardData({ issue, playDate, recall, order, points, topPercent, siteUrl, fanOf, kit }) : null;
@@ -91,6 +94,17 @@ export function FullTime({ issue, playDate, recall, order, points, topPercent, s
             <ClubPicker clubs={clubChoices} current={null} mode="prompt" />
           </div>
         )}
+        <Link href="/daily/table" className="group mt-4 flex items-center gap-3 border-y-[3px] border-double border-navy py-2.5">
+          <span className="min-w-0 flex-1">
+            <span className="block font-display text-[32px] leading-[0.9] uppercase">Today&apos;s table</span>
+            <span className="block text-sm text-navy/70">
+              {position ? `You're ${ordinal(position)} of ${players}. Ties go to less time used.` : "Everyone's day score, best first."}
+            </span>
+          </span>
+          <span aria-hidden="true" className="font-display text-[32px] text-royal transition-transform duration-150 group-hover:translate-x-1">
+            →
+          </span>
+        </Link>
         <Link href="/profile" className="group mt-4 flex items-center gap-3 bg-navy py-2 pr-4 pl-2 text-white">
           <span className="w-14 shrink-0 transition-transform duration-150 group-hover:-translate-y-0.5 group-hover:-rotate-3">
             <ShirtBack kit={myKit} lettering="tag" />
@@ -149,8 +163,8 @@ export function FullTime({ issue, playDate, recall, order, points, topPercent, s
               </tr>
             )}
             <tr className="border-b border-track">
-              <td className="py-2">Points</td>
-              <td className="py-2 text-right font-display text-2xl">{points}</td>
+              <td className="py-2">Day score</td>
+              <td className="py-2 text-right font-display text-2xl">{points} / 100</td>
             </tr>
           </tbody>
         </table>

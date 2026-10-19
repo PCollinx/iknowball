@@ -1,3 +1,4 @@
+import { partScore } from "@/lib/daily/score";
 import { addDays } from "@/lib/time";
 
 // What the profile page shows, worked out from a player's finished attempts.
@@ -21,17 +22,13 @@ export function tierFor(rating: number): TierName {
   return TIERS.findLast((t) => rating >= t.from)!.name;
 }
 
-/** Most points one part can give a day: Part 1 up to 60, Part 2 up to 40. */
-export const PART_MAX = { 1: 60, 2: 40 } as Record<number, number>;
-
 export type PlayedPart = { playDate: string; part: number; correct: number; answerCount: number };
 
 /** One day's score out of 100, by share of answers right in each part. */
 export function dayScores(parts: PlayedPart[]): Map<string, number> {
   const days = new Map<string, number>();
   for (const p of parts) {
-    const share = p.answerCount > 0 ? Math.min(1, Math.max(0, p.correct) / p.answerCount) : 0;
-    days.set(p.playDate, (days.get(p.playDate) ?? 0) + Math.round((PART_MAX[p.part] ?? 0) * share));
+    days.set(p.playDate, (days.get(p.playDate) ?? 0) + partScore(p.part, p.correct, p.answerCount));
   }
   return days;
 }

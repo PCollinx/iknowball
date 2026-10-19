@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { partScore, seededShuffle, topPercent } from "./score";
+import { partScore, rankTable, seededShuffle, topPercent } from "./score";
 
 describe("partScore", () => {
-  it("scores correct answers per format", () => {
-    expect(partScore("free_recall", 12)).toBe(480);
-    expect(partScore("in_order", 4)).toBe(120);
-    expect(partScore("in_order", -1)).toBe(0);
+  it("scores a part by its share of answers right", () => {
+    expect(partScore(1, 12, 12)).toBe(60);
+    expect(partScore(1, 5, 10)).toBe(30);
+    expect(partScore(2, 4, 6)).toBe(27);
+    expect(partScore(2, -1, 6)).toBe(0);
+    expect(partScore(2, 9, 6)).toBe(40);
+    expect(partScore(1, 0, 0)).toBe(0);
   });
 });
 
@@ -28,5 +31,17 @@ describe("seededShuffle", () => {
     for (let seed = 0; seed < 200; seed++) {
       expect(seededShuffle(items, seed).map((x) => x.id)).not.toEqual([1, 2, 3, 4, 5, 6]);
     }
+  });
+});
+
+describe("rankTable", () => {
+  it("ranks by score, then less time, and shares positions on a dead heat", () => {
+    const table = rankTable([
+      { userId: "a", score: 70, seconds: 90 },
+      { userId: "b", score: 85, seconds: 120 },
+      { userId: "c", score: 70, seconds: 60 },
+      { userId: "d", score: 70, seconds: 90 },
+    ]);
+    expect(table.map((e) => `${e.userId}${e.position}`)).toEqual(["b1", "c2", "a3", "d3"]);
   });
 });

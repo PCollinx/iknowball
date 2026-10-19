@@ -89,7 +89,7 @@ Replanned 16 Oct 2026 because the build is ahead (plan doc: https://claude.ai/co
 - **Matchweek score, best 5 of 7**: each Daily day scores 0 to 100 (Part 1 up to 60, Part 2 up to 40, by share of answers right, so a day with more answers weighs the same). A week counts your best 5 days, max 500. Clash adds up to 100 a week from your best 3 sprints once it launches. Ties go to less total time on the counted days.
 - Predictions, when they come, get a fixed weekly pot split across however many matches there are, so double-round weeks never outweigh normal ones.
 - The all-time rating moves once a week from your global weekly finish; a missed week costs nothing.
-- This replaces the provisional `POINTS_PER_CORRECT` in `src/lib/daily/score.ts` when The League is built.
+- Built (19 Oct 2026): the day score is `partScore()` in `src/lib/daily/score.ts`, shown at full time and on the share card, and **today's table** at `/daily/table` (`dayTable()` in `src/lib/daily/data.ts`; guests without a username show as "Guest" plus 4 characters of their id). Scores are worked out from `correct_count` and `answer_count`, not the stored `attempts.score`, so older attempts rank on the same scale.
 
 ## Profile and favourite club (decided 16 Oct 2026)
 
