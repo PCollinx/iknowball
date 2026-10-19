@@ -15,7 +15,7 @@ import { leaveLeague } from "../actions";
 
 export const metadata: Metadata = {
   title: "The League · iKnowBall",
-  description: "Join my league on iKnowBall. Best 5 Dailies a week, out of 500.",
+  description: "Join my league on iKnowBall. Best 5 Dailies plus best 3 Clash sprints a week, out of 600.",
 };
 
 type Params = Promise<{ code: string }>;
@@ -32,7 +32,7 @@ export default function LeagueTablePage({ params, searchParams }: { params: Para
 function Rules() {
   return (
     <ul className="mt-3 grid gap-1.5 text-sm">
-      <li className="border-l-[3px] border-teal pl-3">Scored Monday to Sunday. Your best 5 Dailies count, out of 500.</li>
+      <li className="border-l-[3px] border-teal pl-3">Scored Monday to Sunday: your best 5 Dailies (out of 500) plus your best 3 Clash sprints (up to 100).</li>
       <li className="border-l-[3px] border-teal pl-3">Join any day: the week still counts your best 5 from the days you play.</li>
       <li className="border-l-[3px] border-teal pl-3">Ties go to whoever used less time on their counted days.</li>
     </ul>
@@ -52,7 +52,7 @@ function Invite({ league }: { league: League }) {
         ))}
       </div>
       <p className="my-2.5 border-2 border-dashed border-royal p-2.5 font-semibold break-all text-royal">{url}</p>
-      <ChallengeButton url={url} text={`Join my league "${league.name}" on iKnowBall. Best 5 Dailies a week, out of 500.`} label="Send the invite" />
+      <ChallengeButton url={url} text={`Join my league "${league.name}" on iKnowBall. Best 5 Dailies plus best 3 Clash sprints a week, out of 600.`} label="Send the invite" />
     </section>
   );
 }
@@ -121,7 +121,7 @@ async function LeagueScreen({ params, searchParams }: { params: Params; searchPa
         <section className="min-w-0">
           <h1 className="mt-4 font-display text-[52px] leading-[0.9] break-words uppercase">{league.name}</h1>
           <p className="mt-1.5 text-navy/75">
-            {fresh ? "You're in. Get your mates on the team sheet." : `${weekLabel(week)}. Best 5 of 7 count.`}
+            {fresh ? "You're in. Get your mates on the team sheet." : `${weekLabel(week)}. Best 5 Dailies and 3 sprints count.`}
           </p>
           <div className="mt-4">
             <WeekTable rows={rows} today={weekDay(week)} cut={rows.length > 4 ? 3 : 0} />

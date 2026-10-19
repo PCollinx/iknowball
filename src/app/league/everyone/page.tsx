@@ -9,7 +9,7 @@ import { getGlobalTable } from "@/lib/league/data";
 
 export const metadata: Metadata = {
   title: "Everyone · The League · iKnowBall",
-  description: "This week's global table. Best 5 Dailies count.",
+  description: "This week's global table. Best 5 Dailies and 3 Clash sprints count.",
 };
 
 export default function EveryonePage() {
@@ -31,7 +31,7 @@ async function Everyone() {
         Every<span className="text-royal">one</span>
       </h1>
       <p className="mt-1.5 text-navy/75">
-        {players.toLocaleString("en-GB")} {players === 1 ? "player" : "players"} this week. Best 5 days count.
+        {players.toLocaleString("en-GB")} {players === 1 ? "player" : "players"} this week. Best 5 Dailies and 3 Clash sprints count.
       </p>
       <RankToggle on="players" />
       {top.length ? (

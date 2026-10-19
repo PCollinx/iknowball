@@ -26,6 +26,9 @@ export function WeekTable({ rows, today, cut = 3 }: Props) {
                 {d}
               </th>
             ))}
+            <th className="label w-[26px] border-l border-track py-1.5 text-center text-[10px] text-navy/60 sm:w-11" title="Clash: best 3 sprints">
+              Cl
+            </th>
             <th className="label w-11 py-1.5 text-right text-[10px] text-navy/60 sm:w-16">Pts</th>
           </tr>
         </thead>
@@ -58,6 +61,13 @@ export function WeekTable({ rows, today, cut = 3 }: Props) {
                     </td>
                   );
                 })}
+                <td
+                  className={`border-l py-1.5 text-center font-display text-[13px] leading-none sm:text-base ${
+                    r.mine ? "border-white/30" : "border-track"
+                  } ${r.clash ? (r.mine ? "text-teal-light" : "text-teal") : r.mine ? "text-white/40" : "text-track"}`}
+                >
+                  {r.clash || "–"}
+                </td>
                 <td className="py-1.5 pr-1 text-right font-display text-[24px] leading-none sm:pr-1.5 sm:text-[30px]">{r.points}</td>
               </tr>
             );
@@ -73,6 +83,9 @@ export function WeekTable({ rows, today, cut = 3 }: Props) {
         </span>
         <span>
           <b className="font-display text-sm text-track">–</b> not played
+        </span>
+        <span>
+          <b className="font-display text-sm text-teal">Cl</b> Clash, best 3 sprints
         </span>
         {cut > 0 && rows.length > cut && (
           <span>

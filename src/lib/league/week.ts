@@ -7,6 +7,12 @@ import { addDays } from "@/lib/time";
 
 /** Days in a week that count. */
 export const COUNTED_DAYS = 5;
+/** Clash sprints in a week that count, and the most they add together. */
+export const COUNTED_SPRINTS = 3;
+export const CLASH_MAX = 100;
+
+/** One Clash sprint started in the week: its right answers. */
+export type WeekSprint = { userId: string; right: number };
 
 /** One finished part of a Daily, as the week reads it. */
 export type WeekPart = {
@@ -24,14 +30,17 @@ export type WeekRow = {
   days: (number | null)[];
   /** Indexes into days of the ones that count. */
   counted: number[];
+  /** Best 3 Clash sprints' right answers, at most CLASH_MAX. */
+  clash: number;
+  /** Daily days plus Clash. */
   points: number;
   /** Seconds used on the counted days, the tie-break. */
   seconds: number;
   position: number;
 };
 
-/** Every player's week from their finished parts, best first. */
-export function weekTable(parts: WeekPart[], startsOn: string): WeekRow[] {
+/** Every player's week from their finished parts and Clash sprints, best first. */
+export function weekTable(parts: WeekPart[], startsOn: string, sprints: WeekSprint[] = []): WeekRow[] {
   const dates = Array.from({ length: 7 }, (_, i) => addDays(startsOn, i));
   const byUser = new Map<string, { score: (number | null)[]; secs: number[] }>();
   for (const p of parts) {
@@ -41,6 +50,11 @@ export function weekTable(parts: WeekPart[], startsOn: string): WeekRow[] {
     u.score[day] = (u.score[day] ?? 0) + partScore(p.part, p.correct, p.answerCount);
     u.secs[day] += Math.max(0, p.seconds);
     byUser.set(p.userId, u);
+  }
+  const rights = new Map<string, number[]>();
+  for (const sp of sprints) {
+    rights.set(sp.userId, [...(rights.get(sp.userId) ?? []), Math.max(0, sp.right)]);
+    if (!byUser.has(sp.userId)) byUser.set(sp.userId, { score: Array(7).fill(null), secs: Array(7).fill(0) });
   }
 
   const rows = [...byUser].map(([userId, u]) => {
@@ -52,11 +66,14 @@ export function weekTable(parts: WeekPart[], startsOn: string): WeekRow[] {
       .slice(0, COUNTED_DAYS)
       .map((d) => d.i)
       .sort((a, b) => a - b);
+    const best = (rights.get(userId) ?? []).sort((a, b) => b - a).slice(0, COUNTED_SPRINTS);
+    const clash = Math.min(CLASH_MAX, best.reduce((sum, r) => sum + r, 0));
     return {
       userId,
       days: u.score,
       counted,
-      points: counted.reduce((sum, i) => sum + (u.score[i] ?? 0), 0),
+      clash,
+      points: counted.reduce((sum, i) => sum + (u.score[i] ?? 0), 0) + clash,
       seconds: counted.reduce((sum, i) => sum + u.secs[i], 0),
     };
   });

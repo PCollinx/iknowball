@@ -70,3 +70,20 @@ describe("fanbaseTable", () => {
     ]);
   });
 });
+
+describe("weekTable with Clash", () => {
+  it("adds the best 3 sprints, capped at 100", () => {
+    const sprints = [12, 30, 25, 40, 5].map((right) => ({ userId: "a", right }));
+    const [row] = weekTable([part("a", 0, 1, 10)], MON, sprints);
+    expect(row.clash).toBe(95);
+    expect(row.points).toBe(60 + 95);
+    const [capped] = weekTable([], MON, [40, 40, 40].map((right) => ({ userId: "b", right })));
+    expect(capped.clash).toBe(100);
+  });
+
+  it("puts a sprint-only player on the table", () => {
+    const rows = weekTable([part("a", 0, 1, 1)], MON, [{ userId: "b", right: 20 }]);
+    expect(rows.map((r) => [r.userId, r.points])).toEqual([["b", 20], ["a", 6]]);
+    expect(rows[0].days).toEqual(Array(7).fill(null));
+  });
+});

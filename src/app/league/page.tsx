@@ -10,7 +10,7 @@ import { getHub } from "@/lib/league/data";
 
 export const metadata: Metadata = {
   title: "The League · iKnowBall",
-  description: "Mini-leagues with your mates, scored every matchweek. Best 5 Dailies count.",
+  description: "Mini-leagues with your mates, scored every matchweek. Best 5 Dailies and 3 Clash sprints count.",
 };
 
 export default function LeaguePage() {
@@ -56,7 +56,7 @@ async function Hub() {
           <h1 className="mt-4 font-display text-[56px] leading-[0.9] uppercase">
             Your <span className="text-royal">leagues</span>
           </h1>
-          <p className="mt-1.5 text-navy/75">This week&apos;s places. Your best 5 Dailies count, and tables lock Sunday at midnight.</p>
+          <p className="mt-1.5 text-navy/75">This week&apos;s places. Your best 5 Dailies and best 3 Clash sprints count, and tables lock Sunday at midnight.</p>
           <ul className="mt-2">
             {hub.leagues.map((l) => (
               <Line

@@ -31,7 +31,7 @@ async function Fans() {
       <h1 className="mt-4 font-display text-[56px] leading-[0.9] uppercase">
         Fan<span className="text-royal">base</span>
       </h1>
-      <p className="mt-1.5 text-navy/75">Clubs by their fans&apos; average week, out of 500. A club needs {minFans} fans playing to make the table.</p>
+      <p className="mt-1.5 text-navy/75">Clubs by their fans&apos; average week, out of 600. A club needs {minFans} fans playing to make the table.</p>
       <RankToggle on="fans" />
       {rows.length ? (
         <FanRanks rows={rows} />

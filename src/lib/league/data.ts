@@ -3,8 +3,8 @@ import { currentUserId, guestName } from "@/lib/daily/data";
 import type { Club } from "@/lib/profile/club";
 import { clubsByIds } from "@/lib/profile/data";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { gameDate, matchweekBounds } from "@/lib/time";
-import { fanbaseTable, weekTable, type FanbaseRow, type WeekPart, type WeekRow } from "./week";
+import { addDays, gameDate, gameDateClosesAt, matchweekBounds } from "@/lib/time";
+import { fanbaseTable, weekTable, type FanbaseRow, type WeekPart, type WeekRow, type WeekSprint } from "./week";
 
 // The League reads straight from finished attempts: a past day can't change
 // once the Daily has closed, so a week's table is final at Sunday midnight
@@ -70,6 +70,35 @@ async function weekParts(week: Week, userIds?: string[]): Promise<(WeekPart & { 
   }));
 }
 
+/** Clash sprints started in the week, for everyone or for some players. */
+async function weekSprints(week: Week, userIds?: string[]): Promise<(WeekSprint & { clubId: number | null })[]> {
+  if (userIds && !userIds.length) return [];
+  const from = gameDateClosesAt(addDays(week.startsOn, -1)).toISOString();
+  const to = gameDateClosesAt(week.endsOn).toISOString();
+  const rows: { user_id: string; right_count: number; profiles: { favourite_club_id: number | null } | null }[] = [];
+  for (let start = 0; ; start += PAGE) {
+    let q = createAdminClient()
+      .from("clash_runs")
+      .select("id, user_id, right_count, profiles(favourite_club_id)")
+      .gte("started_at", from)
+      .lt("started_at", to)
+      .order("id")
+      .range(start, start + PAGE - 1);
+    if (userIds) q = q.in("user_id", userIds);
+    const { data, error } = await q;
+    if (error) throw error;
+    rows.push(...((data ?? []) as unknown as typeof rows));
+    if (!data || data.length < PAGE) break;
+  }
+  return rows.map((r) => ({ userId: r.user_id, right: r.right_count, clubId: r.profiles?.favourite_club_id ?? null }));
+}
+
+/** Everyone's week: Daily days plus Clash, with each player's club. */
+async function everyoneWeek(week: Week) {
+  const [parts, sprints] = await Promise.all([weekParts(week), weekSprints(week)]);
+  return { rows: weekTable(parts, week.startsOn, sprints), clubOf: new Map([...sprints, ...parts].map((p) => [p.userId, p.clubId])) };
+}
+
 /** Names and clubs, for the shirts on a table. */
 async function players(userIds: string[]): Promise<Map<string, Player>> {
   if (!userIds.length) return new Map();
@@ -94,14 +123,14 @@ async function membersTable(leagueId: number, week: Week, me: string | null): Pr
   const { data, error } = await createAdminClient().from("league_members").select("user_id").eq("league_id", leagueId);
   if (error) throw error;
   const ids = (data ?? []).map((m) => m.user_id);
-  const [parts, people] = await Promise.all([weekParts(week, ids), players(ids)]);
-  const rows = weekTable(parts, week.startsOn);
+  const [parts, sprints, people] = await Promise.all([weekParts(week, ids), weekSprints(week, ids), players(ids)]);
+  const rows = weekTable(parts, week.startsOn, sprints);
   const played = new Set(rows.map((r) => r.userId));
   const idle = ids.filter((id) => !played.has(id));
   const bottom = rows.length + 1;
   const all: WeekRow[] = [
     ...rows,
-    ...idle.map((userId) => ({ userId, days: Array(7).fill(null), counted: [], points: 0, seconds: 0, position: bottom })),
+    ...idle.map((userId) => ({ userId, days: Array(7).fill(null), counted: [], clash: 0, points: 0, seconds: 0, position: bottom })),
   ];
   return withPlayers(all, people, me).sort((a, b) => a.position - b.position || a.name.localeCompare(b.name));
 }
@@ -145,13 +174,11 @@ export async function getHub(): Promise<Hub> {
   const none = { week, leagues: [], everyone: { position: null, players: 0, points: 0 }, club: null, fanbase: { position: null, clubs: 0 } };
   if (!me) return none;
   const admin = createAdminClient();
-  const [{ data, error }, parts, people] = await Promise.all([
+  const [{ data, error }, { rows: everyone, clubOf }, people] = await Promise.all([
     admin.from("league_members").select("leagues(id, name, invite_code, owner_id)").eq("user_id", me).order("joined_at"),
-    weekParts(week),
+    everyoneWeek(week),
     players([me]),
   ]);
-  const everyone = weekTable(parts, week.startsOn);
-  const clubOf = new Map(parts.map((p) => [p.userId, p.clubId]));
   const fans = fanbaseTable(everyone.map((r) => ({ points: r.points, clubId: clubOf.get(r.userId) ?? null })), FANBASE_MIN);
   const club = people.get(me)?.club ?? null;
   if (error) throw error;
@@ -176,7 +203,7 @@ export async function getHub(): Promise<Hub> {
 /** Everyone who played this week: the top of the table plus your own row. */
 export async function getGlobalTable(): Promise<{ week: Week; top: TableLine[]; mine: TableLine | null; players: number }> {
   const [me, week] = [await currentUserId(), currentWeek()];
-  const rows = weekTable(await weekParts(week), week.startsOn);
+  const { rows } = await everyoneWeek(week);
   const myRow = rows.find((r) => r.userId === me) ?? null;
   const shown = rows.slice(0, GLOBAL_TOP);
   const people = await players([...new Set([...shown, ...(myRow ? [myRow] : [])].map((r) => r.userId))]);
@@ -189,9 +216,7 @@ export type FanbaseLine = FanbaseRow & { club: Club; mine: boolean };
 /** Clubs ranked by their fans' average week. */
 export async function getFanbaseTable(): Promise<{ week: Week; rows: FanbaseLine[]; myClub: Club | null; minFans: number }> {
   const [me, week] = [await currentUserId(), currentWeek()];
-  const parts = await weekParts(week);
-  const rows = weekTable(parts, week.startsOn);
-  const clubOf = new Map(parts.map((p) => [p.userId, p.clubId]));
+  const { rows, clubOf } = await everyoneWeek(week);
   const ranked = fanbaseTable(rows.map((r) => ({ points: r.points, clubId: clubOf.get(r.userId) ?? null })), FANBASE_MIN);
   const myClubId = me ? ((await players([me])).get(me)?.club?.id ?? null) : null;
   const clubs = await clubsByIds([...new Set([...ranked.map((r) => r.clubId), ...(myClubId ? [myClubId] : [])])]);
