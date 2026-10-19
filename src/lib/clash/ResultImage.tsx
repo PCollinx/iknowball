@@ -26,13 +26,13 @@ export function ResultImage({ d }: { d: ResultCardData }) {
             <span>KNOWBALL</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", fontSize: 2.4 * u, lineHeight: 1.35, ...label }}>
-            <span>{`Clash · Sprint · ${d.code}`}</span>
+            <span>{`Clash · Full time · ${d.code}`}</span>
             <span>{d.dateLabel}</span>
           </div>
         </div>
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 2.4 * u }}>
-          <span style={{ fontSize: 2.6 * u, ...label }}>{`Full time · ${d.statLabel} · 60 seconds`}</span>
+          <span style={{ fontSize: 2.6 * u, ...label }}>{`${d.statLabel} · 60 seconds`}</span>
           <div
             style={{
               display: "flex",
