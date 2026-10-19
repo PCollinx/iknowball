@@ -17,6 +17,7 @@ Project memory for Claude Code, carried over from the Claude project where the p
   - **Full time is the share card** (Collins, 19 Oct 2026): no separate result card. It shows the score, a red missed stamp, a 2rem rating tag at the top right, the shootout row and stats; "Share the card" sends `/clash/{CODE}/card`, the same screen as a 1080 × 1080 PNG (`src/lib/clash/ResultImage.tsx`).
   - **The League**: mini-leagues with invite codes, scored per PL matchweek (Mon to Sun), plus a global weekly table and the overall rating.
   - Predictions come after launch.
+- **Waitlist** (built 19 Oct 2026, public from Nov 1): the front page `/` until launch. "Think you know ball?", the tier ladder as shirts, the three pillars and a "Team sheet" form (email, name on your shirt, club, "bring your league" name and mates) whose shirt preview dresses as you type. Rows go to `public.waitlist` through `joinWaitlist` (`src/app/waitlist/actions.ts`, service role, honeypot field); you get your place in the queue on your own shirt. The sign-up count shows from 25. Test sites add links to the Daily and profile under the form.
 - Web app first, mobile-first, with its own desktop layout from about 1024px.
 - No Premier League branding or club crests. Player cards are code-generated shirt-back cards, never faces.
 
@@ -74,16 +75,15 @@ Project memory for Claude Code, carried over from the Claude project where the p
 
 ## Timeline
 
-Replanned 16 Oct 2026 because the build is ahead (plan doc: https://claude.ai/code/artifact/ddd3e7d2-6471-4dfa-845b-6b90ef603740):
+Replanned 16 Oct 2026 because the build is ahead, and on 19 Oct Collins moved Clash ahead of leagues (plan doc: https://claude.ai/code/artifact/ddd3e7d2-6471-4dfa-845b-6b90ef603740):
 
 - Done: setup (15 Oct); The Daily, the maker and Wikidata auto-drafts (15 to 16 Oct).
-- Oct 17 to 25: accounts (guest to Google/email-link sign-in), profile shirt, favourite club.
-- Oct 26 to Nov 1: Daily polish (server share-card images, best-5-of-7 day scores, daily leaderboard). Waitlist page Nov 1.
-- Nov 2 to 8: Highlightly fixture sync, leagues and rankings (a week earlier than first planned). Checkpoint Nov 8.
-- Nov 9 to 15: Clash solo sprint + async challenge links as a stretch goal for launch; PWA install. Nov 15 check decides whether Clash ships at launch or on 18 Dec.
-- Nov 16 to 25: closed beta. **Launch Fri 27 Nov 2026** (fallback 4 Dec; if the build slips, Clash drops back to 18 Dec first). Demo video recorded in the beta, published Thu 26 Nov on X and WhatsApp, pinned on the waitlist page.
+- Done by 19 Oct: accounts (guest to Google/email-link sign-in), profile shirt, favourite club; Daily polish (share-card images, day scores out of 100, today's table); the waitlist page (public Nov 1).
+- Nov 2 to 8: **Clash** solo sprint + async challenge links (Higher or Lower facts, 60 seconds). Ships at launch. Checkpoint Nov 8: if it isn't solid, it drops back to 18 Dec and leagues still start Nov 9.
+- Nov 9 to 15: Highlightly fixture sync, leagues and rankings, PWA install. Checkpoint Nov 15: a real league's week locks correctly before the beta.
+- Nov 16 to 25: closed beta. **Launch Fri 27 Nov 2026** with The Daily, Clash and The League (fallback 4 Dec; if the build slips, Clash drops back to 18 Dec first). Demo video recorded in the beta, published Thu 26 Nov on X and WhatsApp, pinned on the waitlist page.
 - Audience warm-up on X (added 16 Oct): Oct 19 to 31 teaser quizzes as shirt-back images, no name; Nov 1 reveal the name and waitlist; Nov 16 to 25 beta invites to the most engaged followers; Nov 26 demo video. Never post a question from an upcoming Daily. Needs a quick question-to-image export by Oct 19.
-- Rate mode (plus Clash if it missed launch): 18 Dec 2026. Native decision: 1 Mar 2027. Android: July 2027.
+- Rate mode: 18 Dec 2026 (plus Clash only if it missed launch). Native decision: 1 Mar 2027. Android: July 2027.
 
 ## Rating and scoring (decided 16 Oct 2026)
 
@@ -109,6 +109,6 @@ Replanned 16 Oct 2026 because the build is ahead (plan doc: https://claude.ai/co
 ## Open items
 
 - Whether to buy iknowball.com.
-- Clash at launch or 18 Dec: settled at the Nov 15 check.
+- Clash at launch: decided 19 Oct (built Nov 2 to 8, before leagues); the Nov 8 checkpoint is the fallback.
 - Switch Vercel to Pro ($20/mo) before launch: Hobby is non-commercial only.
 - Send auth emails through Resend SMTP (decided 18 Oct 2026): Supabase's built-in mailer allows only a few emails an hour ("email rate limit exceeded"). Dev first, live before the waitlist (Nov 1) and beta: verify playiknowball.com in Resend (DNS in Cloudflare), then Supabase > Authentication > Emails > SMTP (smtp.resend.com, port 465, user `resend`, API key as password, sender noreply@playiknowball.com), then raise the limit under Rate Limits.
