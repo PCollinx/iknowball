@@ -71,7 +71,7 @@ export type ProfileView = Supporter & {
   streak: number;
   weekScore: number;
   weekDays: number;
-  leagues: { id: number; name: string }[];
+  leagues: { id: number; name: string; invite_code: string }[];
 };
 
 type AttemptJoin = { correct_count: number; dailies: { play_date: string; part: number; answer_count: number } };
@@ -103,7 +103,7 @@ export async function getProfileView(userId: string): Promise<ProfileView> {
   const [row, days, leagues] = await Promise.all([
     profileRow(userId),
     playedDays(userId),
-    admin.from("league_members").select("leagues(id, name)").eq("user_id", userId),
+    admin.from("league_members").select("leagues(id, name, invite_code)").eq("user_id", userId),
   ]);
   const today = gameDate();
   const { startsOn, endsOn } = matchweekBounds(today);
@@ -119,9 +119,9 @@ export async function getProfileView(userId: string): Promise<ProfileView> {
     streak: streak(days.keys(), today),
     weekScore: bestFive(thisWeek),
     weekDays: thisWeek.length,
-    leagues: ((leagues.data ?? []) as unknown as { leagues: { id: number; name: string } | null }[])
+    leagues: ((leagues.data ?? []) as unknown as { leagues: { id: number; name: string; invite_code: string } | null }[])
       .map((m) => m.leagues)
-      .filter((l): l is { id: number; name: string } => l !== null),
+      .filter((l): l is { id: number; name: string; invite_code: string } => l !== null),
   };
 }
 

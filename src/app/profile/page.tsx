@@ -112,13 +112,21 @@ async function ProfileScreen({ searchParams }: { searchParams: SearchParams }) {
             <ul>
               {view.leagues.map((l) => (
                 <li key={l.id} className="border-b border-track py-2 font-display text-2xl uppercase">
-                  {l.name}
+                  <Link href={`/league/${l.invite_code}`} className="flex justify-between gap-2">
+                    <span className="truncate">{l.name}</span>
+                    <span aria-hidden="true" className="text-royal">
+                      →
+                    </span>
+                  </Link>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-navy/70">No leagues yet. Mini-leagues with your mates are coming soon.</p>
+            <p className="text-navy/70">No leagues yet. Start one and send the code to your mates.</p>
           )}
+          <Link href="/league" className="mt-2 inline-block font-semibold text-royal underline underline-offset-2">
+            The League
+          </Link>
         </Block>
 
         <Block title={guest ? "Keep your shirt" : "Account"}>
