@@ -108,6 +108,17 @@ export function FullTime({ issue, playDate, recall, order, points, topPercent, p
             →
           </span>
         </Link>
+        <Link href="/clash" className="group flex items-center gap-3 border-b-[3px] border-double border-navy py-2.5">
+          <span className="min-w-0 flex-1">
+            <span className="block font-display text-[32px] leading-[0.9] uppercase">
+              Try a <span className="text-royal">sprint</span>
+            </span>
+            <span className="block text-sm text-navy/70">Daily done. Sixty seconds of Higher or Lower in Clash while you wait for the next one.</span>
+          </span>
+          <span aria-hidden="true" className="font-display text-[32px] text-royal transition-transform duration-150 group-hover:translate-x-1">
+            →
+          </span>
+        </Link>
         <Link href="/profile" className="group mt-4 flex items-center gap-3 bg-navy py-2 pr-4 pl-2 text-white">
           <span className="relative w-14 shrink-0 transition-transform duration-150 group-hover:-translate-y-0.5 group-hover:-rotate-3">
             <ShirtBack kit={myKit} lettering="tag" />
