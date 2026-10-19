@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1325378820,
+    "round": "Regular Season - 7",
+    "date": "2026-10-19T19:00:00.000Z",
+    "homeTeam": {
+      "id": 40781,
+      "name": "Tottenham"
+    },
+    "awayTeam": {
+      "id": 1146230,
+      "name": "Coventry"
+    },
+    "state": {
+      "clock": 90,
+      "score": {
+        "current": "3 - 1",
+        "penalties": null
+      },
+      "description": "Finished"
+    }
+  },
+  {
+    "id": 1325540510,
+    "round": "Regular Season - 26",
+    "date": "2027-02-20T15:00:00.000Z",
+    "homeTeam": {
+      "id": 635630,
+      "name": "Sunderland"
+    },
+    "awayTeam": {
+      "id": 39079,
+      "name": "Everton"
+    },
+    "state": {
+      "clock": null,
+      "score": {
+        "current": null,
+        "penalties": null
+      },
+      "description": "Not started"
+    }
+  }
+]
