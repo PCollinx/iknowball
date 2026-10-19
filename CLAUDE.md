@@ -73,20 +73,30 @@ Project memory for Claude Code, carried over from the Claude project where the p
 - Production hides server errors behind "Minified React error #441": the real message is in Sentry > Issues or Vercel > Logs.
 - Every server variable in `src/lib/env.ts` must be set in Vercel, or any page using the service role (including `/daily`) fails. `/api/health` doesn't check `CRON_SECRET`, which must be 16+ characters. On 15 Oct 2026 it was empty.
 - `npx supabase db push` goes to whichever project was linked last. Always `npx supabase link --project-ref <ref from NEXT_PUBLIC_SUPABASE_URL in Vercel>` and `npx supabase migration list` first. On 15 Oct 2026 the Daily migration went to the wrong project ("column dailies.part does not exist").
+- Two Supabase projects: **iknowball-dev** (ref `fjjizpsljnbwnlcykvod`) and live (ref `edggdeqvfmezibxmttsz`). Vercel Preview and local `.env.local` point at dev, Production at live. Test and fix on dev, never on playiknowball.com (Collins, 18 Oct). Setup steps: README "Development project". The dev database is shared by every test (guests ClaudeTest and AdminTest exist).
+- Sign-in emails go through Resend SMTP (sender `iKnowBall <noreply@playiknowball.com>`, done on dev and live 19 Oct; steps in the project notes `resend-setup.md`). The Supabase email templates use token-hash links so they work in any browser: Magic Link and Confirm signup `{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email`, Change Email Address the same with `type=email_change`; `/auth/callback` handles both these and PKCE codes. The default `{{ .ConfirmationURL }}` link only works in the browser that asked for it and shows "That link didn't work" elsewhere. Each project's Redirect URLs must cover the site (`https://playiknowball.com/**`; dev `http://localhost:3000/**` and the Vercel preview pattern).
 - Running locally (Docker Desktop + local Supabase, `.env.local` from `npx supabase status -o env`, stop and start) is in README.md. The seeded sample Daily is only for the day of `npx supabase db reset`. Test sites (previews and local, `VERCEL_ENV` not production) never show "No Daily today": an empty day gets today's drafts scheduled or a sample Daily, and full time offers "Play it again" (`src/lib/daily/sample.ts`). Production never does either.
 
 ## Timeline
 
-Replanned 16 Oct 2026 because the build is ahead (plan doc: https://claude.ai/code/artifact/ddd3e7d2-6471-4dfa-845b-6b90ef603740):
+Replanned 16 Oct 2026, updated 19 Oct (plan doc: https://claude.ai/code/artifact/ddd3e7d2-6471-4dfa-845b-6b90ef603740). The build is about three weeks ahead:
 
-- Done: setup (15 Oct); The Daily, the maker and Wikidata auto-drafts (15 to 16 Oct).
-- Oct 17 to 25: accounts (guest to Google/email-link sign-in), profile shirt, favourite club.
-- Oct 26 to Nov 1: Daily polish (server share-card images, best-5-of-7 day scores, daily leaderboard). Waitlist page Nov 1.
-- Nov 2 to 8: Highlightly fixture sync, leagues and rankings (a week earlier than first planned). Checkpoint Nov 8.
-- Nov 9 to 15: Clash solo sprint + async challenge links as a stretch goal for launch; PWA install. Nov 15 check decides whether Clash ships at launch or on 18 Dec.
-- Nov 16 to 25: closed beta. **Launch Fri 27 Nov 2026** (fallback 4 Dec; if the build slips, Clash drops back to 18 Dec first). Demo video recorded in the beta, published Thu 26 Nov on X and WhatsApp, pinned on the waitlist page.
-- Audience warm-up on X (added 16 Oct): Oct 19 to 31 teaser quizzes as shirt-back images, no name; Nov 1 reveal the name and waitlist; Nov 16 to 25 beta invites to the most engaged followers; Nov 26 demo video. Never post a question from an upcoming Daily. Needs a quick question-to-image export by Oct 19.
-- Rate mode (plus Clash if it missed launch): 18 Dec 2026. Native decision: 1 Mar 2027. Android: July 2027.
+- Done by 19 Oct: setup; The Daily, the maker and Wikidata auto-drafts; accounts, profile shirt and favourite club; Daily polish (share-card PNGs, day scores out of 100, today's table, Rapid and Era picks); rating out of 10; waitlist page (PR #31, held until Nov 1); Clash solo sprint, challenge links and share card; Highlightly fixture sync; the League (mini-leagues, Everyone and fanbase tables); sign-in emails through Resend on dev and live.
+- Left before launch: the installable web app (PWA, on hold by Collins's choice); Collins testing and refining from 20 Oct; waitlist public Nov 1; switch Vercel to Pro.
+- Checkpoints still stand as tests: Nov 8 (Collins and three friends trade Clash challenge links), Nov 15 (a real league plays a week of Dailies and the table is right).
+- Nov 16 to 25: closed beta. **Launch Fri 27 Nov 2026** with The Daily, Clash and The League (fallback 4 Dec). Demo video recorded in the beta, published Thu 26 Nov on X and WhatsApp, pinned on the waitlist page.
+- Audience warm-up on X: Oct 19 to 31 teaser quizzes as shirt-back images, no name (`/maker/teaser`); Nov 1 reveal the name and waitlist; Nov 16 to 25 beta invites to the most engaged followers; Nov 26 demo video. Never post a question from an upcoming Daily.
+- Rate mode: 18 Dec 2026. Native decision: 1 Mar 2027. Android: July 2027.
+
+## Where things stand (19 Oct 2026, evening)
+
+- Open PRs: #37 (profile "This week" adds Clash, `x / 600`) waits on Collins's merge; #31 (waitlist front page) is held until Nov 1, don't merge.
+- Every migration on `main` is on dev and live as of 19 Oct. New migrations go to dev first, then live after merge (see the `db push` gotcha).
+- Fixture sync runs nightly at 00:30 WAT; the first scheduled run is the night of 19 Oct. Check `api_calls` and `fixtures` the next morning.
+- To check on 21 Oct: whether Wikidata gives Clash enough players. Run this on live; if both pools are over 100, Wikidata is enough, otherwise plan a Clash stat from Highlightly box scores:
+  `select (select count(*) from player_spells where apps is not null) as spells_with_games, (select count(*) from player_spells where goals is not null) as spells_with_goals, (select count(*) from clash_pool('apps', 40, 1000)) as clash_games_pool, (select count(*) from clash_pool('goals', 5, 1000)) as clash_goals_pool;`
+- Small UI debt: no "Saved" message after picking a club on the profile.
+- Collins is testing and changing things from his local IDE in the coming days, against the dev Supabase project.
 
 ## Rating and scoring (decided 16 Oct 2026)
 
@@ -112,6 +122,4 @@ Replanned 16 Oct 2026 because the build is ahead (plan doc: https://claude.ai/co
 ## Open items
 
 - Whether to buy iknowball.com.
-- Clash at launch or 18 Dec: settled at the Nov 15 check.
 - Switch Vercel to Pro ($20/mo) before launch: Hobby is non-commercial only.
-- Send auth emails through Resend SMTP (decided 18 Oct 2026): Supabase's built-in mailer allows only a few emails an hour ("email rate limit exceeded"). Dev first, live before the waitlist (Nov 1) and beta: verify playiknowball.com in Resend (DNS in Cloudflare), then Supabase > Authentication > Emails > SMTP (smtp.resend.com, port 465, user `resend`, API key as password, sender noreply@playiknowball.com), then raise the limit under Rate Limits.
