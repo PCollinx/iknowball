@@ -12,12 +12,15 @@ export const ERA_START_YEAR = 1992;
 /** Every footballer with a "member of sports team" statement for one club in the PL era. */
 export function clubPlayersQuery(wikipediaTitle: string): string {
   const title = wikipediaTitle.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-  return `SELECT ?club ?player ?playerLabel ?playerAltLabel ?st ?start ?end ?dob WHERE {
+  return `SELECT ?club ?player ?playerLabel ?playerAltLabel ?st ?start ?end ?dob ?apps ?goals WHERE {
   ?article schema:about ?club; schema:isPartOf <https://en.wikipedia.org/>; schema:name "${title}"@en.
   ?player p:P54 ?st. ?st ps:P54 ?club.
   ?player wdt:P106 wd:${ASSOCIATION_FOOTBALL_PLAYER}.
   OPTIONAL { ?st pq:P580 ?start. }
   OPTIONAL { ?st pq:P582 ?end. }
+  # League appearances and goals for the spell, where Wikidata has them (Clash facts).
+  OPTIONAL { ?st pq:P1350 ?apps. }
+  OPTIONAL { ?st pq:P1351 ?goals. }
   # Without this, big clubs return every player since the 1880s (over 1 MB, cut off mid-answer).
   FILTER((BOUND(?end) && YEAR(?end) >= ${ERA_START_YEAR}) || (!BOUND(?end) && BOUND(?start) && YEAR(?start) >= ${ERA_START_YEAR - 7}))
   OPTIONAL { ?player wdt:P569 ?dob. }
@@ -34,6 +37,9 @@ export type Spell = {
   joinedOn: string | null;
   leftOn: string | null;
   dateOfBirth: string | null;
+  /** League appearances and goals in the spell; null when Wikidata doesn't say. */
+  apps: number | null;
+  goals: number | null;
 };
 
 type Binding = Record<string, { value: string } | undefined>;
@@ -42,6 +48,8 @@ const qid = (uri: string) => uri.slice(uri.lastIndexOf("/") + 1);
 // Wikidata dates look like "2001-07-01T00:00:00Z"; years with low precision
 // come as "2001-01-01". Negative or malformed values are dropped.
 const day = (v?: string) => (v && /^\d{4}-\d{2}-\d{2}/.test(v) ? v.slice(0, 10) : null);
+// Counts come as decimal strings ("187"); anything odd is dropped.
+const count = (v?: string) => (v && /^\d{1,4}$/.test(v) ? Number(v) : null);
 
 export function parseClubPlayers(json: { results: { bindings: Binding[] } }): Spell[] {
   const spells: Spell[] = [];
@@ -64,6 +72,8 @@ export function parseClubPlayers(json: { results: { bindings: Binding[] } }): Sp
       joinedOn: day(b.start?.value),
       leftOn: day(b.end?.value),
       dateOfBirth: day(b.dob?.value),
+      apps: count(b.apps?.value),
+      goals: count(b.goals?.value),
     });
   }
   // A statement can repeat when a player has two birth dates on record.
