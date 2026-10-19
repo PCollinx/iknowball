@@ -12,6 +12,8 @@ const row = (over: Record<string, string | undefined> = {}) => {
     start: "2014-06-12T00:00:00Z",
     end: "2019-01-11T00:00:00Z",
     dob: "1987-05-04T00:00:00Z",
+    apps: "109",
+    goals: "15",
     ...over,
   };
   return Object.fromEntries(Object.entries(base).filter(([, v]) => v !== undefined).map(([k, v]) => [k, { value: v! }]));
@@ -29,6 +31,8 @@ describe("parseClubPlayers", () => {
         joinedOn: "2014-06-12",
         leftOn: "2019-01-11",
         dateOfBirth: "1987-05-04",
+        apps: 109,
+        goals: 15,
       },
     ]);
   });
@@ -43,6 +47,11 @@ describe("parseClubPlayers", () => {
   it("keeps missing dates as null and drops short aliases", () => {
     const [s] = parseClubPlayers({ results: { bindings: [row({ start: undefined, end: undefined, playerAltLabel: "CF, Cesc" })] } });
     expect([s.joinedOn, s.leftOn, s.aliases]).toEqual([null, null, ["Cesc"]]);
+  });
+
+  it("keeps missing or odd counts as null", () => {
+    const [s] = parseClubPlayers({ results: { bindings: [row({ apps: undefined, goals: "-3" })] } });
+    expect([s.apps, s.goals]).toEqual([null, null]);
   });
 });
 
