@@ -125,6 +125,14 @@ export async function getProfileView(userId: string): Promise<ProfileView> {
   };
 }
 
+/** Clubs by id, for dressing shirts in their kits. */
+export async function clubsByIds(ids: number[]): Promise<Map<number, Club>> {
+  if (!ids.length) return new Map();
+  const { data, error } = await createAdminClient().from("clubs").select(CLUB_COLUMNS).in("id", ids);
+  if (error) throw error;
+  return new Map(((data ?? []) as Club[]).map((c) => [c.id, c]));
+}
+
 /** Clubs by display name ("Chelsea"), for dressing a fixture's shirts. */
 export async function clubsNamed(names: string[]): Promise<Map<string, Club>> {
   if (!names.length) return new Map();

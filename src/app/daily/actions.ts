@@ -3,7 +3,7 @@
 import { refresh } from "next/cache";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createClient } from "@/lib/supabase/server";
+import { ensureUserId } from "@/lib/supabase/guest";
 import { gameDate } from "@/lib/time";
 import {
   cachedAnswerKeys,
@@ -27,15 +27,7 @@ const id = z.coerce.number().int().positive();
 /** Starts the clock on one part of today's Daily. Signs in a guest if needed. */
 export async function startPart(formData: FormData) {
   const dailyId = id.parse(formData.get("dailyId"));
-  let userId = await currentUserId();
-  if (!userId) {
-    const { data, error } = await (await createClient()).auth.signInAnonymously();
-    if (error || !data.user) {
-      console.error("Guest sign-in failed:", error?.message ?? "no user returned");
-      throw new Error("Couldn't start a guest session. Try again.");
-    }
-    userId = data.user.id;
-  }
+  const userId = await ensureUserId();
 
   const daily = await getDaily(dailyId);
   if (!daily || daily.play_date !== gameDate()) throw new Error("That Daily isn't live.");
