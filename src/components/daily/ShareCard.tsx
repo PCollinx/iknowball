@@ -1,4 +1,5 @@
 import type { CSSProperties } from "react";
+import { RatingBadge } from "@/components/profile/RatingBadge";
 import { ShirtBack } from "./ShirtBack";
 import { headlineFixture, splitFixture } from "./fixture";
 import { fixtureSize, stampText, type ShareCardData } from "./share";
@@ -16,16 +17,19 @@ export function ShareCard(d: ShareCardData) {
           <span className={`${d900} sc-logo`}>
             <b>i</b>KnowBall
           </span>
-          <span className="sc-meta">
-            The Daily · No. {String(d.issue).padStart(3, "0")}
-            <br />
-            {d.dateLabel}
-            {d.fanOf && (
-              <>
-                <br />
-                <span className="sc-fan">{d.fanOf} fan</span>
-              </>
-            )}
+          <span className="sc-right-mast">
+            <span className="sc-meta">
+              The Daily · No. {String(d.issue).padStart(3, "0")}
+              <br />
+              {d.dateLabel}
+              {d.fanOf && (
+                <>
+                  <br />
+                  <span className="sc-fan">{d.fanOf} fan</span>
+                </>
+              )}
+            </span>
+            <RatingBadge rating={d.rating} className="sc-rate" />
           </span>
         </div>
         {/* One line when it fits; a very long fixture gets two smaller lines. */}

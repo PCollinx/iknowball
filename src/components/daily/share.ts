@@ -22,6 +22,8 @@ export type ShareCardData = {
   /** Your club, when it's in the fixture. */
   fanOf?: string | null;
   kit?: Kit | null;
+  /** Your overall rating out of 10, today included. */
+  rating: number | null;
 };
 
 export function stampText(short: number): string {
@@ -68,6 +70,7 @@ export type ShareInput = {
   siteUrl: string;
   fanOf: string | null;
   kit: Kit | null;
+  rating: number | null;
 };
 
 /** "Mon 19 Oct 2026", the same on the server and in the browser. */
@@ -82,7 +85,7 @@ export function longDate(playDate: string): string {
 }
 
 /** What the card shows for a finished day. */
-export function shareCardData({ issue, playDate, recall, order, points, topPercent, siteUrl, fanOf, kit }: ShareInput): ShareCardData {
+export function shareCardData({ issue, playDate, recall, order, points, topPercent, siteUrl, fanOf, kit, rating }: ShareInput): ShareCardData {
   return {
     issue,
     dateLabel: longDate(playDate),
@@ -101,5 +104,6 @@ export function shareCardData({ issue, playDate, recall, order, points, topPerce
     host: new URL(siteUrl).host,
     fanOf,
     kit,
+    rating,
   };
 }
