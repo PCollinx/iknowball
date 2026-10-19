@@ -114,6 +114,10 @@ async function TestLinks() {
         play the Daily
       </Link>{" "}
       ·{" "}
+      <Link href="/clash" className="underline underline-offset-[3px]">
+        Clash
+      </Link>{" "}
+      ·{" "}
       <Link href="/profile" className="underline underline-offset-[3px]">
         your shirt
       </Link>
