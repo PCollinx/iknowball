@@ -18,3 +18,10 @@ export const FORMAT_RULE: Record<DailyFormat, (n: number) => string> = {
 
 /** Part 1 or Part 2 rounds that are tapped, not typed or ordered. */
 export const isPick = (format: DailyFormat) => format === "pick" || format === "era";
+
+/** 1st, 2nd, 3rd, 4th … 11th, 12th, 13th … 21st. */
+export function ordinal(n: number): string {
+  const teen = n % 100 >= 11 && n % 100 <= 13;
+  const suffix = teen ? "th" : (["th", "st", "nd", "rd"][n % 10] ?? "th");
+  return `${n}${suffix}`;
+}

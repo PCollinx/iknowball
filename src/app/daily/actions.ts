@@ -84,7 +84,7 @@ export async function submitGuess(attemptId: number, input: string): Promise<Gue
   const admin = createAdminClient();
   const { data: row } = await admin
     .from("attempts")
-    .select("*, dailies!inner(format), attempt_guesses(id, answer_id)")
+    .select("*, dailies!inner(format, part), attempt_guesses(id, answer_id)")
     .eq("id", parsed.data.attemptId)
     .eq("user_id", userId)
     .order("id", { referencedTable: "attempt_guesses" })
@@ -114,7 +114,7 @@ export async function submitGuess(attemptId: number, input: string): Promise<Gue
       .from("attempts")
       .update({
         correct_count: total,
-        score: partScore("free_recall", total),
+        score: partScore(dailies.part, total, answers.length),
         ...(done ? { submitted_at: new Date().toISOString() } : {}),
       })
       .eq("id", attempt.id),
@@ -134,7 +134,7 @@ export async function submitPick(attemptId: number, questionId: number, choice: 
   const admin = createAdminClient();
   const { data: row } = await admin
     .from("attempts")
-    .select("*, dailies!inner(format), attempt_guesses(answer_id, raw_input)")
+    .select("*, dailies!inner(format, part), attempt_guesses(answer_id, raw_input)")
     .eq("id", parsed.data.attemptId)
     .eq("user_id", userId)
     .maybeSingle();
@@ -159,7 +159,7 @@ export async function submitPick(attemptId: number, questionId: number, choice: 
       .from("attempts")
       .update({
         correct_count: correct,
-        score: partScore(dailies.format, correct),
+        score: partScore(dailies.part, correct, answers.length),
         ...(done ? { submitted_at: new Date().toISOString() } : {}),
       })
       .eq("id", attempt.id),
@@ -206,7 +206,7 @@ export async function submitOrder(attemptId: number, order: number[]) {
     .from("attempts")
     .update({
       correct_count: correct,
-      score: partScore("in_order", correct),
+      score: partScore(daily.part, correct, answers.length),
       submitted_at: new Date(Math.min(Date.now(), Date.parse(attempt.deadline_at))).toISOString(),
     })
     .eq("id", attempt.id)

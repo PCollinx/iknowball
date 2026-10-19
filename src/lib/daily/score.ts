@@ -1,12 +1,15 @@
-// Points for one part of The Daily. Provisional: the matchweek scoring formula
-// is still an open item, so this only has to rank today's players sensibly.
-// Multiple choice can be guessed, so a right tap is worth a little less.
-export const POINTS_PER_CORRECT = { free_recall: 40, in_order: 30, pick: 25, era: 25 } as const;
+// A day of The Daily scores out of 100 (decided 16 Oct 2026, see CLAUDE.md
+// "Rating and scoring"): Part 1 up to 60 and Part 2 up to 40, by the share of
+// answers right, so a day with more answers weighs the same as one with fewer.
 
-export type DailyFormat = keyof typeof POINTS_PER_CORRECT;
+/** Most points a part can give a day. */
+export const PART_MAX: Record<number, number> = { 1: 60, 2: 40 };
 
-export function partScore(format: DailyFormat, correct: number): number {
-  return Math.max(0, correct) * POINTS_PER_CORRECT[format];
+export type DailyFormat = "free_recall" | "in_order" | "pick" | "era";
+
+export function partScore(part: number, correct: number, answerCount: number): number {
+  const share = answerCount > 0 ? Math.min(1, Math.max(0, correct) / answerCount) : 0;
+  return Math.round((PART_MAX[part] ?? 0) * share);
 }
 
 /** "Top 36%": where a score sits among today's finished scores (higher is better). */
@@ -14,6 +17,18 @@ export function topPercent(mine: number, scores: number[]): number | null {
   if (scores.length < 2) return null;
   const better = scores.filter((s) => s > mine).length;
   return Math.max(1, Math.ceil(((better + 1) / scores.length) * 100));
+}
+
+export type TableEntry = { userId: string; score: number; seconds: number };
+
+/** A day's table: best score first, ties to less time used (CLAUDE.md,
+ * "Rating and scoring"). Level on both, players share a position. */
+export function rankTable<T extends TableEntry>(entries: T[]): (T & { position: number })[] {
+  const sorted = [...entries].sort((a, b) => b.score - a.score || a.seconds - b.seconds);
+  return sorted.map((e, i) => {
+    const level = sorted.findIndex((x) => x.score === e.score && x.seconds === e.seconds);
+    return { ...e, position: (level === -1 ? i : level) + 1 };
+  });
 }
 
 /** Stable shuffle seeded by the attempt, so a reload shows the same order. */

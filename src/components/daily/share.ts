@@ -94,7 +94,7 @@ export function shareCardData({ issue, playDate, recall, order, points, topPerce
     partLabel: FORMAT_NAME[recall.daily.format],
     stats: [
       ...(order ? [{ value: `${order.correct}/${order.slots.length}`, key: FORMAT_NAME[order.daily.format] }] : []),
-      { value: String(points), key: "Points" },
+      { value: `${points}/100`, key: "Day score" },
       { value: topPercent ? `Top ${topPercent}%` : "Early", key: "Today" },
       { value: clock(recall.timeUsedSeconds), key: "Time used" },
     ],

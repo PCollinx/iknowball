@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { gameDate } from "@/lib/time";
 import { buildKeys, type AnswerKeys } from "./match";
 import { ensureTestDaily } from "./sample";
-import { seededShuffle, topPercent, type DailyFormat } from "./score";
+import { partScore, rankTable, seededShuffle, topPercent, type DailyFormat } from "./score";
 
 // Data access for The Daily. Reads the answer key and writes attempts with the
 // service role, always scoped to the signed-in player, so the browser only
@@ -263,6 +263,9 @@ export type DailyView =
       order: OrderReveal | null;
       points: number;
       topPercent: number | null;
+      /** Your place in today's table, and how many are in it. */
+      position: number | null;
+      players: number;
     };
 
 async function recallReveal(daily: DailyRow, attempt: AttemptRow): Promise<RecallReveal> {
@@ -275,7 +278,7 @@ async function recallReveal(daily: DailyRow, attempt: AttemptRow): Promise<Recal
       found: results.filter((r) => r.right).map((r) => ({ id: r.answer.id, text: r.answer.answer_text })),
       missed: results.filter((r) => !r.right).map((r) => r.answer.answer_text),
       timeUsedSeconds,
-      score: attempt.score,
+      score: partScore(daily.part, attempt.correct_count, daily.answer_count),
     };
   }
   const [answers, foundIds] = await Promise.all([getAnswers(daily.id), foundAnswerIds(attempt.id)]);
@@ -285,7 +288,7 @@ async function recallReveal(daily: DailyRow, attempt: AttemptRow): Promise<Recal
     found: foundIds.map((id) => ({ id, text: byId.get(id) ?? "" })),
     missed: answers.filter((a) => !foundIds.includes(a.id)).map((a) => a.answer_text),
     timeUsedSeconds,
-    score: attempt.score,
+    score: partScore(daily.part, attempt.correct_count, daily.answer_count),
   };
 }
 
@@ -297,7 +300,7 @@ async function orderReveal(daily: DailyRow, attempt: AttemptRow): Promise<OrderR
       daily,
       slots: results.map((r) => ({ placed: r.choice, correct: r.answer.answer_text, note: r.answer.question, right: r.right })),
       correct: attempt.correct_count,
-      score: attempt.score,
+      score: partScore(daily.part, attempt.correct_count, daily.answer_count),
     };
   }
   const answers = (await getAnswers(daily.id)).sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
@@ -316,19 +319,69 @@ async function orderReveal(daily: DailyRow, attempt: AttemptRow): Promise<OrderR
       right: placedId === a.id,
     };
   });
-  return { daily, slots, correct: attempt.correct_count, score: attempt.score };
+  return { daily, slots, correct: attempt.correct_count, score: partScore(daily.part, attempt.correct_count, daily.answer_count) };
 }
 
-async function todaysTopPercent(dailyIds: number[], userId: string): Promise<number | null> {
-  const { data } = await createAdminClient()
+export type TableRow = {
+  userId: string;
+  name: string;
+  club: string | null;
+  score: number;
+  seconds: number;
+  /** Parts finished today. */
+  parts: number;
+  position: number;
+};
+
+type TableAttempt = {
+  user_id: string;
+  daily_id: number;
+  correct_count: number;
+  started_at: string;
+  submitted_at: string;
+  profiles: { username: string | null; clubs: { short_name: string } | null } | null;
+};
+
+/** A guest without a username, named so the same guest reads the same every day. */
+export const guestName = (userId: string) => `Guest ${userId.replace(/-/g, "").slice(0, 4).toUpperCase()}`;
+
+/** Today's table: every player with a finished part, scored out of 100. Scores
+ * are worked out from right answers, so attempts saved before the day score
+ * (19 Oct 2026) rank on the same scale. */
+export async function dayTable(parts: DailyRow[]): Promise<TableRow[]> {
+  if (!parts.length) return [];
+  const byId = new Map(parts.map((p) => [p.id, p]));
+  const { data, error } = await createAdminClient()
     .from("attempts")
-    .select("user_id, score")
-    .in("daily_id", dailyIds)
+    .select("user_id, daily_id, correct_count, started_at, submitted_at, profiles(username, clubs(short_name))")
+    .in("daily_id", parts.map((p) => p.id))
     .not("submitted_at", "is", null);
-  const totals = new Map<string, number>();
-  for (const r of data ?? []) totals.set(r.user_id, (totals.get(r.user_id) ?? 0) + r.score);
-  const mine = totals.get(userId);
-  return mine === undefined ? null : topPercent(mine, [...totals.values()]);
+  if (error) throw error;
+  const players = new Map<string, Omit<TableRow, "position">>();
+  for (const a of (data ?? []) as unknown as TableAttempt[]) {
+    const daily = byId.get(a.daily_id)!;
+    const row = players.get(a.user_id) ?? {
+      userId: a.user_id,
+      name: a.profiles?.username ?? guestName(a.user_id),
+      club: a.profiles?.clubs?.short_name ?? null,
+      score: 0,
+      seconds: 0,
+      parts: 0,
+    };
+    row.score += partScore(daily.part, a.correct_count, daily.answer_count);
+    row.seconds += Math.max(0, Math.round((Date.parse(a.submitted_at) - Date.parse(a.started_at)) / 1000));
+    row.parts += 1;
+    players.set(a.user_id, row);
+  }
+  return rankTable([...players.values()]);
+}
+
+/** Today's parts and table, for the table page. */
+export async function getDayTable(): Promise<{ issue: number; playDate: string; title: string; parts: number; rows: TableRow[]; me: string | null } | null> {
+  const parts = await todaysParts();
+  if (!parts.length) return null;
+  const [issue, me, rows] = await Promise.all([issueNumber(), currentUserId(), dayTable(parts)]);
+  return { issue, playDate: parts[0].play_date, title: parts.find((p) => p.part === 1)?.title ?? parts[0].title, parts: parts.length, rows, me };
 }
 
 export async function getDailyView(): Promise<DailyView> {
@@ -381,11 +434,12 @@ export async function getDailyView(): Promise<DailyView> {
   // Part 1 (Free Recall or Rapid picks) and Part 2 (In Order or Era picks).
   const recallPart = parts.find((p) => p.part === 1);
   const orderPart = parts.find((p) => p.part === 2);
-  const [recall, order, top] = await Promise.all([
+  const [recall, order, table] = await Promise.all([
     recallPart ? recallReveal(recallPart, attempts.get(recallPart.id)!) : null,
     orderPart ? orderReveal(orderPart, attempts.get(orderPart.id)!) : null,
-    todaysTopPercent(parts.map((p) => p.id), userId!),
+    dayTable(parts),
   ]);
+  const mine = table.find((r) => r.userId === userId);
   return {
     kind: "fulltime",
     issue,
@@ -393,6 +447,8 @@ export async function getDailyView(): Promise<DailyView> {
     recall,
     order,
     points: (recall?.score ?? 0) + (order?.score ?? 0),
-    topPercent: top,
+    topPercent: mine ? topPercent(mine.score, table.map((r) => r.score)) : null,
+    position: mine?.position ?? null,
+    players: table.length,
   };
 }

@@ -121,6 +121,8 @@ async function DailyScreen() {
           order={view.order}
           points={view.points}
           topPercent={view.topPercent}
+          position={view.position}
+          players={view.players}
           siteUrl={publicEnv().NEXT_PUBLIC_SITE_URL}
           clubChoices={choices}
           kit={kit}
