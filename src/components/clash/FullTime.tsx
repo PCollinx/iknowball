@@ -2,9 +2,11 @@ import { startSprint } from "@/app/clash/actions";
 import { SubmitButton } from "@/components/daily/SubmitButton";
 import { ordinal } from "@/components/daily/formats";
 import type { Result } from "@/lib/clash/data";
+import { ShareButtons } from "@/components/daily/ShareButtons";
 import { ChallengeButton } from "./ChallengeButton";
 import { ClashMasthead } from "./Masthead";
 import { KickRow } from "./KickRow";
+import { RatingBadge } from "@/components/profile/RatingBadge";
 
 type Props = {
   code: string;
@@ -15,6 +17,8 @@ type Props = {
   /** Everyone's go at this set, best first. */
   table: Result[];
   siteUrl: string;
+  /** Your overall rating out of 10. */
+  rating: number | null;
 };
 
 function banter(right: number, setter: Result | null, mine: Result | null): string {
@@ -28,7 +32,8 @@ function banter(right: number, setter: Result | null, mine: Result | null): stri
   return "Warm-up's done. The next one counts.";
 }
 
-export function ClashFullTime({ code, statLabel, right, kicks, bestRun, table, siteUrl }: Props) {
+/** Full time is the result card: /clash/{code}/card draws this screen as the image you share. */
+export function ClashFullTime({ code, statLabel, right, kicks, bestRun, table, siteUrl, rating }: Props) {
   const missed = kicks.length - right;
   const setter = table.find((r) => r.setter) ?? null;
   const mine = table.find((r) => r.mine) ?? null;
@@ -36,19 +41,20 @@ export function ClashFullTime({ code, statLabel, right, kicks, bestRun, table, s
   const url = `${siteUrl.replace(/\/$/, "")}/clash/${code}`;
 
   return (
-    <main className="mx-auto min-h-dvh max-w-[1100px] px-4 pb-10 lg:grid lg:grid-cols-[minmax(0,1fr)_420px] lg:gap-x-12 lg:px-8">
+    <main className="mx-auto min-h-dvh max-w-[1100px] px-4 pb-10 lg:grid lg:grid-cols-[minmax(0,1fr)_420px] lg:content-start lg:gap-x-12 lg:px-8">
       <div className="lg:col-span-2">
         <ClashMasthead right="Full time" />
       </div>
 
       <section>
-        <div className="grid grid-cols-[1fr_auto] items-end gap-2 border-b-[3px] border-double border-navy pt-3.5 pb-2.5">
-          <div>
-            <span className="label">{statLabel} · 60 seconds</span>
-            <div className="font-display text-[140px] leading-[0.78] text-royal tabular-nums lg:text-[184px]">
-              {right}
-              <small className="text-[40px] text-navy lg:text-[56px]"> right</small>
-            </div>
+        <div className="flex items-center justify-between gap-3 pt-3.5">
+          <span className="label">{statLabel} · 60 seconds</span>
+          <RatingBadge rating={rating} className="size-8 shrink-0 border-2 text-base" />
+        </div>
+        <div className="grid grid-cols-[1fr_auto] items-end gap-2 border-b-[3px] border-double border-navy pt-3 pb-2.5">
+          <div className="font-display text-[140px] leading-[0.78] text-royal tabular-nums lg:text-[184px]">
+            {right}
+            <small className="text-[40px] text-navy uppercase lg:text-[56px]"> right</small>
           </div>
           <span className="mb-2 -rotate-3 border-4 border-red-card px-2.5 pt-1 pb-1.5 font-display text-[26px] text-red-card uppercase">
             {missed === 0 ? "Clean sheet" : `${missed} missed`}
@@ -57,7 +63,7 @@ export function ClashFullTime({ code, statLabel, right, kicks, bestRun, table, s
         <KickRow kicks={kicks} className="py-3" />
         <p className="border-l-[6px] border-red-card px-3 py-2.5 text-[17px] font-semibold">{banter(right, setter, mine)}</p>
 
-        <dl className="mt-4 grid grid-cols-3 border-t-2 border-navy">
+        <dl className="mt-4 mb-4 grid grid-cols-3 border-t-2 border-navy">
           {[
             ["Best run", bestRun],
             ["Missed", missed],
@@ -69,6 +75,10 @@ export function ClashFullTime({ code, statLabel, right, kicks, bestRun, table, s
             </div>
           ))}
         </dl>
+        <ShareButtons
+          text={`I got ${right} right in 60 seconds of Higher or Lower on iKnowBall. Beat that: ${url}`}
+          image={{ url: `/clash/${code}/card`, name: `iknowball-clash-${code}.png` }}
+        />
       </section>
 
       <aside className="mt-6 lg:mt-0 lg:pt-3.5">

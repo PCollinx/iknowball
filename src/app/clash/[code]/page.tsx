@@ -11,7 +11,7 @@ import { getClashView } from "@/lib/clash/data";
 import { STATS } from "@/lib/clash/rules";
 import { publicEnv } from "@/lib/env";
 import { kitOf } from "@/lib/profile/club";
-import { clubsByIds } from "@/lib/profile/data";
+import { clubsByIds, getRating } from "@/lib/profile/data";
 
 export const metadata: Metadata = {
   title: "Clash · iKnowBall",
@@ -70,7 +70,8 @@ async function ClashScreen({ params }: { params: Params }) {
         />
       );
     }
-    case "fulltime":
+    case "fulltime": {
+      const rating = await getRating(view.run.user_id);
       return (
         <ClashFullTime
           code={view.set.code}
@@ -80,8 +81,10 @@ async function ClashScreen({ params }: { params: Params }) {
           bestRun={view.run.best_run}
           table={view.table}
           siteUrl={publicEnv().NEXT_PUBLIC_SITE_URL}
+          rating={rating}
         />
       );
+    }
   }
 }
 
