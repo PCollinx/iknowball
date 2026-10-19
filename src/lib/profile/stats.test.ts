@@ -3,13 +3,14 @@ import { bestFive, dayScores, streak, tierFor } from "./stats";
 
 describe("tierFor", () => {
   it("uses the beta cut-offs", () => {
-    expect(tierFor(899)).toBe("Plastic");
-    expect(tierFor(900)).toBe("Casual");
-    expect(tierFor(1000)).toBe("Casual");
-    expect(tierFor(1100)).toBe("Supporter");
-    expect(tierFor(1300)).toBe("Ball Knower");
-    expect(tierFor(1500)).toBe("Pundit");
-    expect(tierFor(1750)).toBe("Ball God");
+    expect(tierFor(3.9)).toBe("Plastic");
+    expect(tierFor(4)).toBe("Casual");
+    expect(tierFor(5.4)).toBe("Casual");
+    expect(tierFor(5.5)).toBe("Supporter");
+    expect(tierFor(7)).toBe("Ball Knower");
+    expect(tierFor(8)).toBe("Pundit");
+    expect(tierFor(9)).toBe("Ball God");
+    expect(tierFor(10)).toBe("Ball God");
   });
 });
 

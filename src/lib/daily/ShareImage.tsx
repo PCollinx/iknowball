@@ -4,6 +4,7 @@ import { ROYAL_KIT } from "@/components/daily/ShirtBack";
 import { BODY, C, DISPLAY } from "@/lib/og/fonts";
 import { Shirt } from "@/lib/og/Shirt";
 import { emptyShirtSvg, shirtSvg } from "@/lib/og/shirt-svg";
+import { formatRating, ratingColours } from "@/lib/profile/rating";
 import { linesAt } from "@/lib/teaser/layout";
 
 // The share card ("Programme cover") as a 1080 x 1080 image, drawn by next/og.
@@ -16,6 +17,8 @@ export const SHARE_SIZE = 1080;
 const u = SHARE_SIZE / 100;
 const BORDER = 2;
 const COLS = 6;
+/** The rating circle's width in cqw, as .sc-rate. */
+const RATE = 9;
 
 const label = { fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase" } as const;
 
@@ -25,13 +28,16 @@ export function ShareImage({ d }: { d: ShareCardData }) {
   const size = fixtureSize(fixture);
   const inner = SHARE_SIZE - BORDER * 2 - 10 * u;
   const kit = d.kit ?? ROYAL_KIT;
+  const rate = ratingColours(d.rating);
+  // The masthead is as tall as its tallest side: logo, date lines or the rating.
+  const mastH = Math.max(7 * u * 0.9, (d.fanOf ? 3 : 2) * 2.4 * u * 1.35, RATE * u);
 
   // Room left for the score and shirts once everything else is set.
   const promptLines = linesAt(d.prompt, 2.9 * u, inner, 0.5);
   const used =
     BORDER * 2 +
     4.5 * u + // top padding
-    (7 * u * 0.9 + 1.6 * u + 0.5 * u) + // masthead
+    (mastH + 1.6 * u + 0.5 * u) + // masthead
     (2.6 * u + fixtureLines(fixture, size) * size * u * 0.9) +
     (1 * u + promptLines * 2.9 * u * 1.3 + 2 * u + 1.2 * u) +
     (0.35 * u + 1.8 * u + 5.2 * u * 0.9 + 2.1 * u * 1.3 + 2.2 * u) + // stats
@@ -74,10 +80,32 @@ export function ShareImage({ d }: { d: ShareCardData }) {
             <span style={{ color: C.royal }}>i</span>
             <span>KNOWBALL</span>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", fontSize: 2.4 * u, lineHeight: 1.35, ...label }}>
-            <span>{`The Daily · No. ${String(d.issue).padStart(3, "0")}`}</span>
-            <span>{d.dateLabel}</span>
-            {d.fanOf && <span style={{ color: C.teal }}>{`${d.fanOf} fan`}</span>}
+          <div style={{ display: "flex", alignItems: "flex-end" }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", fontSize: 2.4 * u, lineHeight: 1.35, ...label }}>
+              <span>{`The Daily · No. ${String(d.issue).padStart(3, "0")}`}</span>
+              <span>{d.dateLabel}</span>
+              {d.fanOf && <span style={{ color: C.teal }}>{`${d.fanOf} fan`}</span>}
+            </div>
+            {/* The overall rating, coloured like a match rating */}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: RATE * u,
+                height: RATE * u,
+                marginLeft: 2 * u,
+                borderRadius: RATE * u,
+                border: `${0.45 * u}px solid ${C.navy}`,
+                background: rate.fill,
+                color: rate.text,
+                fontFamily: DISPLAY,
+                fontSize: 4.4 * u,
+                lineHeight: 1,
+              }}
+            >
+              {formatRating(d.rating)}
+            </div>
           </div>
         </div>
 

@@ -13,7 +13,7 @@ Project memory for Claude Code, carried over from the Claude project where the p
   - **Round types** (19 Oct 2026, Collins chose "Both"): Part 1 is Free Recall (type names) or **Rapid picks** (tap the one of four players who played for both clubs); Part 2 is In Order or **Era picks** (tap the period a player was at a club). Picks are one `daily_answers` row a question (`answer_text` right, `choices` as shown, `question`), one tap each, checked on the server, 25 points a right tap. Auto-drafts mix them: the four pairings take turns by date (`pairingFor` in `src/lib/drafts/generate.ts`), so each week has all four; a picks round the data can't fill falls back to the typed one. The maker can switch either part.
   - Content is **auto-drafted, reviewed weekly** (decided 16 Oct 2026). `/api/jobs/import-wikidata` (daily, a few clubs per run, each club refreshed weekly) loads PL-era player club spells from Wikidata into `player_spells`; `/api/jobs/drafts` (20:00 WAT daily) drafts empty days 8 ahead (Part 1 "played for both X and Y since 1992", Part 2 order of joining) and schedules any still-draft day due tomorrow. Collins reviews drafts (teal "Auto" tag) in the maker. Answers always come from data; AI may only help with wording. Code in `src/lib/drafts/`.
   - **Clash**: 60-second duels (Higher/Lower facts, skill-specific player comparisons, crowd vs data). At launch: solo sprint plus async challenge links. Rate mode feeds the vote pool (about 100 votes for a comparison to enter play).
-  - **The League**: mini-leagues with invite codes, scored per PL matchweek (Mon to Sun), plus a global weekly table and an all-time rating.
+  - **The League**: mini-leagues with invite codes, scored per PL matchweek (Mon to Sun), plus a global weekly table and the overall rating.
   - Predictions come after launch.
 - **Waitlist** (built 19 Oct 2026, public from Nov 1): the front page `/` until launch. "Think you know ball?", the tier ladder as shirts, the three pillars and a "Team sheet" form (email, name on your shirt, club, "bring your league" name and mates) whose shirt preview dresses as you type. Rows go to `public.waitlist` through `joinWaitlist` (`src/app/waitlist/actions.ts`, service role, honeypot field); you get your place in the queue on your own shirt. The sign-up count shows from 25. Test sites add links to the Daily and profile under the form.
 - Web app first, mobile-first, with its own desktop layout from about 1024px.
@@ -85,17 +85,17 @@ Replanned 16 Oct 2026 because the build is ahead, and on 19 Oct Collins moved Cl
 
 ## Rating and scoring (decided 16 Oct 2026)
 
-- **Tiers**: Plastic, Casual, Supporter, Ball Knower, Pundit, Ball God. Everyone starts on a rating of 1000 and is placed after 3 Dailies. Cut-offs to tune in the closed beta: below 900 Plastic, 900 Casual, 1100 Supporter, 1300 Ball Knower, 1500 Pundit, 1750+ Ball God (aim for about the top 1%).
+- **Overall rating out of 10** (19 Oct 2026, Collins; replaced the 1000-point rating): one decimal like a sports app (7.6, 8.9), 10 is perfect. It is the average of your day scores ÷ 10 over your last 30 days played, each older day counting 0.9 of the one after it; missed days cost nothing (`overallRating()` in `src/lib/profile/rating.ts`, worked out from attempts, not the old `ratings` table). Shown as a circle coloured like a match rating: red below 5, orange 5, yellow 6, green 7+ (`RatingBadge`), at the top right of the profile shirt, on the share card's masthead and on full time.
+- **Tiers**: Plastic, Casual, Supporter, Ball Knower, Pundit, Ball God, placed after 3 Dailies. Cut-offs by rating, to tune in the closed beta: below 4.0 Plastic, 4.0 Casual, 5.5 Supporter, 7.0 Ball Knower, 8.0 Pundit, 9.0+ Ball God.
 - **Matchweek score, best 5 of 7**: each Daily day scores 0 to 100 (Part 1 up to 60, Part 2 up to 40, by share of answers right, so a day with more answers weighs the same). A week counts your best 5 days, max 500. Clash adds up to 100 a week from your best 3 sprints once it launches. Ties go to less total time on the counted days.
 - Predictions, when they come, get a fixed weekly pot split across however many matches there are, so double-round weeks never outweigh normal ones.
-- The all-time rating moves once a week from your global weekly finish; a missed week costs nothing.
 - Built (19 Oct 2026): the day score is `partScore()` in `src/lib/daily/score.ts`, shown at full time and on the share card, and **today's table** at `/daily/table` (`dayTable()` in `src/lib/daily/data.ts`; guests without a username show as "Guest" plus 4 characters of their id). Scores are worked out from `correct_count` and `answer_count`, not the stored `attempts.score`, so older attempts rank on the same scale.
 
 ## Profile and favourite club (decided 16 Oct 2026)
 
 - `profiles.favourite_club_id` stays and is optional. Ask once, skippable, after a guest's first Daily ("Who do you support?"); neutrals allowed; list = PL clubs plus a few big non-PL clubs followed in Nigeria.
 - It is used in exactly three ways, and never changes questions, scores or rating:
-  1. **Your shirt**: the profile is a shirt-back card in the club's kit, with a navy nameplate on the hem carrying the username, then tier and rating ("C2", picked 18 Oct 2026; the earlier "tier as the number" was replaced).
+  1. **Your shirt**: the profile is a shirt-back card in the club's kit, with a navy nameplate on the hem carrying the username, then the tier, with the rating badge at the top right ("C2", picked 18 Oct 2026; the earlier "tier as the number" was replaced).
   2. **Fanbase table**: a weekly League table of clubs ranked by their fans' average score.
   3. **Matchday nudge**: when your club is in that day's Daily, the page says so and the share card tags it.
 - A player can switch club **once a season**, so nobody hops clubs to climb the fanbase table.

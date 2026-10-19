@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ClubPicker } from "@/components/profile/ClubPicker";
+import { RatingBadge } from "@/components/profile/RatingBadge";
 import type { Club } from "@/lib/profile/club";
 import { gameDateClosesAt } from "@/lib/time";
 import type { OrderReveal, RecallReveal } from "@/lib/daily/data";
@@ -32,6 +33,8 @@ type Props = {
   kit: Kit | null;
   /** Your own shirt: your club's kit, or the neutral one. */
   myKit: Kit;
+  /** Your overall rating out of 10, today included. */
+  rating: number | null;
   /** Previews and local runs, where today's Daily can be replayed. */
   testSite?: boolean;
 };
@@ -43,10 +46,10 @@ function banter(recall: RecallReveal): string {
   return `${short} missing. ${shirtName(recall.missed[0])} was right there.`;
 }
 
-export function FullTime({ issue, playDate, recall, order, points, topPercent, position, players, siteUrl, clubChoices, fanOf, kit, myKit, testSite = false }: Props) {
+export function FullTime({ issue, playDate, recall, order, points, topPercent, position, players, siteUrl, clubChoices, fanOf, kit, myKit, rating, testSite = false }: Props) {
   const found = recall?.found.length ?? 0;
   const total = recall ? found + recall.missed.length : 0;
-  const card = recall ? shareCardData({ issue, playDate, recall, order, points, topPercent, siteUrl, fanOf, kit }) : null;
+  const card = recall ? shareCardData({ issue, playDate, recall, order, points, topPercent, siteUrl, fanOf, kit, rating }) : null;
   const shareText = [
     `iKnowBall · The Daily No. ${String(issue).padStart(3, "0")}`,
     recall?.daily.title ?? "",
@@ -106,13 +109,14 @@ export function FullTime({ issue, playDate, recall, order, points, topPercent, p
           </span>
         </Link>
         <Link href="/profile" className="group mt-4 flex items-center gap-3 bg-navy py-2 pr-4 pl-2 text-white">
-          <span className="w-14 shrink-0 transition-transform duration-150 group-hover:-translate-y-0.5 group-hover:-rotate-3">
+          <span className="relative w-14 shrink-0 transition-transform duration-150 group-hover:-translate-y-0.5 group-hover:-rotate-3">
             <ShirtBack kit={myKit} lettering="tag" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block font-display text-[32px] leading-[0.9] uppercase">Your shirt</span>
-            <span className="block text-sm text-white/80">Rating, streak and this week&apos;s score</span>
+            <span className="block text-sm text-white/80">Your rating out of 10, streak and this week&apos;s score</span>
           </span>
+          <RatingBadge rating={rating} className="w-12 shrink-0 border-2 border-white text-[22px]" />
           <span aria-hidden="true" className="font-display text-[32px] text-teal-light">
             →
           </span>
