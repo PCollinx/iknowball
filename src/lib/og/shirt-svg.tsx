@@ -56,3 +56,13 @@ export function shirtSvg(kit: Kit): string {
   );
   return `data:image/svg+xml;base64,${Buffer.from(body).toString("base64")}`;
 }
+
+/** A slot still to fill: the shirt as a dashed outline on mist, like the app's. */
+export function emptyShirtSvg(): string {
+  const body = toSvg(
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 104" width="100" height="104">
+      <path d={SHIRT} fill="#EEF2FB" stroke="#DCE3F5" strokeWidth="2.5" strokeLinejoin="round" strokeDasharray="4 3" />
+    </svg>,
+  );
+  return `data:image/svg+xml;base64,${Buffer.from(body).toString("base64")}`;
+}

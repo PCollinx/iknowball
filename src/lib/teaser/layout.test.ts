@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { fitSize, linesAt, parseTeaser, shirtGrid, shirtLabels, teaserQuery, withHeadline } from "./layout";
-import { shirtSvg } from "./shirt-svg";
+import { shirtSvg } from "@/lib/og/shirt-svg";
 
 describe("parseTeaser", () => {
   it("falls back to safe defaults", () => {

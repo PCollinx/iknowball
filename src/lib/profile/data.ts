@@ -1,7 +1,9 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { gameDate, matchweekBounds, seasonOf } from "@/lib/time";
-import type { Club } from "./club";
+import { splitFixture } from "@/components/daily/fixture";
+import type { Kit } from "@/components/daily/ShirtBack";
+import { fixtureKit, type Club } from "./club";
 import { bestFive, dayScores, PLACEMENT_DAYS, streak, tierFor, type PlayedPart, type TierName } from "./stats";
 
 // Data access for the profile and the favourite club. Reads with the service
@@ -119,4 +121,12 @@ export async function clubsNamed(names: string[]): Promise<Map<string, Club>> {
   const { data, error } = await createAdminClient().from("clubs").select(CLUB_COLUMNS).in("name", names);
   if (error) throw error;
   return new Map(((data ?? []) as Club[]).map((c) => [c.name.toLowerCase(), c]));
+}
+
+/** A fixture's kit ("Chelsea v Arsenal"): its clubs half and half. */
+export async function kitForFixture(title: string | null): Promise<Kit | null> {
+  if (!title) return null;
+  const [home, away] = splitFixture(title);
+  const clubs = await clubsNamed([home, away].filter((n): n is string => Boolean(n)));
+  return fixtureKit(clubs.get(home.toLowerCase()) ?? null, away ? (clubs.get(away.toLowerCase()) ?? null) : null);
 }

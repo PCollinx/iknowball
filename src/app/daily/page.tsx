@@ -7,10 +7,8 @@ import { InOrder } from "@/components/daily/InOrder";
 import { KickOff } from "@/components/daily/KickOff";
 import { Masthead, shortDate } from "@/components/daily/Masthead";
 import { currentUserId, getDailyView } from "@/lib/daily/data";
-import { splitFixture } from "@/components/daily/fixture";
-import type { Kit } from "@/components/daily/ShirtBack";
-import { clubInTitle, fixtureKit, kitOf } from "@/lib/profile/club";
-import { clubChoices, clubsNamed, getSupporter } from "@/lib/profile/data";
+import { clubInTitle, kitOf } from "@/lib/profile/club";
+import { clubChoices, getSupporter, kitForFixture } from "@/lib/profile/data";
 import { publicEnv } from "@/lib/env";
 import { gameDate } from "@/lib/time";
 
@@ -34,7 +32,7 @@ async function DailyScreen() {
   const dateLabel = shortDate(gameDate());
   const [supporter, kit] = await Promise.all([
     userId && (view.kind === "kickoff" || view.kind === "fulltime") ? getSupporter(userId) : null,
-    kitFor(fixtureTitle(view)),
+    kitForFixture(fixtureTitle(view)),
   ]);
 
   switch (view.kind) {
@@ -126,14 +124,6 @@ function fixtureTitle(view: Awaited<ReturnType<typeof getDailyView>>): string | 
     default:
       return null;
   }
-}
-
-/** Answer shirts wear the fixture's clubs, half and half. */
-async function kitFor(title: string | null): Promise<Kit | null> {
-  if (!title) return null;
-  const [home, away] = splitFixture(title);
-  const clubs = await clubsNamed([home, away].filter((n): n is string => Boolean(n)));
-  return fixtureKit(clubs.get(home.toLowerCase()) ?? null, away ? (clubs.get(away.toLowerCase()) ?? null) : null);
 }
 
 function Loading() {
