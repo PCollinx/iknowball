@@ -22,10 +22,10 @@ export async function ogFonts() {
 /** The theme's colours, for images drawn outside the CSS. */
 export const C = {
   navy: "#0C1330",
-  royal: "#1F48D6",
+  royal: "#2440FF",
   teal: "#00A3A3",
   tealLight: "#7FE3E0",
-  mist: "#EEF2FB",
-  track: "#DCE3F5",
+  mist: "#EDF0FF",
+  track: "#D9DFFF",
   red: "#D7263D",
 };

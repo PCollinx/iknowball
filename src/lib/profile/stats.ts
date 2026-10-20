@@ -23,6 +23,20 @@ export function tierFor(rating: number): TierName {
   return TIERS.findLast((t) => rating >= t.from)!.name;
 }
 
+/** The tier above a rating, how far off it is, and how much of the way
+ * through the current tier the rating is (0 to 1). Null at the top. */
+export function nextTier(rating: number): { name: TierName; gap: number; progress: number } | null {
+  const i = TIERS.findLastIndex((t) => rating >= t.from);
+  const next = TIERS[i + 1];
+  if (!next) return null;
+  const from = Math.max(0, TIERS[i].from);
+  return {
+    name: next.name,
+    gap: Math.round((next.from - rating) * 10) / 10,
+    progress: Math.min(1, Math.max(0, (rating - from) / (next.from - from))),
+  };
+}
+
 export type PlayedPart = { playDate: string; part: number; correct: number; answerCount: number };
 
 /** One day's score out of 100, by share of answers right in each part. */

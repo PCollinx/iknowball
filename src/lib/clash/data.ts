@@ -4,6 +4,7 @@ import { currentUserId, guestName } from "@/lib/daily/data";
 import { isTestSite } from "@/lib/daily/sample";
 import { buildChain, newCode, SET_SIZE, STATS, type Item, type Stat } from "./rules";
 import { samplePool } from "./sample";
+import { addDays, gameDate, gameDateClosesAt, matchweekBounds } from "@/lib/time";
 
 // Data access for Clash. Reads and writes with the service role: the sets
 // hold every answer, so the browser only ever gets what's on screen.
@@ -160,4 +161,26 @@ export async function getClashView(code: string): Promise<ClashView> {
   }
   const table = await setTable(set, userId);
   return { kind: "fulltime", set, run, table };
+}
+
+/** Clash on the home page: your best sprint this matchweek and your latest challenge code. */
+export type HomeClash = { best: number | null; lastCode: string | null };
+
+export async function getHomeClash(userId: string): Promise<HomeClash> {
+  const admin = createAdminClient();
+  const { startsOn, endsOn } = matchweekBounds(gameDate());
+  const [runs, sets] = await Promise.all([
+    admin
+      .from("clash_runs")
+      .select("right_count")
+      .eq("user_id", userId)
+      .gte("started_at", gameDateClosesAt(addDays(startsOn, -1)).toISOString())
+      .lt("started_at", gameDateClosesAt(endsOn).toISOString())
+      .order("right_count", { ascending: false })
+      .limit(1),
+    admin.from("clash_sets").select("code").eq("created_by", userId).order("created_at", { ascending: false }).limit(1),
+  ]);
+  if (runs.error) throw runs.error;
+  if (sets.error) throw sets.error;
+  return { best: runs.data?.[0]?.right_count ?? null, lastCode: sets.data?.[0]?.code ?? null };
 }

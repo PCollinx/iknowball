@@ -7,6 +7,7 @@ import { FixtureTitle } from "@/components/daily/FixtureTitle";
 import { ordinal } from "@/components/daily/formats";
 import { Masthead, shortDate } from "@/components/daily/Masthead";
 import { getDayTable, type TableRow } from "@/lib/daily/data";
+import { KeepyUppy } from "@/components/loading/KeepyUppy";
 
 export const metadata: Metadata = {
   title: "Today's table · iKnowBall",
@@ -136,7 +137,7 @@ function Loading() {
       <div className="flex justify-between border-b border-navy pt-3.5 pb-2">
         <span className="label">Today&apos;s table</span>
       </div>
-      <div className="mt-6 h-[104px] w-3/4 bg-mist" />
+      <KeepyUppy label="Today's table" caption="Adding up the scores…" />
     </main>
   );
 }

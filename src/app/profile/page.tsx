@@ -13,6 +13,7 @@ import { clubChoices, getProfileView, type ProfileView } from "@/lib/profile/dat
 import { formatRating, RATING_DAYS } from "@/lib/profile/rating";
 import { PLACEMENT_DAYS } from "@/lib/profile/stats";
 import { gameDate, seasonLabel, seasonOf } from "@/lib/time";
+import { KeepyUppy } from "@/components/loading/KeepyUppy";
 
 export const metadata: Metadata = {
   title: "Your shirt · iKnowBall",
@@ -61,7 +62,7 @@ async function ProfileScreen({ searchParams }: { searchParams: SearchParams }) {
           No shirt <span className="text-royal">yet</span>
         </h1>
         <p className="mt-3 text-lg">Play today&apos;s Daily and you get one. No sign-up needed.</p>
-        <Link href="/daily" className="mt-5 block bg-royal p-3.5 text-center font-display text-[28px] text-white uppercase">
+        <Link href="/daily" className="mt-5 block bg-royal sash p-3.5 text-center font-display text-[28px] text-white uppercase">
           Play today&apos;s Daily
         </Link>
         <section className="mt-8 border-t-[3px] border-double border-navy pt-4">
@@ -243,7 +244,7 @@ function Loading() {
       <div className="flex justify-between border-b border-navy pt-3.5 pb-2">
         <span className="label">iKnowBall</span>
       </div>
-      <div className="mx-auto mt-5 aspect-square w-[72%] max-w-[300px] bg-mist" />
+      <KeepyUppy label="Your shirt" caption="Ironing your shirt…" />
     </main>
   );
 }

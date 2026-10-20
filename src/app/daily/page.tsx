@@ -13,6 +13,7 @@ import { clubChoices, getRating, getSupporter, kitForFixture } from "@/lib/profi
 import { publicEnv } from "@/lib/env";
 import { isTestSite } from "@/lib/daily/sample";
 import { gameDate } from "@/lib/time";
+import { KeepyUppy } from "@/components/loading/KeepyUppy";
 
 export const metadata: Metadata = {
   title: "The Daily · iKnowBall",
@@ -161,7 +162,7 @@ function Loading() {
       <div className="flex justify-between border-b border-navy pt-3.5 pb-2">
         <span className="label">The Daily</span>
       </div>
-      <div className="mt-6 h-[104px] w-3/4 bg-mist" />
+      <KeepyUppy label="The Daily" caption="Warming up…" />
     </main>
   );
 }

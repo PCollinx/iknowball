@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bestFive, dayScores, streak, tierFor } from "./stats";
+import { bestFive, dayScores, nextTier, streak, tierFor } from "./stats";
 
 describe("tierFor", () => {
   it("uses the beta cut-offs", () => {
@@ -52,5 +52,20 @@ describe("streak", () => {
 
   it("is zero after a missed day", () => {
     expect(streak(["2026-10-15"], "2026-10-17")).toBe(0);
+  });
+});
+
+describe("nextTier", () => {
+  it("gives the tier above, the gap and the way through this one", () => {
+    expect(nextTier(7.6)).toEqual({ name: "Pundit", gap: 0.4, progress: expect.closeTo(0.6, 5) });
+    expect(nextTier(5.5)).toEqual({ name: "Ball Knower", gap: 1.5, progress: 0 });
+  });
+
+  it("measures Plastic from zero", () => {
+    expect(nextTier(2)).toEqual({ name: "Casual", gap: 2, progress: 0.5 });
+  });
+
+  it("has nothing above Ball God", () => {
+    expect(nextTier(9.4)).toBeNull();
   });
 });

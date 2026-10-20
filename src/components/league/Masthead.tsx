@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { KeepyUppy } from "@/components/loading/KeepyUppy";
 
 export function LeagueMasthead({ right }: { right: string }) {
   return (
@@ -17,7 +18,7 @@ export function LeagueLoading() {
       <div className="flex justify-between border-b border-navy pt-3.5 pb-2">
         <span className="label">The League</span>
       </div>
-      <div className="mt-6 h-[104px] w-3/4 bg-mist" />
+      <KeepyUppy label="The League" caption="Checking the table…" />
     </main>
   );
 }

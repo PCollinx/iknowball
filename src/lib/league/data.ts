@@ -234,3 +234,109 @@ export async function getFanbaseTable(): Promise<{ week: Week; rows: FanbaseLine
     minFans: FANBASE_MIN,
   };
 }
+
+/** A row on the home page's League board. `points` is a fanbase's average on the fans tab. */
+export type BoardRow = { key: string; position: number; name: string; points: number; mine: boolean };
+
+/** One tab of the home page's League board: the top three, your row and your place. */
+export type BoardTab = {
+  key: string;
+  kind: "league" | "everyone" | "fans";
+  label: string;
+  /** The full table, opened from the scoreboard block. */
+  href: string;
+  top: BoardRow[];
+  mine: BoardRow | null;
+  /** Places gained (or lost) since yesterday; null on the fans tab, when new today or on a Monday. */
+  moved: number | null;
+  /** Players (or clubs) on the table. */
+  size: number;
+};
+
+const BOARD_TOP = 3;
+
+function boardRow(r: TableLine): BoardRow {
+  return { key: r.userId, position: r.position, name: r.mine ? "You" : r.name, points: r.points, mine: r.mine };
+}
+
+/** The home page's League board: a tab per league you're in, then Everyone and your club's fans. */
+export async function getHomeBoard(me: string | null): Promise<{ tabs: BoardTab[]; club: Club | null }> {
+  const week = currentWeek();
+  const [memberships, parts, sprints] = await Promise.all([
+    me
+      ? createAdminClient().from("league_members").select("leagues(id, name, invite_code, owner_id)").eq("user_id", me).order("joined_at")
+      : Promise.resolve({ data: [], error: null }),
+    weekParts(week),
+    weekSprints(week),
+  ]);
+  if (memberships.error) throw memberships.error;
+  const leagues = ((memberships.data ?? []) as unknown as { leagues: League | null }[])
+    .map((m) => m.leagues)
+    .filter((l): l is League => l !== null);
+
+  // Everyone: the same week table as /league/everyone, with places moved since yesterday.
+  const everyone = weekTable(parts, week.startsOn, sprints);
+  const moved = movement(parts, sprints, week.startsOn, week.today);
+  const myRow = everyone.find((r) => r.userId === me) ?? null;
+  const shown = everyone.slice(0, BOARD_TOP);
+
+  // Fans: clubs ranked by their fans' average week, as on /league/fans.
+  const clubOf = new Map([...sprints, ...parts].map((p) => [p.userId, p.clubId]));
+  const fans = fanbaseTable(everyone.map((r) => ({ points: r.points, clubId: clubOf.get(r.userId) ?? null })), FANBASE_MIN);
+
+  const [people, leagueTables] = await Promise.all([
+    players([...new Set([...shown, ...(myRow ? [myRow] : [])].map((r) => r.userId).concat(me ? [me] : []))]),
+    Promise.all(leagues.map((l) => membersTable(l.id, week, me))),
+  ]);
+  const club = me ? (people.get(me)?.club ?? null) : null;
+  const myFans = fans.find((f) => f.clubId === club?.id) ?? null;
+  const clubs = await clubsByIds([...new Set([...fans.slice(0, BOARD_TOP), ...(myFans ? [myFans] : [])].map((f) => f.clubId))]);
+  const fanRow = (f: FanbaseRow): BoardRow => ({
+    key: String(f.clubId),
+    position: f.position,
+    name: clubs.get(f.clubId)?.name ?? "Club",
+    points: Math.round(f.average),
+    mine: f.clubId === club?.id,
+  });
+  const everyoneLines = withPlayers([...shown, ...(myRow && myRow.position > BOARD_TOP ? [myRow] : [])], people, me, moved);
+
+  return {
+    club,
+    tabs: [
+      ...leagues.map((league, i): BoardTab => {
+        const rows = leagueTables[i];
+        const mine = rows.find((r) => r.mine) ?? null;
+        return {
+          key: `league-${league.id}`,
+          kind: "league",
+          label: league.name,
+          href: `/league/${league.invite_code}`,
+          top: rows.slice(0, BOARD_TOP).map(boardRow),
+          mine: mine ? boardRow(mine) : null,
+          moved: mine?.moved ?? null,
+          size: rows.length,
+        };
+      }),
+      {
+        key: "everyone",
+        kind: "everyone",
+        label: "Everyone",
+        href: "/league/everyone",
+        top: everyoneLines.filter((r) => r.position <= BOARD_TOP).map(boardRow),
+        mine: myRow ? boardRow(everyoneLines.find((r) => r.mine)!) : null,
+        moved: me ? (moved.get(me) ?? null) : null,
+        size: everyone.length,
+      },
+      {
+        key: "fans",
+        kind: "fans",
+        label: "Fans",
+        href: "/league/fans",
+        top: fans.slice(0, BOARD_TOP).map(fanRow),
+        mine: myFans ? fanRow(myFans) : null,
+        moved: null,
+        size: fans.length,
+      },
+    ],
+  };
+}

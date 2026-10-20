@@ -12,6 +12,7 @@ import { STATS } from "@/lib/clash/rules";
 import { publicEnv } from "@/lib/env";
 import { kitOf } from "@/lib/profile/club";
 import { clubsByIds, getRating } from "@/lib/profile/data";
+import { KeepyUppy } from "@/components/loading/KeepyUppy";
 
 export const metadata: Metadata = {
   title: "Clash · iKnowBall",
@@ -43,7 +44,7 @@ async function ClashScreen({ params }: { params: Params }) {
             No such <span className="text-royal">challenge</span>
           </h1>
           <p className="mt-3 text-lg">That link doesn&apos;t match a sprint. Check it, or start your own.</p>
-          <Link href="/clash" className="mt-5 block bg-royal p-3.5 text-center font-display text-[28px] text-white uppercase">
+          <Link href="/clash" className="mt-5 block bg-royal sash p-3.5 text-center font-display text-[28px] text-white uppercase">
             New sprint
           </Link>
         </main>
@@ -94,7 +95,7 @@ function Loading() {
       <div className="flex justify-between border-b border-navy pt-3.5 pb-2">
         <span className="label">Clash · Sprint</span>
       </div>
-      <div className="mt-6 h-[104px] w-3/4 bg-mist" />
+      <KeepyUppy label="Clash" caption="Lining up the players…" />
     </main>
   );
 }
