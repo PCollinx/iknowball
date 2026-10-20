@@ -8,6 +8,9 @@ const posthogAssetsHost = posthogHost.replace(".i.posthog.com", "-assets.i.posth
 
 const nextConfig: NextConfig = {
   skipTrailingSlashRedirect: true,
+  // Next's own gzip, off in development: piping proxied /ingest responses through
+  // it trips Node's MaxListenersExceededWarning. Vercel compresses in production.
+  compress: process.env.NODE_ENV !== "development",
   async rewrites() {
     return [
       { source: "/ingest/static/:path*", destination: `${posthogAssetsHost}/static/:path*` },
@@ -15,6 +18,11 @@ const nextConfig: NextConfig = {
     ];
   },
   cacheComponents: true,
+  experimental: {
+    // Turbopack's on-disk dev cache kept serving stale Tailwind CSS across restarts
+    // (new classes missing). Off, a restart always rebuilds; builds keep their cache.
+    turbopackFileSystemCacheForDev: false,
+  },
   partialPrefetching: true,
   turbopack: {
     rules: {
