@@ -43,7 +43,7 @@ export function ShareButtons({ text, image }: { text: string; image: Image | nul
   if (!image) return null;
   return (
     <div>
-      <button type="button" onClick={shareImage} className="mt-2 mb-1 w-full border-[3px] border-royal bg-royal p-2.5 text-center font-display text-xl text-white uppercase">
+      <button type="button" onClick={shareImage} className="mt-2 mb-1 w-full border-[3px] border-royal bg-royal sash p-2.5 text-center font-display text-xl text-white uppercase">
         Share the card
       </button>
       <p role="status" className="min-h-[22px] text-[15px] font-semibold text-royal">

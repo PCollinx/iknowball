@@ -1,56 +1,113 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
+import { splitFixture } from "@/components/daily/fixture";
+import type { Kit } from "@/components/daily/ShirtBack";
+import { ClashTicket } from "@/components/home/ClashTicket";
+import { DailySticker } from "@/components/home/DailySticker";
+import { LeagueBoard } from "@/components/home/LeagueBoard";
+import { ShirtSticker } from "@/components/home/ShirtSticker";
+import { SiteFooter } from "@/components/nav/SiteFooter";
+import { SiteNav } from "@/components/nav/SiteNav";
+import { getHomeClash } from "@/lib/clash/data";
+import { currentUserId, getHomeDaily, type HomeDaily } from "@/lib/daily/data";
+import { getHomeBoard } from "@/lib/league/data";
+import { kitOf } from "@/lib/profile/club";
+import { clubsNamed, getProfileView } from "@/lib/profile/data";
 import { gameDate, gameDateClosesAt } from "@/lib/time";
+import { KeepyUppy } from "@/components/loading/KeepyUppy";
 
-// Reads the clock, so it renders per request; the rest of the page is static.
-async function DailyCloses() {
-  await connection();
-  const today = gameDate();
-  const closes = gameDateClosesAt(today);
-  return (
-    <p className="text-sm opacity-70">
-      Today&apos;s Daily ({today}) closes at {closes.toISOString().slice(11, 16)} UTC, midnight GMT+1.
-    </p>
-  );
-}
+// Home: "Matchday ticket" (picked 20 Oct 2026). The Daily as an album
+// sticker, Clash as a match ticket, the League as a scoreboard and your shirt
+// as a sticker, under the Programme navbar.
 
 export default function Home() {
   return (
-    <main className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-4 px-4">
-      <h1 className="font-display text-5xl uppercase text-royal">iKnowBall</h1>
-      <p>One Daily, one try. Then settle it in a Clash and your league.</p>
-      <Link href="/daily" className="bg-royal p-3.5 text-center font-display text-[28px] text-white uppercase">
-        Play today&apos;s Daily
-      </Link>
-      <Link href="/clash" className="group flex items-center gap-3 border-y-[3px] border-double border-navy py-2.5">
-        <span className="min-w-0 flex-1">
-          <span className="block font-display text-[32px] leading-[0.9] uppercase">
-            Clash <span className="text-royal">sprint</span>
-          </span>
-          <span className="block text-sm text-navy/70">Sixty seconds of Higher or Lower. Send the link and settle it.</span>
-        </span>
-        <span aria-hidden="true" className="font-display text-[32px] text-royal transition-transform duration-150 group-hover:translate-x-1">
-          →
-        </span>
-      </Link>
-      <Link href="/league" className="group flex items-center gap-3 border-b-[3px] border-double border-navy pb-2.5">
-        <span className="min-w-0 flex-1">
-          <span className="block font-display text-[32px] leading-[0.9] uppercase">
-            The <span className="text-royal">League</span>
-          </span>
-          <span className="block text-sm text-navy/70">Mini-leagues with your mates. Best 5 Dailies a week count.</span>
-        </span>
-        <span aria-hidden="true" className="font-display text-[32px] text-royal transition-transform duration-150 group-hover:translate-x-1">
-          →
-        </span>
-      </Link>
-      <Link href="/profile" className="border-2 border-navy p-3 text-center font-display text-2xl uppercase">
-        Your shirt
-      </Link>
-      <Suspense fallback={<p className="text-sm opacity-70">&nbsp;</p>}>
-        <DailyCloses />
-      </Suspense>
-    </main>
+    <Suspense fallback={<Loading />}>
+      <HomeScreen />
+    </Suspense>
+  );
+}
+
+/** Each of the fixture's clubs in its own kit; royal when a club isn't known. */
+async function fixtureKits(daily: HomeDaily | null): Promise<[Kit | undefined, Kit | undefined]> {
+  const title = daily?.parts.find((p) => p.part === 1)?.title;
+  if (!title) return [undefined, undefined];
+  const [home, away] = splitFixture(title);
+  const clubs = await clubsNamed([home, away].filter((n): n is string => Boolean(n)));
+  const kit = (name: string | null) => {
+    const club = name ? clubs.get(name.toLowerCase()) : undefined;
+    return club ? kitOf(club) : undefined;
+  };
+  return [kit(home), kit(away)];
+}
+
+/** The game date and the server's clock, for the countdown to midnight WAT. */
+function readClock() {
+  const today = gameDate();
+  return { today, closesAt: gameDateClosesAt(today).toISOString(), serverNow: Date.now() };
+}
+
+// Reads the session and the clock, so it renders per request.
+async function HomeScreen() {
+  await connection();
+  const me = await currentUserId();
+  const { today, closesAt, serverNow } = readClock();
+  const [daily, clash, board, view] = await Promise.all([
+    getHomeDaily(me),
+    me ? getHomeClash(me) : null,
+    getHomeBoard(me),
+    me ? getProfileView(me) : null,
+  ]);
+  const kits = await fixtureKits(daily);
+  const day = new Date(`${today}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+
+  return (
+    <>
+      <SiteNav rating={view?.rating ?? null} />
+      <main className="mx-auto max-w-[1184px] px-4 pb-8">
+        <div className="pt-4 lg:pt-6">
+          <span className="label text-royal">{day}</span>
+          <h1 className="mt-1 font-display text-[40px] leading-[0.9] uppercase lg:text-[60px] lg:leading-[0.86]">
+            {daily ? (
+              <>
+                Matchday{" "}
+                <span className="btn-teal ml-1 inline-block -rotate-2 px-2.5 pb-1 lg:ml-2 lg:px-3.5 lg:pb-1.5">is on</span>
+              </>
+            ) : (
+              <>
+                Rest{" "}
+                <span className="btn-teal ml-1 inline-block -rotate-2 px-2.5 pb-1 lg:ml-2 lg:px-3.5 lg:pb-1.5">day</span>
+              </>
+            )}
+          </h1>
+        </div>
+
+        <div className="mt-5 grid gap-7 lg:mt-6 lg:grid-cols-12 lg:gap-9">
+          <div className="min-w-0 lg:col-span-7">
+            <DailySticker daily={daily} kits={kits} closesAt={closesAt} serverNow={serverNow} />
+          </div>
+          <div className="flex min-w-0 flex-col gap-7 lg:col-span-5 lg:gap-8">
+            <ClashTicket clash={clash} />
+            <LeagueBoard tabs={board.tabs} club={board.club} />
+          </div>
+          <div className="px-1 lg:col-span-12 lg:px-0">
+            <ShirtSticker view={view} />
+          </div>
+        </div>
+
+      </main>
+      <SiteFooter />
+    </>
+  );
+}
+
+function Loading() {
+  return (
+    <>
+      <SiteNav />
+      <main className="mx-auto min-h-[70dvh] max-w-[1184px] px-4" aria-busy="true">
+        <KeepyUppy label="Matchday" caption="Warming up…" className="pt-16" />
+      </main>
+    </>
   );
 }

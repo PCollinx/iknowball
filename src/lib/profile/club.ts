@@ -37,4 +37,4 @@ export function kitOf(club: Club | null): Kit {
   return { shirt: club.shirt_colour, number: club.number_colour, trim: club.trim_colour, pattern: club.kit_pattern, collar: club.kit_collar };
 }
 
-export const NEUTRAL_KIT: Kit = { shirt: "#1F48D6", number: "#7FE3E0", trim: "#00A3A3", pattern: "plain" };
+export const NEUTRAL_KIT: Kit = { shirt: "#2440FF", number: "#7FE3E0", trim: "#00A3A3", pattern: "plain" };

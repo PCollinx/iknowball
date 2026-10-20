@@ -38,7 +38,7 @@ export const RATING_BANDS = [
   { from: 7, fill: "#1E9A4C", text: "#FFFFFF" }, // green
 ] as const;
 
-const UNRATED = { fill: "#DCE3F5", text: "#0C1330" };
+const UNRATED = { fill: "#D9DFFF", text: "#0C1330" };
 
 export function ratingColours(rating: number | null): { fill: string; text: string } {
   if (rating === null) return UNRATED;

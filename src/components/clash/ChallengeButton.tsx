@@ -25,7 +25,7 @@ export function ChallengeButton({ url, text, label = "Send the challenge" }: { u
 
   return (
     <>
-      <button type="button" onClick={send} className="w-full bg-royal p-3.5 font-display text-[28px] text-white uppercase">
+      <button type="button" onClick={send} className="w-full bg-royal sash p-3.5 font-display text-[28px] text-white uppercase">
         {label}
       </button>
       <p role="status" className="min-h-[22px] pt-1 text-[15px] font-semibold text-royal">

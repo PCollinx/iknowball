@@ -19,7 +19,7 @@ export type Lettering = "number" | "tag";
 export const SHIRT = "M31 6 L43 2 Q50 9 57 2 L69 6 L97 24 L86 43 L76 37 L76 100 L24 100 L24 37 L14 43 L3 24 Z";
 
 /** The app's own kit, for Daily answers when the fixture's clubs aren't known. */
-export const ROYAL_KIT: Kit = { shirt: "#1F48D6", number: "#FFFFFF", trim: "#7FE3E0" };
+export const ROYAL_KIT: Kit = { shirt: "#2440FF", number: "#FFFFFF", trim: "#7FE3E0" };
 const MISS_KIT: Kit = { shirt: "#FFFFFF", number: "#D7263D", trim: "#D7263D" };
 
 type Props = {

@@ -5,6 +5,8 @@
  * The background is always white: there is no dark theme.
  * Navy is the text colour. Royal blue leads (shirts, correct answers, answer box).
  * Teal is the countdown, tier badge and highlights.
+ * The blue is "Sky sash" (picked 20 Oct 2026): an electric royal, with a sky-blue
+ * sash across big royal panels and buttons (the sash utility below).
  */
 :root {
   --background: #ffffff;
@@ -15,12 +17,13 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-navy: #0c1330;
-  --color-royal: #1f48d6;
+  --color-royal: #2440ff;
   --color-teal: #00a3a3;
   --color-teal-light: #7fe3e0;
-  --color-mist: #eef2fb;
-  --color-track: #dce3f5;
+  --color-mist: #edf0ff;
+  --color-track: #d9dfff;
   --color-red-card: #d7263d;
+  --color-sky: #5cb8ff;
 
   /* Display: headings, numbers, shirt names. Body: everything else. */
   --font-display: var(--font-big-shoulders), "Arial Narrow", Impact, sans-serif;
@@ -50,6 +53,87 @@
       opacity: 1;
     }
   }
+
+  /* Home: stickers are dealt onto the page, the fixture's shirts float, the
+   * ticket stub rocks as if about to tear, and bars fill in. Used with motion-safe:. */
+  --animate-deal-sticker: deal-sticker 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  @keyframes deal-sticker {
+    from {
+      transform: translateY(40px) rotate(-8deg);
+      opacity: 0;
+    }
+  }
+  --animate-float-a: float-a 4.2s ease-in-out infinite;
+  @keyframes float-a {
+    0%,
+    100% {
+      transform: translateY(0) rotate(-7deg);
+    }
+    50% {
+      transform: translateY(-10px) rotate(-4deg);
+    }
+  }
+  --animate-float-b: float-b 4.8s ease-in-out infinite;
+  @keyframes float-b {
+    0%,
+    100% {
+      transform: translateY(-8px) rotate(6deg);
+    }
+    50% {
+      transform: translateY(2px) rotate(9deg);
+    }
+  }
+  --animate-tear: tear 3s ease-in-out infinite;
+  @keyframes tear {
+    0%,
+    100% {
+      transform: none;
+    }
+    50% {
+      transform: rotate(2.5deg);
+    }
+  }
+  /* Loading: keepy-uppy (picked 21 Oct 2026). The ball bounces and spins over
+   * its shadow, from the first frame, so even a one-second load shows it. */
+  --animate-keepy-bounce: keepy-bounce 0.7s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  @keyframes keepy-bounce {
+    0%,
+    100% {
+      transform: translateY(120px) scale(1.12, 0.86);
+    }
+    8%,
+    92% {
+      transform: translateY(110px);
+    }
+    50% {
+      transform: translateY(0) scale(0.97, 1.03);
+    }
+  }
+  --animate-keepy-spin: keepy-spin 1.4s linear infinite;
+  @keyframes keepy-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  --animate-keepy-shadow: keepy-shadow 0.7s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  @keyframes keepy-shadow {
+    0%,
+    100% {
+      transform: scaleX(1);
+      opacity: 0.3;
+    }
+    50% {
+      transform: scaleX(0.45);
+      opacity: 0.1;
+    }
+  }
+
+  --animate-fill-bar: fill-bar 1.2s 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  @keyframes fill-bar {
+    from {
+      transform: scaleX(0);
+    }
+  }
 }
 
 html {
@@ -60,6 +144,58 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+}
+
+/* A sky-blue sash across a royal panel or button, like a kit's diagonal band.
+ * It sits near the right edge, clear of the label: white on sky is too faint to read.
+ * Pair it with disabled:bg-none on buttons that grey out. */
+@utility sash {
+  background-image: linear-gradient(110deg, transparent 0 80%, var(--color-sky) 80% 91%, transparent 91%);
+}
+
+/* Buttons with a hard offset shadow, like a sticker (20 Oct 2026): light teal
+ * with navy type on a navy shadow, or navy with sky type on a sky shadow. Add
+ * btn-press to ones you can tap: they lift on hover and push in when pressed. */
+@utility btn-teal {
+  --btn-shadow: var(--color-navy);
+  border: 2px solid var(--color-navy);
+  background-color: var(--color-teal-light);
+  color: var(--color-navy);
+  box-shadow: 5px 5px 0 var(--btn-shadow);
+}
+
+@utility btn-navy {
+  --btn-shadow: var(--color-sky);
+  border: 2px solid var(--color-navy);
+  background-color: var(--color-navy);
+  color: var(--color-sky);
+  box-shadow: 5px 5px 0 var(--btn-shadow);
+}
+
+@utility btn-press {
+  transition:
+    translate 0.12s,
+    box-shadow 0.12s;
+  &:hover {
+    translate: -2px -2px;
+    box-shadow: 7px 7px 0 var(--btn-shadow);
+  }
+  &:active {
+    translate: 3px 3px;
+    box-shadow: 2px 2px 0 var(--btn-shadow);
+  }
+}
+
+/* A short word ("or", "vs") whose letters carry the sash: royal letterforms
+ * with one teal slash cutting through the whole word, painted only inside the
+ * letters (no box behind them). Full teal, as light teal fades on white. */
+@utility sash-mark {
+  display: inline-block;
+  background-color: var(--color-royal);
+  background-image: linear-gradient(112deg, transparent 0 40%, var(--color-teal) 40% 60%, transparent 60%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* Small uppercase label used in mastheads, tables and the share card. */

@@ -68,7 +68,7 @@ export function JoinButton({ code }: { code: string }) {
   return (
     <form action={action}>
       <input type="hidden" name="code" value={code} />
-      <button type="submit" disabled={pending} className="w-full bg-royal p-3.5 font-display text-[28px] text-white uppercase disabled:bg-track">
+      <button type="submit" disabled={pending} className="w-full bg-royal sash p-3.5 font-display text-[28px] text-white uppercase disabled:bg-track disabled:bg-none">
         {pending ? "Joining…" : "Join the league"}
       </button>
       {state.error && <p role="alert" className="mt-2 font-semibold text-red-card">{state.error}</p>}

@@ -40,7 +40,7 @@ async function Everyone() {
         <p className="mt-4 text-lg">Nobody has played this week yet. First on the table takes top spot.</p>
       )}
       {!top.some((r) => r.mine) && !mine && (
-        <Link href="/daily" className="mt-4 block bg-royal p-3.5 text-center font-display text-[26px] text-white uppercase">
+        <Link href="/daily" className="mt-4 block bg-royal sash p-3.5 text-center font-display text-[26px] text-white uppercase">
           Get on the table
         </Link>
       )}

@@ -8,7 +8,7 @@ export function SubmitButton({ children, pendingText }: { children: React.ReactN
     <button
       type="submit"
       disabled={pending}
-      className="w-full bg-royal p-3.5 font-display text-[28px] text-white uppercase disabled:bg-track disabled:text-navy/60"
+      className="w-full bg-royal sash p-3.5 font-display text-[28px] text-white uppercase disabled:bg-track disabled:bg-none disabled:text-navy/60"
     >
       {pending ? pendingText : children}
     </button>
