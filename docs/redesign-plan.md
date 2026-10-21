@@ -47,9 +47,9 @@ One step, before any redesign, so every later screen starts inside the same fram
   opted out), holding the navbar above the page and the footer below. Pages drop their own wrappers.
 - **Page mastheads stay, slimmer.** The "The Daily · No. 004" and "Clash · Sprint" lines become the page's
   own header under the navbar (no second brand line).
-- **Match mode during a live round.** While a Daily part or a Clash sprint is running, a full navbar and
-  footer invite a mis-tap that throws away a timed attempt. Proposal: the navbar shrinks to the logo and the
-  clock, and the footer hides, until full time. *(Collins to confirm.)*
+- **Match mode during a live round** (agreed 21 Oct 2026). While a Daily part or a Clash sprint is running,
+  a full navbar and footer invite a mis-tap that throws away a timed attempt, so the navbar shrinks to the
+  logo (not a link) and a "Live" tag, the round keeps its own clock, and the footer hides, until full time.
 - **Add a 404 page** in the same frame (there isn't one yet), and put the Daily's error screen inside it.
 - **Out of scope:** the maker (`/maker/*`) keeps its own admin bar.
 
@@ -102,9 +102,12 @@ Final privacy copy once Collins has reviewed it (drop the "Draft" tag, add the c
 ### 12. The maker (optional, admin only)
 `/maker`, `/maker/day`, `/maker/teaser`, `/maker/login`. Only if time allows before launch.
 
+### 13. The waitlist (last)
+PR #31, held until 1 Nov: rebase it onto the new home and frame, then redesign it in the same style. The last
+redesign we take on (Collins, 21 Oct 2026).
+
 ## Also on the list
 
-- **Waitlist (PR #31, held until 1 Nov):** rebase it onto the new home and frame before it goes out.
 - **Share images** (`src/lib/daily/ShareImage.tsx`, `src/lib/clash/ResultImage.tsx`) follow their
   screens in steps 3 and 6.
 
@@ -123,3 +126,4 @@ Final privacy copy once Collins has reviewed it (drop the "Draft" tag, add the c
 - [ ] 10. Your shirt
 - [ ] 11. Privacy, 404 and errors
 - [ ] 12. The maker (optional)
+- [ ] 13. The waitlist
