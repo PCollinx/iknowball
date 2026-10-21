@@ -82,7 +82,7 @@ export function PickRound(props: Props) {
           <div className="@container min-w-0">
             {props.format === "era" ? (
               <h1 className="font-display text-[52px] leading-[0.9] uppercase lg:text-[80px]">
-                Era <span className="text-royal">picks</span>
+                Era <span className="sash-mark">picks</span>
               </h1>
             ) : (
               <FixtureTitle title={props.title} className="text-[min(52px,var(--fit))] lg:text-[min(80px,var(--fit))]" />
