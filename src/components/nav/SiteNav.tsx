@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { connection } from "next/server";
 import { RatingBadge } from "@/components/profile/RatingBadge";
 import { currentUserId } from "@/lib/daily/data";
 import { getRating } from "@/lib/profile/data";
@@ -52,8 +53,10 @@ export function SiteNav() {
   );
 }
 
-/** Reads the session, so it streams in after the page's static shell. */
+/** Reads the session, so it streams in after the page's static shell. The
+ * sign-in check reads the clock, so it must be marked request-time first. */
 async function PlayerShirtLink() {
+  await connection();
   const me = await currentUserId();
   return <ShirtLink rating={me ? await getRating(me) : null} />;
 }
