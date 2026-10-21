@@ -13,6 +13,7 @@ import { publicEnv } from "@/lib/env";
 import { kitOf } from "@/lib/profile/club";
 import { clubsByIds, getRating } from "@/lib/profile/data";
 import { KeepyUppy } from "@/components/loading/KeepyUppy";
+import { MatchLive } from "@/components/nav/MatchLive";
 
 export const metadata: Metadata = {
   title: "Clash · iKnowBall",
@@ -38,7 +39,7 @@ async function ClashScreen({ params }: { params: Params }) {
   switch (view.kind) {
     case "missing":
       return (
-        <main className="mx-auto min-h-dvh max-w-[560px] px-4">
+        <main className="mx-auto w-full flex-1 max-w-[560px] px-4">
           <ClashMasthead right="Higher or lower" />
           <h1 className="mt-6 font-display text-[64px] leading-[0.9] uppercase">
             No such <span className="text-royal">challenge</span>
@@ -56,19 +57,22 @@ async function ClashScreen({ params }: { params: Params }) {
       const clubs = await clubsByIds(ids);
       const kits: Record<number, Kit> = Object.fromEntries([...clubs].map(([id, club]) => [id, kitOf(club)]));
       return (
-        <Sprint
-          key={view.run.id}
-          runId={view.run.id}
-          statLabel={STATS[view.set.stat].label}
-          shown={{ name: view.shown.name, clubId: view.shown.club_id, value: view.shown.value }}
-          next={view.next}
-          deadlineAt={view.run.deadline_at}
-          serverNow={view.serverNow}
-          kicks={view.run.kicks}
-          currentRun={view.run.current_run}
-          bestRun={view.run.best_run}
-          kits={kits}
-        />
+        <>
+          <MatchLive />
+          <Sprint
+            key={view.run.id}
+            runId={view.run.id}
+            statLabel={STATS[view.set.stat].label}
+            shown={{ name: view.shown.name, clubId: view.shown.club_id, value: view.shown.value }}
+            next={view.next}
+            deadlineAt={view.run.deadline_at}
+            serverNow={view.serverNow}
+            kicks={view.run.kicks}
+            currentRun={view.run.current_run}
+            bestRun={view.run.best_run}
+            kits={kits}
+          />
+        </>
       );
     }
     case "fulltime": {
@@ -91,7 +95,7 @@ async function ClashScreen({ params }: { params: Params }) {
 
 function Loading() {
   return (
-    <main className="mx-auto min-h-dvh max-w-[560px] px-4" aria-busy="true">
+    <main className="mx-auto w-full flex-1 max-w-[560px] px-4" aria-busy="true">
       <div className="flex justify-between border-b border-navy pt-3.5 pb-2">
         <span className="label">Clash · Sprint</span>
       </div>

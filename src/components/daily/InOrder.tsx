@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { submitOrder } from "@/app/daily/actions";
+import { submitOrder } from "@/app/(site)/daily/actions";
 import { Masthead } from "./Masthead";
 import { ShirtBack, shirtName } from "./ShirtBack";
 import { useCountdown } from "./useCountdown";
@@ -34,7 +34,7 @@ export function InOrder(props: Props) {
   const total = props.items.length;
 
   return (
-    <main className="mx-auto grid min-h-dvh max-w-[1200px] grid-rows-[auto_1fr_auto] [grid-template-areas:'head'_'squad'_'answer'] lg:h-dvh lg:grid-cols-[440px_1fr] lg:grid-rows-[1fr_auto] lg:[grid-template-areas:'head_squad'_'answer_squad']">
+    <main className="mx-auto grid w-full flex-1 max-w-[1200px] grid-rows-[auto_1fr_auto] [grid-template-areas:'head'_'squad'_'answer'] lg:h-dvh lg:grid-cols-[440px_1fr] lg:grid-rows-[1fr_auto] lg:[grid-template-areas:'head_squad'_'answer_squad']">
       <section className="px-4 [grid-area:head] lg:px-8">
         <Masthead issue={props.issue} right={`${props.dateLabel} · ${props.partLabel}`} />
         <div className="grid grid-cols-[1fr_auto] items-start gap-3 border-b-[3px] border-double border-navy py-3.5 lg:grid-cols-1 lg:border-b-0">

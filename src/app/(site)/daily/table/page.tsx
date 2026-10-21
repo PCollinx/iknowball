@@ -31,7 +31,7 @@ async function TableScreen() {
   const day = await getDayTable();
   if (!day) {
     return (
-      <main className="mx-auto min-h-dvh max-w-[880px] px-4 lg:px-8">
+      <main className="mx-auto w-full flex-1 max-w-[880px] px-4 lg:px-8">
         <Masthead issue={0} right="Today's table" />
         <h1 className="mt-6 font-display text-[64px] leading-[0.9] uppercase">
           No Daily <span className="text-royal">today</span>
@@ -46,7 +46,7 @@ async function TableScreen() {
   const below = mine && mine.position > SHOWN && !shown.includes(mine) ? mine : null;
 
   return (
-    <main className="mx-auto min-h-dvh max-w-[880px] px-4 pb-10 lg:px-8">
+    <main className="mx-auto w-full flex-1 max-w-[880px] px-4 pb-10 lg:px-8">
       <Masthead issue={day.issue} right={`${shortDate(day.playDate)} · Today's table`} />
       <div className="grid grid-cols-[1fr_auto] items-end gap-3 border-b-[3px] border-double border-navy py-3.5">
         <div className="@container min-w-0">
@@ -133,7 +133,7 @@ function Row({ row, me, partial }: { row: TableRow; me: boolean; partial: boolea
 
 function Loading() {
   return (
-    <main className="mx-auto min-h-dvh max-w-[880px] px-4" aria-busy="true">
+    <main className="mx-auto w-full flex-1 max-w-[880px] px-4" aria-busy="true">
       <div className="flex justify-between border-b border-navy pt-3.5 pb-2">
         <span className="label">Today&apos;s table</span>
       </div>

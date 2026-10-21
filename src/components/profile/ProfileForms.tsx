@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { saveWithEmail, setUsername, signInWithEmail, type FormState } from "@/app/profile/actions";
+import { saveWithEmail, setUsername, signInWithEmail, type FormState } from "@/app/(site)/profile/actions";
 
 function Message({ state }: { state: FormState }) {
   return (

@@ -1,4 +1,4 @@
-import { startSprint } from "@/app/clash/actions";
+import { startSprint } from "@/app/(site)/clash/actions";
 import { SubmitButton } from "@/components/daily/SubmitButton";
 import { PENALTY_SECONDS, SPRINT_SECONDS } from "@/lib/clash/rules";
 import type { Result } from "@/lib/clash/data";
@@ -8,7 +8,7 @@ import { KickRow } from "./KickRow";
 /** Before a sprint: the rules, and on a challenge link, the score to beat. */
 export function ClashKickOff({ code, statLabel, setter }: { code?: string; statLabel?: string; setter?: Result | null }) {
   return (
-    <main className="mx-auto min-h-dvh max-w-[1100px] px-4 pb-10 lg:grid lg:grid-cols-[minmax(0,1fr)_420px] lg:gap-x-12 lg:px-8">
+    <main className="mx-auto w-full flex-1 max-w-[1100px] px-4 pb-10 lg:grid lg:grid-cols-[minmax(0,1fr)_420px] lg:gap-x-12 lg:px-8">
       <div className="lg:col-span-2">
         <ClashMasthead right={statLabel ?? "Higher or lower"} />
       </div>

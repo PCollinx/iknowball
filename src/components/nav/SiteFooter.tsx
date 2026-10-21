@@ -10,7 +10,7 @@ const ICON = "h-4 w-4 shrink-0";
 
 export function SiteFooter() {
   return (
-    <footer className="mt-10 border-t-[4px] border-double border-navy">
+    <footer data-site-footer className="mt-10 border-t-[4px] border-double border-navy">
       <div className="mx-auto flex max-w-[1184px] flex-col gap-5 px-4 py-6 xl:flex-row xl:items-center xl:justify-between xl:gap-8">
         <div className="flex flex-col gap-2 xl:max-w-[300px]">
           <Link href="/" aria-label="iKnowBall home" className="flex shrink-0 items-center gap-2">

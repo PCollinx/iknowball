@@ -1,4 +1,4 @@
-import { startSprint } from "@/app/clash/actions";
+import { startSprint } from "@/app/(site)/clash/actions";
 import { SubmitButton } from "@/components/daily/SubmitButton";
 import { ordinal } from "@/components/daily/formats";
 import type { Result } from "@/lib/clash/data";
@@ -41,7 +41,7 @@ export function ClashFullTime({ code, statLabel, right, kicks, bestRun, table, s
   const url = `${siteUrl.replace(/\/$/, "")}/clash/${code}`;
 
   return (
-    <main className="mx-auto min-h-dvh max-w-[1100px] px-4 pb-10 lg:grid lg:grid-cols-[minmax(0,1fr)_420px] lg:content-start lg:gap-x-12 lg:px-8">
+    <main className="mx-auto w-full flex-1 max-w-[1100px] px-4 pb-10 lg:grid lg:grid-cols-[minmax(0,1fr)_420px] lg:content-start lg:gap-x-12 lg:px-8">
       <div className="lg:col-span-2">
         <ClashMasthead right="Full time" />
       </div>

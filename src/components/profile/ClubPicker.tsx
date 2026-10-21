@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { chooseClub } from "@/app/profile/actions";
+import { chooseClub } from "@/app/(site)/profile/actions";
 import { SubmitButton } from "@/components/daily/SubmitButton";
 import { ShirtBack } from "@/components/daily/ShirtBack";
 import { kitOf, type Club } from "@/lib/profile/club";

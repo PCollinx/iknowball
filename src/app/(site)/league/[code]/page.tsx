@@ -77,7 +77,7 @@ async function LeagueScreen({ params, searchParams }: { params: Params; searchPa
 
   if (view.kind === "missing") {
     return (
-      <main className="mx-auto min-h-dvh max-w-[560px] px-4 pb-10">
+      <main className="mx-auto w-full flex-1 max-w-[560px] px-4 pb-10">
         <LeagueMasthead right="Invite" />
         <h1 className="mt-6 font-display text-[64px] leading-[0.9] uppercase">
           No such <span className="text-royal">league</span>
@@ -92,7 +92,7 @@ async function LeagueScreen({ params, searchParams }: { params: Params; searchPa
 
   if (view.kind === "invite") {
     return (
-      <main className="mx-auto min-h-dvh max-w-[560px] px-4 pb-10">
+      <main className="mx-auto w-full flex-1 max-w-[560px] px-4 pb-10">
         <LeagueMasthead right="Invite" />
         <span className="label mt-5 block text-royal">You&apos;re invited</span>
         <h1 className="mt-1 font-display text-[56px] leading-[0.9] break-words uppercase">{view.league.name}</h1>
@@ -115,7 +115,7 @@ async function LeagueScreen({ params, searchParams }: { params: Params; searchPa
   const { league, week, rows } = view;
   const fresh = search.new === "1";
   return (
-    <main className="mx-auto min-h-dvh max-w-[560px] px-4 pb-10 lg:max-w-[1040px]">
+    <main className="mx-auto w-full flex-1 max-w-[560px] px-4 pb-10 lg:max-w-[1040px]">
       <LeagueMasthead right={fresh ? "New league" : weekLabel(week)} />
       <div className="lg:grid lg:grid-cols-[1fr_340px] lg:gap-10">
         <section className="min-w-0">

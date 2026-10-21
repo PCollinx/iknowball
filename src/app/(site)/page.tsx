@@ -6,8 +6,6 @@ import { ClashTicket } from "@/components/home/ClashTicket";
 import { DailySticker } from "@/components/home/DailySticker";
 import { LeagueBoard } from "@/components/home/LeagueBoard";
 import { ShirtSticker } from "@/components/home/ShirtSticker";
-import { SiteFooter } from "@/components/nav/SiteFooter";
-import { SiteNav } from "@/components/nav/SiteNav";
 import { getHomeClash } from "@/lib/clash/data";
 import { currentUserId, getHomeDaily, type HomeDaily } from "@/lib/daily/data";
 import { getHomeBoard } from "@/lib/league/data";
@@ -63,8 +61,7 @@ async function HomeScreen() {
 
   return (
     <>
-      <SiteNav rating={view?.rating ?? null} />
-      <main className="mx-auto max-w-[1184px] px-4 pb-8">
+      <main className="mx-auto w-full max-w-[1184px] px-4 pb-8">
         <div className="pt-4 lg:pt-6">
           <span className="label text-royal">{day}</span>
           <h1 className="mt-1 font-display text-[40px] leading-[0.9] uppercase lg:text-[60px] lg:leading-[0.86]">
@@ -96,7 +93,6 @@ async function HomeScreen() {
         </div>
 
       </main>
-      <SiteFooter />
     </>
   );
 }
@@ -104,8 +100,7 @@ async function HomeScreen() {
 function Loading() {
   return (
     <>
-      <SiteNav />
-      <main className="mx-auto min-h-[70dvh] max-w-[1184px] px-4" aria-busy="true">
+      <main className="mx-auto w-full max-w-[1184px] flex-1 px-4" aria-busy="true">
         <KeepyUppy label="Matchday" caption="Warming up…" className="pt-16" />
       </main>
     </>
