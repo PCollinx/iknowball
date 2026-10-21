@@ -2,18 +2,15 @@
 
 import { useRef, useState, useTransition } from "react";
 import { endPart, submitGuess } from "@/app/(site)/daily/actions";
-import { Masthead } from "./Masthead";
+import { FixtureTitle } from "./FixtureTitle";
+import { GiveUp, Pitch, RoundHead } from "./InPlay";
 import { ShirtBack, shirtName, type Kit } from "./ShirtBack";
 import { useCountdown } from "./useCountdown";
-import { clock } from "./clock";
-import { FixtureTitle } from "./FixtureTitle";
 
 const RIGHT = ["Ball knowledge.", "Correct. Next one.", "Sharp. Keep going.", "You know ball.", "Oya, next."];
 const WRONG = ["Not on the list. Try again.", "Not on the list, chief.", "Who told you that one?", "E no dey the list."];
 
 type Props = {
-  issue: number;
-  dateLabel: string;
   partLabel: string;
   title: string;
   prompt: string;
@@ -64,53 +61,62 @@ export function FreeRecall(props: Props) {
   }
 
   const over = left === 0 || closing;
+  const xi = Math.min(props.answerCount, XI.length);
+  const shirt = (k: number) => (k < found.length ? found[k] : null);
 
   return (
-    <main className="mx-auto grid w-full flex-1 max-w-[1200px] grid-rows-[auto_1fr_auto] [grid-template-areas:'head'_'squad'_'answer'] lg:h-dvh lg:grid-cols-[440px_1fr] lg:grid-rows-[1fr_auto] lg:[grid-template-areas:'head_squad'_'answer_squad']">
-      <section className="px-4 [grid-area:head] lg:px-8">
-        <Masthead issue={props.issue} right={`${props.dateLabel} · ${props.partLabel}`} />
-        <div className="grid grid-cols-[1fr_auto] items-start gap-3 border-b-[3px] border-double border-navy py-3.5 lg:grid-cols-1 lg:border-b-0">
-          <div className="@container min-w-0">
-            <FixtureTitle title={props.title} className="text-[min(52px,var(--fit))] lg:text-[min(80px,var(--fit))]" />
-            <p className="mt-2 max-w-[32ch] text-[15px] lg:text-lg">{props.prompt}</p>
-          </div>
-          <div
-            className={`min-w-[92px] px-2.5 pt-1.5 pb-2 text-right text-white lg:flex lg:items-baseline lg:gap-3.5 lg:justify-self-start lg:px-4 ${left <= 15 && !over ? "bg-red-card" : "bg-teal"}`}
-            role="timer"
-            aria-label={`${left} seconds left`}
-          >
-            <span className="label block text-[10px] lg:order-2 lg:text-xs">Time left</span>
-            <span className="block font-display text-[46px] leading-[0.9] tabular-nums lg:text-7xl">{clock(left)}</span>
-          </div>
-        </div>
+    <main className="mx-auto grid w-full max-w-[560px] flex-1 grid-rows-[auto_1fr_auto] px-4 [grid-template-areas:'head'_'squad'_'answer'] lg:max-w-[1184px] lg:grid-cols-[400px_minmax(0,1fr)] lg:grid-rows-[auto_1fr] lg:gap-x-10 lg:[grid-template-areas:'head_squad'_'answer_squad']">
+      <section className="[grid-area:head]">
+        <RoundHead
+          label={`${props.partLabel} · Free Recall`}
+          title={<FixtureTitle title={props.title} className="text-[min(34px,var(--fit))] lg:text-[min(64px,var(--fit))]" />}
+          prompt={xi < props.answerCount ? `${props.prompt} Fill the XI, then the bench.` : props.prompt}
+          left={left}
+          low={left <= 15 && !over}
+        />
       </section>
 
-      <section className="px-4 [grid-area:squad] lg:overflow-y-auto lg:border-l-[3px] lg:border-double lg:border-navy lg:px-8">
-        <div className="hidden lg:block">
-          <div className="flex justify-between border-b border-navy pt-3.5 pb-2">
-            <span className="label">Squad</span>
-            <span className="label">Numbered in the order you got them</span>
+      {/* The squad: found shirts take the XI, strikers first, then the bench. */}
+      <section className="pt-3 pb-4 [grid-area:squad] lg:pt-6 lg:pb-10" aria-label={`Squad: ${found.length} of ${props.answerCount} found`}>
+        <Pitch half="attack" className="aspect-[358/336] lg:aspect-[4/3]">
+          {XI.slice(0, xi).map(([x, y], k) => {
+            const f = shirt(k);
+            return (
+              <div key={k} className="absolute w-[15cqw] -translate-1/2 text-center lg:w-[11.5cqw]" style={{ left: `${x}%`, top: `${y}%` }}>
+                {f ? (
+                  <ShirtBack kit={props.kit ?? undefined} num={k + 1} pop={f.id === fresh} />
+                ) : (
+                  <ShirtBack num="?" state="empty" />
+                )}
+                {f && (
+                  <span className="mt-[-0.5cqw] inline-block max-w-[19cqw] truncate bg-navy px-[1cqw] py-[0.4cqw] font-display text-[3.3cqw] leading-none text-white uppercase lg:text-[2.5cqw]">
+                    {shirtName(f.text)}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </Pitch>
+        {props.answerCount > xi && (
+          <div className="mt-2.5 grid grid-cols-[auto_minmax(0,1fr)] items-start gap-2.5">
+            <span className="label pt-1 text-[10px] lg:text-xs">Bench</span>
+            <div className="grid grid-cols-6 gap-x-1 gap-y-1 lg:grid-cols-8 lg:gap-x-2">
+              {Array.from({ length: props.answerCount - xi }, (_, j) => {
+                const k = xi + j;
+                const f = shirt(k);
+                return f ? (
+                  <ShirtBack key={f.id} kit={props.kit ?? undefined} name={shirtName(f.text)} num={k + 1} pop={f.id === fresh} />
+                ) : (
+                  <ShirtBack key={`empty-${k}`} num="?" state="empty" />
+                );
+              })}
+            </div>
           </div>
-        </div>
-        <div className="flex items-baseline justify-between pt-3 pb-1.5">
-          <span className="label">{found.length ? "Found" : "Squad"}</span>
-          <span className="font-display text-3xl lg:text-5xl">
-            {found.length} / {props.answerCount}
-          </span>
-        </div>
-        <div className="grid grid-cols-5 gap-x-1 gap-y-1.5 pb-4 lg:grid-cols-6 lg:gap-x-3 lg:gap-y-3.5">
-          {Array.from({ length: props.answerCount }, (_, k) =>
-            k < found.length ? (
-              <ShirtBack key={found[k].id} kit={props.kit ?? undefined} name={shirtName(found[k].text)} num={k + 1} pop={found[k].id === fresh} />
-            ) : (
-              <ShirtBack key={`empty-${k}`} num="?" state="empty" />
-            ),
-          )}
-        </div>
+        )}
       </section>
 
-      <section className="sticky bottom-0 grid gap-2 border-t-2 border-navy bg-white px-4 pt-3 pb-4 [grid-area:answer] lg:static lg:mx-8 lg:border-t-[3px] lg:border-double lg:px-0">
-        <form action={guess} autoComplete="off" className="flex border-[3px] border-royal focus-within:shadow-[0_0_0_3px_var(--color-track)]">
+      <section className="sticky bottom-0 -mx-4 grid gap-2 border-t-2 border-navy bg-white px-4 pt-3 pb-4 [grid-area:answer] lg:static lg:mx-0 lg:self-start lg:border-t-[3px] lg:border-double lg:px-0 lg:pt-5">
+        <form action={guess} autoComplete="off" className="flex gap-2">
           <label htmlFor="guess" className="sr-only">
             Type a player&apos;s name
           </label>
@@ -125,30 +131,41 @@ export function FreeRecall(props: Props) {
             autoCapitalize="words"
             spellCheck={false}
             enterKeyHint="go"
-            className="min-w-0 flex-1 bg-white p-3 text-lg font-semibold outline-none placeholder:font-normal placeholder:text-[#7d88aa]"
+            className="min-w-0 flex-1 border-[2.5px] border-royal bg-white p-2.5 text-lg font-semibold outline-none placeholder:font-normal placeholder:text-[#7d88aa] focus:shadow-[0_0_0_3px_var(--color-track)]"
           />
-          <button type="submit" disabled={over} className="bg-royal px-5 font-display text-2xl text-white uppercase disabled:bg-track disabled:text-navy/60">
+          <button
+            type="submit"
+            disabled={over}
+            className="btn-teal btn-press px-4 font-display text-2xl uppercase disabled:border-track disabled:bg-track disabled:text-navy/60 disabled:shadow-none"
+          >
             Go
           </button>
         </form>
-        <p
-          role="status"
-          className={`min-h-[22px] text-[15px] font-semibold ${feedback?.tone === "ok" ? "text-royal" : feedback?.tone === "no" ? "text-red-card" : "text-navy/70"}`}
-        >
-          {over ? "Full time on this part." : checking ? `Checking ${pending}…` : feedback?.text}
-        </p>
-        <div>
-          <button
-            type="button"
-            onClick={close}
-            disabled={over}
-            className="text-[13px] font-semibold text-navy/70 underline underline-offset-[3px]"
+        <div className="flex items-baseline justify-between gap-3">
+          <p
+            role="status"
+            className={`min-h-[22px] text-sm font-semibold lg:text-[15px] ${feedback?.tone === "ok" ? "text-royal" : feedback?.tone === "no" ? "text-red-card" : "text-navy/70"}`}
           >
-            Give up and reveal
-          </button>
+            {over ? "Full time on this part." : checking ? `Checking ${pending}…` : feedback?.text}
+          </p>
+          <GiveUp onClick={close} disabled={over} />
         </div>
       </section>
     </main>
   );
 }
 
+/** The XI's places on the pitch (x, y in %), filled strikers first, keeper last: a 4-4-2. */
+const XI: [number, number][] = [
+  [38, 13],
+  [62, 13],
+  [12, 38],
+  [37, 40],
+  [63, 40],
+  [88, 38],
+  [12, 65],
+  [37, 67],
+  [63, 67],
+  [88, 65],
+  [50, 87],
+];

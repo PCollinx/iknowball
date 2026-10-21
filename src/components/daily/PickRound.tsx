@@ -4,9 +4,8 @@ import { useState, useTransition } from "react";
 import { endPart, submitPick } from "@/app/(site)/daily/actions";
 import type { PickAnswered, PickQuestion } from "@/lib/daily/data";
 import { FixtureTitle } from "./FixtureTitle";
-import { Masthead } from "./Masthead";
-import { ShirtBack, shirtName, type Kit } from "./ShirtBack";
-import { clock } from "./clock";
+import { GiveUp, Pitch, RoundHead, Steps, type Step } from "./InPlay";
+import { ShirtBack, type Kit } from "./ShirtBack";
 import { useCountdown } from "./useCountdown";
 
 const RIGHT = ["Ball knowledge.", "Correct. Next one.", "Sharp.", "You know ball.", "Oya, next."];
@@ -15,8 +14,6 @@ const WRONG = ["Not that one, chief.", "Who told you that one?", "E no reach.", 
 const SHOW_MS = 800;
 
 type Props = {
-  issue: number;
-  dateLabel: string;
   partLabel: string;
   format: "pick" | "era";
   title: string;
@@ -74,118 +71,173 @@ export function PickRound(props: Props) {
         ? "Checking…"
         : "";
 
+  const steps: Step[] = props.questions.map((q) => {
+    const a = answered.find((x) => x.id === q.id);
+    return a ? (a.right ? "right" : "wrong") : q === current ? "now" : "next";
+  });
+  const era = props.format === "era";
+  const low = left <= 10 && !over;
+  const progress = (
+    <Steps steps={steps} label="Your answers so far">
+      <span className="text-navy/70">
+        {number} of {props.questions.length}
+      </span>{" "}
+      <span className="font-display text-lg tracking-normal text-royal lg:text-2xl">{right} right</span>
+    </Steps>
+  );
+  const stateOf = (choice: string) => {
+    const chosen = tap?.choice === choice;
+    const isAnswer = result?.answer === choice;
+    return result ? (isAnswer ? "right" : chosen ? "wrong" : "idle") : chosen ? "pending" : "idle";
+  };
+  const faded = (state: string) => (result && state === "idle" ? "opacity-40" : "");
+
   return (
-    <main className="mx-auto grid w-full flex-1 max-w-[1200px] grid-rows-[auto_1fr_auto] [grid-template-areas:'head'_'squad'_'answer'] lg:h-dvh lg:grid-cols-[440px_1fr] lg:grid-rows-[1fr_auto] lg:[grid-template-areas:'head_squad'_'answer_squad']">
-      <section className="px-4 [grid-area:head] lg:px-8">
-        <Masthead issue={props.issue} right={`${props.dateLabel} · ${props.partLabel}`} />
-        <div className="grid grid-cols-[1fr_auto] items-start gap-3 border-b-[3px] border-double border-navy py-3.5 lg:grid-cols-1 lg:border-b-0">
-          <div className="@container min-w-0">
-            {props.format === "era" ? (
-              <h1 className="font-display text-[52px] leading-[0.9] uppercase lg:text-[80px]">
+    <main className="mx-auto grid w-full max-w-[560px] flex-1 grid-rows-[auto_1fr_auto] px-4 [grid-template-areas:'head'_'squad'_'answer'] lg:max-w-[1184px] lg:grid-cols-[400px_minmax(0,1fr)] lg:grid-rows-[auto_1fr] lg:gap-x-10 lg:[grid-template-areas:'head_squad'_'answer_squad']">
+      <section className="[grid-area:head]">
+        <RoundHead
+          label={`${props.partLabel} · ${era ? "Era picks" : "Rapid picks"}`}
+          title={
+            era ? (
+              <h1 className="font-display text-[34px] leading-[0.9] whitespace-nowrap uppercase lg:text-5xl xl:text-[64px]">
                 Era <span className="sash-mark">picks</span>
               </h1>
             ) : (
-              <FixtureTitle title={props.title} className="text-[min(52px,var(--fit))] lg:text-[min(80px,var(--fit))]" />
-            )}
-            <p className="mt-2 max-w-[32ch] text-[15px] lg:text-lg">{props.prompt}</p>
-          </div>
-          <div
-            className={`min-w-[92px] px-2.5 pt-1.5 pb-2 text-right text-white lg:flex lg:items-baseline lg:gap-3.5 lg:justify-self-start lg:px-4 ${left <= 10 && !over ? "bg-red-card" : "bg-teal"}`}
-            role="timer"
-            aria-label={`${left} seconds left`}
-          >
-            <span className="label block text-[10px] lg:order-2 lg:text-xs">Time left</span>
-            <span className="block font-display text-[46px] leading-[0.9] tabular-nums lg:text-7xl">{clock(left)}</span>
-          </div>
-        </div>
+              <FixtureTitle title={props.title} className="text-[min(34px,var(--fit))] lg:text-[min(64px,var(--fit))]" />
+            )
+          }
+          prompt={props.prompt}
+          left={left}
+          low={low}
+        />
       </section>
 
-      <section className="px-4 [grid-area:squad] lg:overflow-y-auto lg:border-l-[3px] lg:border-double lg:border-navy lg:px-8">
-        {/* The scoreline so far: a box a question, right in royal, wrong in red. */}
-        <div className="flex items-baseline justify-between gap-3 pt-3 pb-2">
-          <span className="label">
-            Question {number} of {props.questions.length}
-          </span>
-          <span className="font-display text-3xl lg:text-5xl">{right} right</span>
-        </div>
-        <ol className="flex gap-1 pb-4" aria-label="Your answers so far">
-          {props.questions.map((q, i) => {
-            const a = answered.find((x) => x.id === q.id);
-            const tone = a ? (a.right ? "bg-royal border-royal" : "bg-red-card border-red-card") : q === current ? "border-navy" : "border-track";
-            return <li key={q.id} aria-label={`Question ${i + 1}: ${a ? (a.right ? "right" : "wrong") : "to come"}`} className={`h-3 flex-1 border-2 ${tone}`} />;
-          })}
-        </ol>
+      <section className="pt-3 pb-4 [grid-area:squad] lg:pt-6 lg:pb-10">
+        {current && era && <EraQuestion key={current.id} question={current.question} />}
+        <div className={era ? "mt-3 lg:mt-5" : ""}>{progress}</div>
 
-        {current && (
-          <div key={current.id} className="animate-deal-in pb-6">
-            {current.question && <p className="mb-3 font-display text-[40px] leading-[0.95] uppercase lg:text-6xl">{current.question}</p>}
-            <div className="grid grid-cols-2 gap-2 lg:gap-4">
-              {current.choices.map((choice, i) => {
-                const chosen = tap?.choice === choice;
-                const isAnswer = result?.answer === choice;
-                const state = result ? (isAnswer ? "right" : chosen ? "wrong" : "idle") : chosen ? "pending" : "idle";
-                return props.format === "pick" ? (
-                  <button
-                    key={choice}
-                    type="button"
-                    onClick={() => pick(current, choice)}
-                    disabled={over || Boolean(tap)}
-                    className={`grid justify-items-center gap-1 border-[3px] p-2 text-center transition-colors ${PICK_TONE[state]} ${result && state === "idle" ? "opacity-40" : ""}`}
-                  >
-                    <span className="w-full max-w-[120px]">
-                      <ShirtBack
-                        kit={props.kit ?? undefined}
-                        name={shirtName(choice)}
-                        num={String.fromCharCode(65 + i)}
-                        state={state === "wrong" ? "miss" : "hit"}
-                      />
+        {current && !era && (
+          // Rapid picks: four shirts on the pitch, pick your man.
+          <Pitch key={current.id} half="middle" className="animate-deal-in mt-3 aspect-[358/410] lg:mt-5 lg:aspect-[4/3]">
+            {current.choices.map((choice, i) => {
+              const state = stateOf(choice);
+              const [x, y] = SPOTS[i] ?? [50, 50];
+              return (
+                <button
+                  key={choice}
+                  type="button"
+                  onClick={() => pick(current, choice)}
+                  disabled={over || Boolean(tap)}
+                  aria-label={choice}
+                  className={`group absolute grid w-[30cqw] -translate-1/2 justify-items-center transition-opacity lg:w-[22cqw] ${faded(state)}`}
+                  style={{ left: `${x}%`, top: `${y}%` }}
+                >
+                  <span className="w-[26cqw] transition-transform group-enabled:group-hover:-translate-y-1 lg:w-[17cqw]">
+                    <ShirtBack kit={props.kit ?? undefined} num={String.fromCharCode(65 + i)} state={state === "wrong" ? "miss" : "hit"} />
+                  </span>
+                  <span className={`-mt-[0.5cqw] max-w-full truncate px-[2cqw] py-[0.8cqw] font-display text-[5cqw] leading-none text-white uppercase lg:text-[3.2cqw] ${PICK_TAG[state]}`}>
+                    {tagName(choice)}
+                  </span>
+                </button>
+              );
+            })}
+          </Pitch>
+        )}
+
+        {current && era && (
+          // Era picks: four season tickets, tap the one he held.
+          <div key={current.id} className="animate-deal-in mt-4 grid gap-3 pr-1 lg:mt-6 lg:gap-4 xl:grid-cols-2 xl:gap-5">
+            {current.choices.map((choice, i) => {
+              const state = stateOf(choice);
+              const [from, to] = choice.split("–");
+              return (
+                <button
+                  key={choice}
+                  type="button"
+                  onClick={() => pick(current, choice)}
+                  disabled={over || Boolean(tap)}
+                  className={`grid h-[78px] grid-cols-[minmax(0,1fr)_58px] border-[2.5px] text-left shadow-[4px_4px_0_var(--color-navy)] transition-[opacity,translate] enabled:hover:-translate-y-0.5 lg:h-[104px] lg:grid-cols-[minmax(0,1fr)_72px] ${TICKET_TONE[state]} ${TILT[i % TILT.length]} ${faded(state)}`}
+                >
+                  <span className="flex min-w-0 flex-col justify-center px-3.5">
+                    <span className="label truncate text-[9px] opacity-75 lg:text-[11px]">Season ticket{eraClub(current.question) ? ` · ${eraClub(current.question)}` : ""}</span>
+                    <span className="mt-0.5 font-display text-[34px] leading-[0.95] whitespace-nowrap tabular-nums lg:text-[44px]">
+                      {to !== undefined ? (
+                        <>
+                          {from} <span className={state === "idle" || state === "pending" ? "text-teal" : ""}>→</span> {to || "now"}
+                        </>
+                      ) : (
+                        choice
+                      )}
                     </span>
-                    <span className="text-[15px] leading-tight font-semibold">{choice}</span>
-                  </button>
-                ) : (
-                  <button
-                    key={choice}
-                    type="button"
-                    onClick={() => pick(current, choice)}
-                    disabled={over || Boolean(tap)}
-                    className={`border-[3px] px-2 py-5 font-display text-[34px] leading-none tabular-nums transition-colors lg:py-8 lg:text-5xl ${ERA_TONE[state]} ${result && state === "idle" ? "opacity-40" : ""}`}
-                  >
-                    {choice}
-                  </button>
-                );
-              })}
-            </div>
+                  </span>
+                  <span className={`flex items-center justify-center border-l-[2.5px] border-dashed font-display text-[32px] lg:text-[40px] ${STUB_TONE[state]}`}>
+                    {String.fromCharCode(65 + i)}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         )}
       </section>
 
-      <section className="sticky bottom-0 grid gap-2 border-t-2 border-navy bg-white px-4 pt-3 pb-4 [grid-area:answer] lg:static lg:mx-8 lg:border-t-[3px] lg:border-double lg:px-0">
+      <section className="sticky bottom-0 -mx-4 flex items-baseline justify-between gap-3 border-t-2 border-navy bg-white px-4 pt-3 pb-4 [grid-area:answer] lg:static lg:mx-0 lg:self-start lg:border-t-[3px] lg:border-double lg:px-0 lg:pt-5">
         <p
           role="status"
-          className={`min-h-[22px] text-[15px] font-semibold ${result ? (result.right ? "text-royal" : "text-red-card") : "text-navy/70"}`}
+          className={`min-h-[22px] text-sm font-semibold lg:text-[15px] ${result ? (result.right ? "text-royal" : "text-red-card") : low ? "text-red-card" : "text-navy/70"}`}
         >
-          {feedback}
+          {feedback || (low ? "Ten seconds. Trust your gut." : era ? "Tap a ticket. One tap, no swaps." : "Tap a shirt. One tap, no swaps.")}
         </p>
-        <div>
-          <button type="button" onClick={close} disabled={over} className="text-[13px] font-semibold text-navy/70 underline underline-offset-[3px]">
-            Give up and reveal
-          </button>
-        </div>
+        <GiveUp onClick={close} disabled={over} />
       </section>
     </main>
   );
 }
 
-const PICK_TONE = {
-  idle: "border-navy bg-white hover:bg-mist",
-  pending: "border-navy bg-mist",
-  right: "border-royal bg-mist",
-  wrong: "border-red-card bg-white",
+/** "Dennis Bergkamp at Arsenal": the player, big (the club is on the tickets). */
+function EraQuestion({ question }: { question: string | null }) {
+  if (!question) return null;
+  const name = eraClub(question) ? question.slice(0, question.lastIndexOf(" at ")) : question;
+  return <p className="animate-deal-in font-display text-[44px] leading-[0.9] uppercase lg:text-7xl">{name}</p>;
+}
+
+function eraClub(question: string | null): string | null {
+  const at = question?.lastIndexOf(" at ") ?? -1;
+  return question && at > 0 ? question.slice(at + 4) : null;
+}
+
+/** The name on a shirt's tag: all but the first name ("Van Persie"), or the one name. */
+function tagName(name: string): string {
+  const words = name.trim().split(/\s+/);
+  return words.length > 1 ? words.slice(1).join(" ") : name;
+}
+
+/** Where the four shirts stand on the pitch (x, y in %). */
+const SPOTS: [number, number][] = [
+  [28, 24],
+  [72, 28],
+  [28, 72],
+  [72, 76],
+];
+
+const TILT = ["-rotate-[1.2deg]", "rotate-[0.8deg]", "-rotate-[0.6deg]", "rotate-[1.1deg]"];
+
+const PICK_TAG = {
+  idle: "bg-navy",
+  pending: "bg-navy outline-[3px] outline-offset-2 outline-teal outline",
+  right: "bg-royal outline-[3px] outline-offset-2 outline-royal outline",
+  wrong: "bg-red-card",
 } as const;
 
-const ERA_TONE = {
-  idle: "border-navy bg-white text-navy hover:bg-mist",
-  pending: "border-navy bg-navy text-white",
-  right: "border-royal bg-royal text-white",
-  wrong: "border-red-card bg-red-card text-white",
+const TICKET_TONE = {
+  idle: "border-navy bg-white text-navy",
+  pending: "border-navy bg-mist text-navy",
+  right: "border-navy bg-royal text-white",
+  wrong: "border-navy bg-red-card text-white",
+} as const;
+
+const STUB_TONE = {
+  idle: "border-navy bg-teal-light text-navy",
+  pending: "border-navy bg-teal text-white",
+  right: "border-navy bg-teal-light text-navy",
+  wrong: "border-navy bg-white text-red-card",
 } as const;

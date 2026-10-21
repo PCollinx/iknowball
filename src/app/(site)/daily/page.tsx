@@ -85,8 +85,6 @@ async function DailyScreen() {
           <MatchLive />
           <FreeRecall
             key={view.attemptId}
-            issue={view.issue}
-            dateLabel={dateLabel}
             partLabel={`Part ${view.daily.part}`}
             title={view.daily.title}
             prompt={view.daily.prompt}
@@ -105,8 +103,6 @@ async function DailyScreen() {
           <MatchLive />
           <PickRound
             key={view.attemptId}
-            issue={view.issue}
-            dateLabel={dateLabel}
             partLabel={`Part ${view.daily.part}`}
             format={view.daily.format === "era" ? "era" : "pick"}
             title={view.daily.title}
@@ -126,8 +122,6 @@ async function DailyScreen() {
           <MatchLive />
           <InOrder
             key={view.attemptId}
-            issue={view.issue}
-            dateLabel={dateLabel}
             partLabel={`Part ${view.daily.part}`}
             prompt={view.daily.prompt}
             attemptId={view.attemptId}

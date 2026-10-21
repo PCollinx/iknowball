@@ -2,14 +2,10 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { submitOrder } from "@/app/(site)/daily/actions";
-import { Masthead } from "./Masthead";
-import { ShirtBack, shirtName } from "./ShirtBack";
+import { RoundClock, Steps, type Step } from "./InPlay";
 import { useCountdown } from "./useCountdown";
-import { clock } from "./clock";
 
 type Props = {
-  issue: number;
-  dateLabel: string;
   partLabel: string;
   prompt: string;
   attemptId: number;
@@ -33,90 +29,92 @@ export function InOrder(props: Props) {
   const byId = new Map(props.items.map((i) => [i.id, i.text]));
   const total = props.items.length;
 
+  const steps: Step[] = Array.from({ length: total }, (_, k) => (k < placed.length ? "right" : k === placed.length && !over ? "now" : "next"));
+  const squad = props.items.filter((item) => !placed.includes(item.id));
+  const ready = placed.length === total && !over;
+
   return (
-    <main className="mx-auto grid w-full flex-1 max-w-[1200px] grid-rows-[auto_1fr_auto] [grid-template-areas:'head'_'squad'_'answer'] lg:h-dvh lg:grid-cols-[440px_1fr] lg:grid-rows-[1fr_auto] lg:[grid-template-areas:'head_squad'_'answer_squad']">
-      <section className="px-4 [grid-area:head] lg:px-8">
-        <Masthead issue={props.issue} right={`${props.dateLabel} · ${props.partLabel}`} />
-        <div className="grid grid-cols-[1fr_auto] items-start gap-3 border-b-[3px] border-double border-navy py-3.5 lg:grid-cols-1 lg:border-b-0">
+    <main className="mx-auto grid w-full max-w-[560px] flex-1 grid-rows-[1fr_auto] px-4 pt-4 lg:max-w-[1000px] lg:grid-rows-[auto_auto] lg:content-start lg:pt-8 lg:pb-10">
+      {/* The round lives inside the kick-off's sticker. */}
+      <section className="relative self-start border-[2.5px] border-navy bg-white shadow-[5px_5px_0_var(--color-navy)]">
+        <div className="flex items-center justify-between gap-3 bg-navy px-2.5 py-1.5 text-white lg:px-4 lg:py-2">
+          <span className="label text-[10px] text-teal-light lg:text-xs">{props.partLabel} · In Order</span>
+          <span className="label text-[10px] lg:text-xs">
+            {placed.length} / {total} placed
+          </span>
+        </div>
+        <RoundClock left={left} low={left <= 10 && !over} className="absolute top-7 -right-2 rotate-3 lg:top-9 lg:-right-3" />
+        <div className="pt-2.5 pr-[112px] pl-3 lg:pt-4 lg:pr-[170px] lg:pl-5">
+          <h1 className="font-display text-[34px] leading-[0.9] uppercase lg:text-[56px]">
+            In <span className="sash-mark">order</span>
+          </h1>
+          <p className="mt-1.5 text-[13px] leading-snug lg:text-base">{props.prompt}</p>
+        </div>
+        <div className="px-3 pt-3 lg:px-5 lg:pt-4">
+          <Steps steps={steps} label="Slots filled" />
+        </div>
+
+        <div className="grid gap-4 px-3 pt-3 pb-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-8 lg:px-5 lg:pt-5 lg:pb-6">
+          <ol>
+            {Array.from({ length: total }, (_, k) => {
+              const id = placed[k];
+              const next = k === placed.length && !over;
+              return (
+                <li key={k} className={`mb-1.5 grid h-10 grid-cols-[34px_minmax(0,1fr)] border-2 lg:mb-2 lg:h-12 lg:grid-cols-[44px_minmax(0,1fr)] ${id ? "border-navy" : next ? "border-dashed border-navy" : "border-dashed border-[#9aa6c8]"}`}>
+                  <span className="flex items-center justify-center border-r-2 border-navy bg-teal-light font-display text-[22px] lg:text-[28px]">{k + 1}</span>
+                  {id ? (
+                    <button
+                      type="button"
+                      disabled={over}
+                      onClick={() => setPlaced((p) => p.filter((x) => x !== id))}
+                      aria-label={`${byId.get(id)}: send back`}
+                      className="flex min-w-0 items-center justify-between gap-2 bg-royal px-2.5 text-left font-display text-[22px] text-white uppercase lg:text-[26px]"
+                    >
+                      <span className="truncate">{byId.get(id)}</span>
+                      {/* When he joined stays a question until full time. */}
+                      <span aria-hidden className="text-teal-light">?</span>
+                    </button>
+                  ) : (
+                    <span className="flex items-center px-2.5 text-[13px] font-semibold text-[#7d88aa]">{next ? "Next in goes here" : ""}</span>
+                  )}
+                </li>
+              );
+            })}
+          </ol>
           <div>
-            <h1 className="font-display text-[52px] leading-[0.9] uppercase lg:text-[80px]">
-              In <span className="text-royal">order</span>
-            </h1>
-            <p className="mt-2 max-w-[32ch] text-[15px] lg:text-lg">{props.prompt}</p>
-          </div>
-          <div
-            className={`min-w-[92px] px-2.5 pt-1.5 pb-2 text-right text-white lg:flex lg:items-baseline lg:gap-3.5 lg:justify-self-start lg:px-4 ${left <= 10 && !over ? "bg-red-card" : "bg-teal"}`}
-            role="timer"
-            aria-label={`${left} seconds left`}
-          >
-            <span className="label block text-[10px] lg:order-2 lg:text-xs">Time left</span>
-            <span className="block font-display text-[46px] leading-[0.9] tabular-nums lg:text-7xl">{clock(left)}</span>
+            <span className="label hidden text-xs lg:block">Squad · tap them in the order they joined</span>
+            <div className="flex flex-wrap gap-2 lg:mt-3 lg:gap-3">
+              {squad.map((item, i) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  disabled={over}
+                  onClick={() => setPlaced((p) => (p.length < total && !p.includes(item.id) ? [...p, item.id] : p))}
+                  className={`border-[2.5px] border-navy bg-white px-3 py-1.5 font-display text-xl uppercase shadow-[3px_3px_0_var(--color-navy)] transition-[translate,box-shadow] enabled:hover:-translate-0.5 enabled:hover:bg-mist enabled:active:translate-0.5 enabled:active:shadow-none lg:text-2xl ${TILT[i % TILT.length]}`}
+                >
+                  {item.text}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="px-4 [grid-area:squad] lg:overflow-y-auto lg:border-l-[3px] lg:border-double lg:border-navy lg:px-8 lg:pt-3.5">
-        <ol className="pt-2">
-          {Array.from({ length: total }, (_, k) => {
-            const id = placed[k];
-            const next = k === placed.length && !over;
-            return (
-              <li key={k} className="grid min-h-[54px] grid-cols-[40px_1fr] items-center gap-2.5 border-b border-track">
-                <span className={`font-display text-[34px] ${id ? "text-navy" : "text-track"}`}>{k + 1}</span>
-                {id ? (
-                  <button
-                    type="button"
-                    disabled={over}
-                    onClick={() => setPlaced((p) => p.filter((x) => x !== id))}
-                    aria-label={`Send ${byId.get(id)} back`}
-                    className="h-[38px] bg-royal px-2.5 text-left font-display text-2xl text-white uppercase"
-                  >
-                    {byId.get(id)}
-                  </button>
-                ) : (
-                  <span className="flex h-[38px] items-center border-2 border-dashed border-track px-2.5 text-sm text-[#7d88aa]">
-                    {next ? "Tap a player below" : ""}
-                  </span>
-                )}
-              </li>
-            );
-          })}
-        </ol>
-        <div className="flex justify-between pt-4 pb-2">
-          <span className="label">Squad</span>
-          <span className="label text-navy/70">{total} players</span>
-        </div>
-        <div className="grid grid-cols-3 gap-2 pb-4 lg:grid-cols-6">
-          {props.items.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              disabled={over || placed.includes(item.id)}
-              onClick={() => setPlaced((p) => (p.length < total && !p.includes(item.id) ? [...p, item.id] : p))}
-              className="grid justify-items-center gap-0.5 border-2 border-navy bg-white px-1.5 pt-2 pb-1.5 enabled:hover:border-royal enabled:hover:bg-mist disabled:opacity-25"
-            >
-              <span className="w-14">
-                <ShirtBack name={shirtName(item.text)} state="miss" className="[&_path]:stroke-navy" />
-              </span>
-              <span className="label text-[11px]">{item.text.split(" ")[0]}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="sticky bottom-0 grid gap-2 border-t-2 border-navy bg-white px-4 pt-3 pb-4 [grid-area:answer] lg:static lg:mx-8 lg:border-t-[3px] lg:border-double lg:px-0">
+      <section className="sticky bottom-0 -mx-4 mt-4 grid gap-2 bg-white px-4 pt-3 pb-4 lg:static lg:mx-0 lg:mt-6 lg:max-w-[480px] lg:px-0">
         <button
           type="button"
           onClick={lock}
-          disabled={over || placed.length < total}
-          className="bg-royal p-3 font-display text-2xl text-white uppercase disabled:bg-track disabled:text-navy/60"
+          disabled={!ready}
+          className="btn-teal btn-press p-3 font-display text-2xl uppercase disabled:border-track disabled:bg-track disabled:text-navy/60 disabled:shadow-none"
         >
-          {locking ? "Locking in…" : "Lock it in"}
+          {locking ? "Locking in…" : placed.length < total ? `Lock it in · ${placed.length} of ${total} placed` : "Lock it in"}
         </button>
-        <p role="status" className="min-h-[22px] text-[15px] font-semibold text-navy/70">
-          {placed.length ? "Tap a placed name to send it back." : "Fill all the slots, then lock it in."}
+        <p role="status" className="min-h-[22px] text-sm font-semibold text-navy/70">
+          {over && !locking ? "Full time on this part." : placed.length ? "Tap a placed name to send it back." : "Fill all the slots, then lock it in."}
         </p>
       </section>
     </main>
   );
 }
+
+const TILT = ["-rotate-2", "rotate-[1.5deg]", "-rotate-1", "rotate-1", "-rotate-[1.5deg]", "rotate-2"];
