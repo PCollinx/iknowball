@@ -113,40 +113,44 @@ export function PickRound(props: Props) {
       </section>
 
       <section className="pt-3 pb-4 [grid-area:squad] lg:pt-6 lg:pb-10">
-        {current && era && <EraQuestion key={current.id} question={current.question} />}
+        {/* One line for the player: the next name replaces this one in place. */}
+        {current && era && <EraQuestion question={current.question} />}
         <div className={era ? "mt-3 lg:mt-5" : ""}>{progress}</div>
 
         {current && !era && (
-          // Rapid picks: four shirts on the pitch, pick your man.
-          <Pitch key={current.id} half="middle" className="animate-deal-in mt-3 aspect-[358/410] lg:mt-5 lg:aspect-[4/3]">
-            {current.choices.map((choice, i) => {
-              const state = stateOf(choice);
-              const [x, y] = SPOTS[i] ?? [50, 50];
-              return (
-                <button
-                  key={choice}
-                  type="button"
-                  onClick={() => pick(current, choice)}
-                  disabled={over || Boolean(tap)}
-                  aria-label={choice}
-                  className={`group absolute grid w-[30cqw] -translate-1/2 justify-items-center transition-opacity lg:w-[22cqw] ${faded(state)}`}
-                  style={{ left: `${x}%`, top: `${y}%` }}
-                >
-                  <span className="w-[26cqw] transition-transform group-enabled:group-hover:-translate-y-1 lg:w-[17cqw]">
-                    <ShirtBack kit={props.kit ?? undefined} num={String.fromCharCode(65 + i)} state={state === "wrong" ? "miss" : "hit"} />
-                  </span>
-                  <span className={`-mt-[0.5cqw] max-w-full truncate px-[2cqw] py-[0.8cqw] font-display text-[5cqw] leading-none text-white uppercase lg:text-[3.2cqw] ${PICK_TAG[state]}`}>
-                    {tagName(choice)}
-                  </span>
-                </button>
-              );
-            })}
+          // Rapid picks: four shirts on the pitch, pick your man. The pitch
+          // stays put; only the shirts change from question to question.
+          <Pitch half="middle" className="mt-3 aspect-[358/410] lg:mt-5 lg:aspect-[4/3]">
+            <div key={`shirts-${current.id}`} className="animate-deal-in absolute inset-0">
+              {current.choices.map((choice, i) => {
+                const state = stateOf(choice);
+                const [x, y] = SPOTS[i] ?? [50, 50];
+                return (
+                  <button
+                    key={choice}
+                    type="button"
+                    onClick={() => pick(current, choice)}
+                    disabled={over || Boolean(tap)}
+                    aria-label={choice}
+                    className={`group absolute grid w-[30cqw] -translate-1/2 justify-items-center transition-opacity lg:w-[22cqw] ${faded(state)}`}
+                    style={{ left: `${x}%`, top: `${y}%` }}
+                  >
+                    <span className="w-[26cqw] transition-transform group-enabled:group-hover:-translate-y-1 lg:w-[17cqw]">
+                      <ShirtBack kit={props.kit ?? undefined} num={String.fromCharCode(65 + i)} state={state === "wrong" ? "miss" : "hit"} />
+                    </span>
+                    <span className={`-mt-[0.5cqw] max-w-full truncate px-[2cqw] py-[0.8cqw] font-display text-[5cqw] leading-none text-white uppercase lg:text-[3.2cqw] ${PICK_TAG[state]}`}>
+                      {tagName(choice)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </Pitch>
         )}
 
         {current && era && (
           // Era picks: four season tickets, tap the one he held.
-          <div key={current.id} className="animate-deal-in mt-4 grid gap-3 pr-1 lg:mt-6 lg:gap-4 xl:grid-cols-2 xl:gap-5">
+          <div key={`tickets-${current.id}`} className="animate-deal-in mt-4 grid gap-3 pr-1 lg:mt-6 lg:gap-4 xl:grid-cols-2 xl:gap-5">
             {current.choices.map((choice, i) => {
               const state = stateOf(choice);
               const [from, to] = choice.split("–");
@@ -197,7 +201,7 @@ export function PickRound(props: Props) {
 function EraQuestion({ question }: { question: string | null }) {
   if (!question) return null;
   const name = eraClub(question) ? question.slice(0, question.lastIndexOf(" at ")) : question;
-  return <p className="animate-deal-in font-display text-[44px] leading-[0.9] uppercase lg:text-7xl">{name}</p>;
+  return <p className="font-display text-[44px] text-balance leading-[0.9] uppercase lg:text-7xl">{name}</p>;
 }
 
 function eraClub(question: string | null): string | null {
