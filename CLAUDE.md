@@ -38,6 +38,7 @@ Project memory for Claude Code, carried over from the Claude project where the p
 - **Navbar "Programme"** (`src/components/nav/SiteNav.tsx`, 20 Oct 2026): shirt logo and wordmark, numbered sections over a double rule, your rating linking to the profile. Only the home page uses it so far; the other screens keep their own mastheads until each is redesigned.
 - **Footer** (`src/components/nav/SiteFooter.tsx`, 21 Oct 2026, after futoteca's): the mark and a line on the left; Support, Privacy & data, X (@twiceatwt), GitHub (PCollinx) and LinkedIn on the right, with inline icons. Links live in `src/lib/site.ts`. Used on the home page and `/privacy` so far.
 - **Loading screen: keepy-uppy** (21 Oct 2026, Collins, from the mocks at https://claude.ai/artifact/4efr7qpqXLFQUJ2LuvmDD6; no counter): a ball bouncing and spinning over its shadow, plain CSS that loops on its own (`src/components/loading/KeepyUppy.tsx`). It is the Suspense fallback on home, the Daily, today's table, Clash challenges, the League pages and the profile, each with its own caption. It shows and moves from the first frame, so even a one-second load shows the ball in play (Collins, 21 Oct 2026), and stands still for reduced motion.
+- **Redesign plan** (21 Oct 2026): every screen gets the navbar and footer (step 0), then is redesigned one at a time to match the home page. Order, kit, process and progress: `docs/redesign-plan.md`. Tick a step there when its PR is merged.
 - Picker page with all rounds: https://claude.ai/artifact/99Qnj4Vm79G3JeDY24KUTp
 
 ## Data
