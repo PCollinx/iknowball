@@ -242,7 +242,7 @@ export type PickAnswered = { id: number; choice: string; answer: string; right: 
 
 export type DailyView =
   | { kind: "none" }
-  | { kind: "kickoff"; issue: number; daily: DailyRow; total: number; before: RecallReveal | null }
+  | { kind: "kickoff"; issue: number; daily: DailyRow; parts: DailyRow[]; total: number; before: RecallReveal | null }
   | { kind: "recall"; issue: number; daily: DailyRow; attemptId: number; deadlineAt: string; serverNow: number; found: Shown[] }
   | { kind: "order"; issue: number; daily: DailyRow; attemptId: number; deadlineAt: string; serverNow: number; items: Shown[] }
   | {
@@ -414,7 +414,7 @@ export async function getDailyView(): Promise<DailyView> {
   let before: RecallReveal | null = null;
   for (const daily of parts) {
     const attempt = attempts.get(daily.id);
-    if (!attempt) return { kind: "kickoff", issue, daily, total: parts.length, before };
+    if (!attempt) return { kind: "kickoff", issue, daily, parts, total: parts.length, before };
     if (!attempt.submitted_at) {
       if (daily.format === "pick" || daily.format === "era") {
         const [answers, guesses] = await Promise.all([getAnswers(daily.id), pickGuesses(attempt.id)]);

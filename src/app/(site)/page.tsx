@@ -1,16 +1,13 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { splitFixture } from "@/components/daily/fixture";
-import type { Kit } from "@/components/daily/ShirtBack";
 import { ClashTicket } from "@/components/home/ClashTicket";
 import { DailySticker } from "@/components/home/DailySticker";
 import { LeagueBoard } from "@/components/home/LeagueBoard";
 import { ShirtSticker } from "@/components/home/ShirtSticker";
 import { getHomeClash } from "@/lib/clash/data";
-import { currentUserId, getHomeDaily, type HomeDaily } from "@/lib/daily/data";
+import { currentUserId, getHomeDaily } from "@/lib/daily/data";
 import { getHomeBoard } from "@/lib/league/data";
-import { kitOf } from "@/lib/profile/club";
-import { clubsNamed, getProfileView } from "@/lib/profile/data";
+import { getProfileView, kitsForFixture } from "@/lib/profile/data";
 import { gameDate, gameDateClosesAt } from "@/lib/time";
 import { KeepyUppy } from "@/components/loading/KeepyUppy";
 
@@ -24,19 +21,6 @@ export default function Home() {
       <HomeScreen />
     </Suspense>
   );
-}
-
-/** Each of the fixture's clubs in its own kit; royal when a club isn't known. */
-async function fixtureKits(daily: HomeDaily | null): Promise<[Kit | undefined, Kit | undefined]> {
-  const title = daily?.parts.find((p) => p.part === 1)?.title;
-  if (!title) return [undefined, undefined];
-  const [home, away] = splitFixture(title);
-  const clubs = await clubsNamed([home, away].filter((n): n is string => Boolean(n)));
-  const kit = (name: string | null) => {
-    const club = name ? clubs.get(name.toLowerCase()) : undefined;
-    return club ? kitOf(club) : undefined;
-  };
-  return [kit(home), kit(away)];
 }
 
 /** The game date and the server's clock, for the countdown to midnight WAT. */
@@ -56,7 +40,7 @@ async function HomeScreen() {
     getHomeBoard(me),
     me ? getProfileView(me) : null,
   ]);
-  const kits = await fixtureKits(daily);
+  const kits = await kitsForFixture(daily?.parts.find((p) => p.part === 1)?.title ?? null);
   const day = new Date(`${today}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
 
   return (

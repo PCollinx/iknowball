@@ -4,7 +4,7 @@ import { CLASH_MAX, COUNTED_SPRINTS } from "@/lib/league/week";
 import { addDays, gameDate, gameDateClosesAt, matchweekBounds, seasonOf } from "@/lib/time";
 import { splitFixture } from "@/components/daily/fixture";
 import type { Kit } from "@/components/daily/ShirtBack";
-import { fixtureKit, type Club } from "./club";
+import { fixtureKit, kitOf, type Club } from "./club";
 import { overallRating } from "./rating";
 import { bestFive, dayScores, PLACEMENT_DAYS, streak, tierFor, type PlayedPart, type TierName } from "./stats";
 
@@ -160,4 +160,17 @@ export async function kitForFixture(title: string | null): Promise<Kit | null> {
   const [home, away] = splitFixture(title);
   const clubs = await clubsNamed([home, away].filter((n): n is string => Boolean(n)));
   return fixtureKit(clubs.get(home.toLowerCase()) ?? null, away ? (clubs.get(away.toLowerCase()) ?? null) : null);
+}
+
+/** Each of a fixture's clubs in its own kit ("Chelsea v Arsenal"), for the two
+ * floating shirts on the Daily sticker; undefined (royal) for a club we don't know. */
+export async function kitsForFixture(title: string | null): Promise<[Kit | undefined, Kit | undefined]> {
+  if (!title) return [undefined, undefined];
+  const [home, away] = splitFixture(title);
+  const clubs = await clubsNamed([home, away].filter((n): n is string => Boolean(n)));
+  const kit = (name: string | null) => {
+    const club = name ? clubs.get(name.toLowerCase()) : undefined;
+    return club ? kitOf(club) : undefined;
+  };
+  return [kit(home), kit(away)];
 }

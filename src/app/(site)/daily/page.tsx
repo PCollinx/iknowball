@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { FreeRecall } from "@/components/daily/FreeRecall";
@@ -9,10 +10,10 @@ import { KickOff } from "@/components/daily/KickOff";
 import { Masthead, shortDate } from "@/components/daily/Masthead";
 import { currentUserId, getDailyView } from "@/lib/daily/data";
 import { clubInTitle, kitOf } from "@/lib/profile/club";
-import { clubChoices, getRating, getSupporter, kitForFixture } from "@/lib/profile/data";
+import { clubChoices, getRating, getSupporter, kitForFixture, kitsForFixture } from "@/lib/profile/data";
 import { publicEnv } from "@/lib/env";
 import { isTestSite } from "@/lib/daily/sample";
-import { gameDate } from "@/lib/time";
+import { gameDate, gameDateClosesAt } from "@/lib/time";
 import { KeepyUppy } from "@/components/loading/KeepyUppy";
 import { MatchLive } from "@/components/nav/MatchLive";
 
@@ -29,25 +30,38 @@ export default function DailyPage() {
   );
 }
 
+/** When today's Daily closes, and the server's clock, for the sticker's countdown. */
+function readClock() {
+  return { closesAt: gameDateClosesAt(gameDate()).toISOString(), serverNow: Date.now() };
+}
+
 // Reads the session and the clock, so it renders per request.
 async function DailyScreen() {
   await connection();
   const [view, userId] = await Promise.all([getDailyView(), currentUserId()]);
   const dateLabel = shortDate(gameDate());
-  const [supporter, kit] = await Promise.all([
+  const [supporter, kit, kits] = await Promise.all([
     userId && (view.kind === "kickoff" || view.kind === "fulltime") ? getSupporter(userId) : null,
     kitForFixture(fixtureTitle(view)),
+    view.kind === "kickoff" && !view.before ? kitsForFixture(view.daily.title) : ([undefined, undefined] as const),
   ]);
 
   switch (view.kind) {
     case "none":
       return (
-        <main className="mx-auto w-full flex-1 max-w-[560px] px-4">
+        <main className="mx-auto w-full max-w-[560px] flex-1 px-4 pb-10">
           <Masthead issue={0} right={dateLabel} />
           <h1 className="mt-6 font-display text-[64px] leading-[0.9] uppercase">
             No Daily <span className="text-royal">today</span>
           </h1>
-          <p className="mt-3 text-lg">The pitch is being cut. Check back tomorrow.</p>
+          <p className="mt-3 text-lg">The pitch is being cut. Back tomorrow with a new one.</p>
+          <Link
+            href="/clash"
+            className="btn-teal btn-press mt-6 flex items-center justify-between px-[18px] py-3.5 font-display text-[26px] uppercase"
+          >
+            <span>Kick off a Clash instead</span>
+            <span aria-hidden="true">→</span>
+          </Link>
         </main>
       );
     case "kickoff":
@@ -56,10 +70,13 @@ async function DailyScreen() {
           issue={view.issue}
           dateLabel={dateLabel}
           daily={view.daily}
+          parts={view.parts}
           total={view.total}
           before={view.before}
           club={supporter?.club ?? null}
           kit={kit}
+          kits={[kits[0], kits[1]]}
+          {...readClock()}
         />
       );
     case "recall":
