@@ -114,7 +114,7 @@ redesign we take on (Collins, 21 Oct 2026).
 ## Progress
 
 - [x] 0. Navbar and footer everywhere (PR #40)
-- [ ] 1. The Daily: kick-off
+- [x] 1. The Daily: kick-off (PR #41)
 - [ ] 2. The Daily: in play
 - [ ] 3. The Daily: full time and sharing
 - [ ] 4. Today's table
