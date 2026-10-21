@@ -1,4 +1,4 @@
-import { startPart } from "@/app/daily/actions";
+import { startPart } from "@/app/(site)/daily/actions";
 import { Masthead } from "./Masthead";
 import { RecallGrid } from "./RecallGrid";
 import type { Kit } from "./ShirtBack";
@@ -15,7 +15,7 @@ export function KickOff({ issue, dateLabel, daily, total, before, club, kit }: P
   const fixture = before ? before.daily.title : daily.title;
   const yourLot = clubInTitle(club, fixture);
   return (
-    <main className="mx-auto min-h-dvh max-w-[560px] px-4 pb-8">
+    <main className="mx-auto w-full flex-1 max-w-[560px] px-4 pb-8">
       <Masthead issue={issue} right={dateLabel} />
       {before && (
         <section className="border-b-[3px] border-double border-navy pb-4">

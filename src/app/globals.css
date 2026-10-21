@@ -219,3 +219,20 @@ body {
     transition-duration: 1ms !important;
   }
 }
+
+/* Match mode (21 Oct 2026): while a timed round is on, the page renders
+ * <MatchLive />, and the navbar shrinks to a plain logo and a "Live" tag while
+ * the footer hides, so a stray tap can't throw away an attempt. Pure CSS, so
+ * it's right from the first paint. Hooks: data-nav-* in SiteNav, data-site-footer. */
+[data-nav-live],
+[data-nav-brand] {
+  display: none;
+}
+body:has([data-match-live]) [data-nav-full],
+body:has([data-match-live]) [data-site-footer] {
+  display: none;
+}
+body:has([data-match-live]) [data-nav-live],
+body:has([data-match-live]) [data-nav-brand] {
+  display: inline-flex;
+}

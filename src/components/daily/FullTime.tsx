@@ -6,7 +6,7 @@ import { gameDateClosesAt } from "@/lib/time";
 import type { OrderReveal, RecallReveal } from "@/lib/daily/data";
 import { Masthead } from "./Masthead";
 import { NextDaily } from "./NextDaily";
-import { replayToday } from "@/app/daily/actions";
+import { replayToday } from "@/app/(site)/daily/actions";
 import { RecallGrid } from "./RecallGrid";
 import { ShareButtons } from "./ShareButtons";
 import { ShareCard } from "./ShareCard";
@@ -61,7 +61,7 @@ export function FullTime({ issue, playDate, recall, order, points, topPercent, p
     .join("\n");
 
   return (
-    <main className="mx-auto min-h-dvh max-w-[1200px] px-4 lg:grid lg:grid-cols-[minmax(0,1fr)_480px] lg:gap-x-10 lg:px-8">
+    <main className="mx-auto w-full flex-1 max-w-[1200px] px-4 lg:grid lg:grid-cols-[minmax(0,1fr)_480px] lg:gap-x-10 lg:px-8">
       <div className="lg:col-span-2">
         <Masthead issue={issue} right="Full time" />
       </div>

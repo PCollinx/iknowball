@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { createLeague, joinLeague, type LeagueFormState } from "@/app/league/actions";
+import { createLeague, joinLeague, type LeagueFormState } from "@/app/(site)/league/actions";
 
 const START: LeagueFormState = { error: null };
 

@@ -14,6 +14,7 @@ import { publicEnv } from "@/lib/env";
 import { isTestSite } from "@/lib/daily/sample";
 import { gameDate } from "@/lib/time";
 import { KeepyUppy } from "@/components/loading/KeepyUppy";
+import { MatchLive } from "@/components/nav/MatchLive";
 
 export const metadata: Metadata = {
   title: "The Daily · iKnowBall",
@@ -41,7 +42,7 @@ async function DailyScreen() {
   switch (view.kind) {
     case "none":
       return (
-        <main className="mx-auto min-h-dvh max-w-[560px] px-4">
+        <main className="mx-auto w-full flex-1 max-w-[560px] px-4">
           <Masthead issue={0} right={dateLabel} />
           <h1 className="mt-6 font-display text-[64px] leading-[0.9] uppercase">
             No Daily <span className="text-royal">today</span>
@@ -63,52 +64,61 @@ async function DailyScreen() {
       );
     case "recall":
       return (
-        <FreeRecall
-          key={view.attemptId}
-          issue={view.issue}
-          dateLabel={dateLabel}
-          partLabel={`Part ${view.daily.part}`}
-          title={view.daily.title}
-          prompt={view.daily.prompt}
-          answerCount={view.daily.answer_count}
-          attemptId={view.attemptId}
-          deadlineAt={view.deadlineAt}
-          serverNow={view.serverNow}
-          found={view.found}
-          kit={kit}
-        />
+        <>
+          <MatchLive />
+          <FreeRecall
+            key={view.attemptId}
+            issue={view.issue}
+            dateLabel={dateLabel}
+            partLabel={`Part ${view.daily.part}`}
+            title={view.daily.title}
+            prompt={view.daily.prompt}
+            answerCount={view.daily.answer_count}
+            attemptId={view.attemptId}
+            deadlineAt={view.deadlineAt}
+            serverNow={view.serverNow}
+            found={view.found}
+            kit={kit}
+          />
+        </>
       );
     case "pick":
       return (
-        <PickRound
-          key={view.attemptId}
-          issue={view.issue}
-          dateLabel={dateLabel}
-          partLabel={`Part ${view.daily.part}`}
-          format={view.daily.format === "era" ? "era" : "pick"}
-          title={view.daily.title}
-          prompt={view.daily.prompt}
-          attemptId={view.attemptId}
-          deadlineAt={view.deadlineAt}
-          serverNow={view.serverNow}
-          questions={view.questions}
-          answered={view.answered}
-          kit={kit}
-        />
+        <>
+          <MatchLive />
+          <PickRound
+            key={view.attemptId}
+            issue={view.issue}
+            dateLabel={dateLabel}
+            partLabel={`Part ${view.daily.part}`}
+            format={view.daily.format === "era" ? "era" : "pick"}
+            title={view.daily.title}
+            prompt={view.daily.prompt}
+            attemptId={view.attemptId}
+            deadlineAt={view.deadlineAt}
+            serverNow={view.serverNow}
+            questions={view.questions}
+            answered={view.answered}
+            kit={kit}
+          />
+        </>
       );
     case "order":
       return (
-        <InOrder
-          key={view.attemptId}
-          issue={view.issue}
-          dateLabel={dateLabel}
-          partLabel={`Part ${view.daily.part}`}
-          prompt={view.daily.prompt}
-          attemptId={view.attemptId}
-          deadlineAt={view.deadlineAt}
-          serverNow={view.serverNow}
-          items={view.items}
-        />
+        <>
+          <MatchLive />
+          <InOrder
+            key={view.attemptId}
+            issue={view.issue}
+            dateLabel={dateLabel}
+            partLabel={`Part ${view.daily.part}`}
+            prompt={view.daily.prompt}
+            attemptId={view.attemptId}
+            deadlineAt={view.deadlineAt}
+            serverNow={view.serverNow}
+            items={view.items}
+          />
+        </>
       );
     case "fulltime": {
       // "Who do you support?" is asked once, right after a first Daily.
@@ -158,7 +168,7 @@ function fixtureTitle(view: Awaited<ReturnType<typeof getDailyView>>): string | 
 
 function Loading() {
   return (
-    <main className="mx-auto min-h-dvh max-w-[560px] px-4" aria-busy="true">
+    <main className="mx-auto w-full flex-1 max-w-[560px] px-4" aria-busy="true">
       <div className="flex justify-between border-b border-navy pt-3.5 pb-2">
         <span className="label">The Daily</span>
       </div>

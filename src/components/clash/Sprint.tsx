@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { answerClash, endSprint } from "@/app/clash/actions";
+import { answerClash, endSprint } from "@/app/(site)/clash/actions";
 import type { Card } from "@/lib/clash/data";
 import type { Guess } from "@/lib/clash/rules";
 import { ShirtBack, shirtName, type Kit } from "@/components/daily/ShirtBack";
@@ -90,7 +90,7 @@ export function Sprint(props: Props) {
   };
 
   return (
-    <main className="mx-auto min-h-dvh max-w-[1100px] px-4 pb-6 lg:grid lg:grid-cols-[380px_minmax(0,1fr)] lg:gap-x-12 lg:px-8">
+    <main className="mx-auto w-full flex-1 max-w-[1100px] px-4 pb-6 lg:grid lg:grid-cols-[380px_minmax(0,1fr)] lg:gap-x-12 lg:px-8">
       <div className="lg:col-span-2">
         <ClashMasthead right={props.statLabel} />
       </div>

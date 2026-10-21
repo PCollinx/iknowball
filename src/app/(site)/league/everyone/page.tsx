@@ -25,7 +25,7 @@ async function Everyone() {
   await connection();
   const { week, top, mine, players } = await getGlobalTable();
   return (
-    <main className="mx-auto min-h-dvh max-w-[560px] px-4 pb-10">
+    <main className="mx-auto w-full flex-1 max-w-[560px] px-4 pb-10">
       <LeagueMasthead right={weekLabel(week)} />
       <h1 className="mt-4 font-display text-[56px] leading-[0.9] uppercase">
         Every<span className="text-royal">one</span>

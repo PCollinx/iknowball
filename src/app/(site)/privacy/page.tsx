@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { SiteFooter } from "@/components/nav/SiteFooter";
-import { SiteNav } from "@/components/nav/SiteNav";
 import { PRIVACY_EMAIL } from "@/lib/site";
 
 // Privacy & data, in plain English (drafted 21 Oct 2026 from what the code
@@ -19,8 +17,7 @@ const UPDATED = "21 Oct 2026";
 export default function PrivacyPage() {
   return (
     <>
-      <SiteNav />
-      <main className="mx-auto max-w-[720px] px-4 pb-4 lg:px-0">
+      <main className="mx-auto w-full max-w-[720px] px-4 pb-4">
         <div className="flex items-center justify-between gap-3 border-b-[3px] border-double border-navy pt-6 pb-2">
           <span className="label whitespace-nowrap">Privacy &amp; data</span>
           <span className="label shrink-0 bg-teal-light px-2 py-0.5">Draft · {UPDATED}</span>
@@ -128,7 +125,6 @@ export default function PrivacyPage() {
           If this changes, we&apos;ll update this page and the date at the top.
         </Section>
       </main>
-      <SiteFooter />
     </>
   );
 }

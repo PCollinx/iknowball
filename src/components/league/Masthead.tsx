@@ -14,7 +14,7 @@ export function LeagueMasthead({ right }: { right: string }) {
 
 export function LeagueLoading() {
   return (
-    <main className="mx-auto min-h-dvh max-w-[560px] px-4 lg:max-w-[1040px]" aria-busy="true">
+    <main className="mx-auto w-full flex-1 max-w-[560px] px-4 lg:max-w-[1040px]" aria-busy="true">
       <div className="flex justify-between border-b border-navy pt-3.5 pb-2">
         <span className="label">The League</span>
       </div>

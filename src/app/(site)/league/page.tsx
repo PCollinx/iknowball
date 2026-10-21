@@ -49,7 +49,7 @@ async function Hub() {
   const share = everyone.position && everyone.players >= 20 ? Math.max(1, Math.ceil((everyone.position / everyone.players) * 100)) : null;
 
   return (
-    <main className="mx-auto min-h-dvh max-w-[560px] px-4 pb-10 lg:max-w-[1040px]">
+    <main className="mx-auto w-full flex-1 max-w-[560px] px-4 pb-10 lg:max-w-[1040px]">
       <LeagueMasthead right={weekLabel(hub.week)} />
       <div className="lg:grid lg:grid-cols-[1fr_380px] lg:gap-10">
         <section>

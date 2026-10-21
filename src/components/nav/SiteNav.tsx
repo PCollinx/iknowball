@@ -1,65 +1,81 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { RatingBadge } from "@/components/profile/RatingBadge";
+import { currentUserId } from "@/lib/daily/data";
+import { getRating } from "@/lib/profile/data";
+import { NavLinks, SectionLinks } from "./NavLinks";
 
 // The site's navbar, "Programme" style (picked 20 Oct 2026): the shirt logo
 // and wordmark, numbered sections like a matchday programme's contents, and
 // your rating, over a double rule. On phones the sections sit in a row under
-// the logo.
+// the logo. It sits in the (site) layout, so every public screen has it, and
+// it needs nothing from the page: the active section comes from the address
+// and the rating loads in its own Suspense slot.
+//
+// Match mode (21 Oct 2026): while a timed round is on (a page renders
+// <MatchLive />), CSS in globals.css hides the sections, the shirt link and
+// the footer, and swaps the linked logo for a plain one, so a stray tap can't
+// throw away an attempt. The data-nav-* attributes are its hooks.
 
-export type Section = "daily" | "clash" | "league" | "table" | "profile";
-
-const DESKTOP: [Section, string, string][] = [
-  ["daily", "/daily", "The Daily"],
-  ["clash", "/clash", "Clash"],
-  ["league", "/league", "The League"],
-  ["table", "/daily/table", "Today's table"],
-];
-const PHONE: [Section, string, string][] = [...DESKTOP.slice(0, 3), ["profile", "/profile", "Your shirt"]];
-
-/** `rating` is the player's rating, null before a first Daily; leave it out on
- * pages that don't look it up, and the link reads "Your shirt" instead. */
-export function SiteNav({ active, rating }: { active?: Section; rating?: number | null }) {
+export function SiteNav() {
   return (
     <header className="border-b-[4px] border-double border-navy">
       <div className="mx-auto flex max-w-[1184px] items-center justify-between gap-4 px-4 py-3 lg:py-0">
-        <Link href="/" aria-label="iKnowBall home" className="flex items-center gap-2 lg:gap-2.5">
-          <Logo />
-          <span className="font-display text-[26px] leading-none uppercase lg:text-[32px]">
-            iKnow<span className="text-royal">Ball</span>
-          </span>
+        <Link href="/" aria-label="iKnowBall home" data-nav-full className="flex items-center gap-2 lg:gap-2.5 lg:py-3">
+          <Brand />
         </Link>
-        <nav aria-label="Sections" className="hidden gap-8 lg:flex">
-          {DESKTOP.map(([key, href, label], i) => (
-            <NavLink key={key} href={href} n={i + 1} label={label} active={active === key} className="pt-[22px] pb-5 text-[15px]" />
-          ))}
+        {/* In match mode the mark is shown, not linked, so a stray tap can't leave the round. */}
+        <span data-nav-brand className="items-center gap-2 lg:gap-2.5 lg:py-3">
+          <Brand />
+        </span>
+        <nav aria-label="Sections" data-nav-full className="hidden gap-8 lg:flex">
+          <Suspense fallback={<SectionLinks variant="desktop" className="pt-[22px] pb-5 text-[15px]" active={null} />}>
+            <NavLinks variant="desktop" className="pt-[22px] pb-5 text-[15px]" />
+          </Suspense>
         </nav>
-        <Link
-          href="/profile"
-          aria-label="Your shirt"
-          className="flex items-center gap-2.5 lg:border-2 lg:border-navy lg:py-1.5 lg:pr-3 lg:pl-2"
-        >
-          {rating !== undefined && <RatingBadge rating={rating} className="w-[34px] text-base lg:w-[30px] lg:text-sm" />}
-          <span className={`font-semibold ${rating !== undefined ? "hidden lg:inline" : "text-sm lg:text-base"}`}>Your shirt</span>
-        </Link>
+        <div data-nav-full>
+          <Suspense fallback={<ShirtLink rating={undefined} />}>
+            <PlayerShirtLink />
+          </Suspense>
+        </div>
+        <span data-nav-live className="label items-center gap-1.5 bg-navy px-2 py-1 text-white">
+          <span className="h-2 w-2 rounded-full bg-red-card motion-safe:animate-pulse" aria-hidden="true" />
+          Live
+        </span>
       </div>
-      <nav aria-label="Sections" className="flex gap-[18px] overflow-x-auto px-4 lg:hidden">
-        {PHONE.map(([key, href, label], i) => (
-          <NavLink key={key} href={href} n={i + 1} label={label} active={active === key} className="pt-1 pb-2.5 text-sm" />
-        ))}
+      <nav aria-label="Sections" data-nav-full className="flex gap-[18px] overflow-x-auto px-4 lg:hidden">
+        <Suspense fallback={<SectionLinks variant="phone" className="pt-1 pb-2.5 text-sm" active={null} />}>
+          <NavLinks variant="phone" className="pt-1 pb-2.5 text-sm" />
+        </Suspense>
       </nav>
     </header>
   );
 }
 
-function NavLink({ href, n, label, active, className }: { href: string; n: number; label: string; active: boolean; className: string }) {
+/** Reads the session, so it streams in after the page's static shell. */
+async function PlayerShirtLink() {
+  const me = await currentUserId();
+  return <ShirtLink rating={me ? await getRating(me) : null} />;
+}
+
+/** `rating` is null before a first Daily, undefined while it loads (the link then reads "Your shirt"). */
+function ShirtLink({ rating }: { rating: number | null | undefined }) {
   return (
-    <Link
-      href={href}
-      aria-current={active ? "page" : undefined}
-      className={`border-b-[3px] whitespace-nowrap ${active ? "border-teal font-semibold" : "border-transparent hover:border-track"} ${className}`}
-    >
-      <span className={active ? "text-royal" : ""}>{String(n).padStart(2, "0")}</span>&nbsp; {label}
+    <Link href="/profile" aria-label="Your shirt" className="flex items-center gap-2.5 lg:border-2 lg:border-navy lg:py-1.5 lg:pr-3 lg:pl-2">
+      {rating !== undefined && <RatingBadge rating={rating} className="w-[34px] text-base lg:w-[30px] lg:text-sm" />}
+      <span className={`font-semibold ${rating !== undefined ? "hidden lg:inline" : "text-sm lg:text-base"}`}>Your shirt</span>
     </Link>
+  );
+}
+
+function Brand() {
+  return (
+    <>
+      <Logo />
+      <span className="font-display text-[26px] leading-none uppercase lg:text-[32px]">
+        iKnow<span className="text-royal">Ball</span>
+      </span>
+    </>
   );
 }
 

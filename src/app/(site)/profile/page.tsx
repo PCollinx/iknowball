@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { continueWithGoogle, signOut } from "@/app/profile/actions";
+import { continueWithGoogle, signOut } from "@/app/(site)/profile/actions";
 import { ShirtBack } from "@/components/daily/ShirtBack";
 import { ClubPicker } from "@/components/profile/ClubPicker";
 import { RatingBadge } from "@/components/profile/RatingBadge";
@@ -39,9 +39,7 @@ export default function ProfilePage({ searchParams }: { searchParams: SearchPara
 function Header() {
   return (
     <div className="flex items-center justify-between gap-2 border-b border-navy pt-3.5 pb-2 lg:col-span-2">
-      <Link href="/" className="label">
-        iKnowBall
-      </Link>
+      <span className="label">Your shirt</span>
       <span className="label">Season {seasonLabel(seasonOf(gameDate()))}</span>
     </div>
   );
@@ -55,7 +53,7 @@ async function ProfileScreen({ searchParams }: { searchParams: SearchParams }) {
 
   if (!user) {
     return (
-      <main className="mx-auto min-h-dvh max-w-[560px] px-4 pb-8">
+      <main className="mx-auto w-full flex-1 max-w-[560px] px-4 pb-8">
         <Header />
         {authError && <Alert>{authError}</Alert>}
         <h1 className="mt-6 font-display text-[64px] leading-[0.9] uppercase">
@@ -80,7 +78,7 @@ async function ProfileScreen({ searchParams }: { searchParams: SearchParams }) {
   const guest = Boolean(user.is_anonymous);
 
   return (
-    <main className="mx-auto min-h-dvh max-w-[1200px] px-4 pb-10 lg:grid lg:grid-cols-[420px_minmax(0,1fr)] lg:gap-x-12 lg:px-8">
+    <main className="mx-auto w-full flex-1 max-w-[1200px] px-4 pb-10 lg:grid lg:grid-cols-[420px_minmax(0,1fr)] lg:gap-x-12 lg:px-8">
       <Header />
 
       <section className="lg:col-start-1">
@@ -240,9 +238,9 @@ function Alert({ children }: { children: React.ReactNode }) {
 
 function Loading() {
   return (
-    <main className="mx-auto min-h-dvh max-w-[560px] px-4" aria-busy="true">
+    <main className="mx-auto w-full flex-1 max-w-[560px] px-4" aria-busy="true">
       <div className="flex justify-between border-b border-navy pt-3.5 pb-2">
-        <span className="label">iKnowBall</span>
+        <span className="label">Your shirt</span>
       </div>
       <KeepyUppy label="Your shirt" caption="Ironing your shirt…" />
     </main>
