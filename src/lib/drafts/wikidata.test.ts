@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clubPlayersQuery, parseClubPlayers } from "./wikidata";
+import { clubPlayersQuery, parseClubPlayers, parsePositions, positionFromLabels, positionsQuery } from "./wikidata";
 
 const E = "http://www.wikidata.org/entity/";
 const row = (over: Record<string, string | undefined> = {}) => {
@@ -58,5 +58,34 @@ describe("parseClubPlayers", () => {
 describe("clubPlayersQuery", () => {
   it("escapes quotes in the article title", () => {
     expect(clubPlayersQuery('A "B" F.C.')).toContain('schema:name "A \\"B\\" F.C."@en');
+  });
+});
+
+describe("positions", () => {
+  it("puts each player in one line", () => {
+    expect(positionFromLabels(["goalkeeper"])).toBe("GK");
+    expect(positionFromLabels(["centre-back", "full-back"])).toBe("DEF");
+    expect(positionFromLabels(["defensive midfielder"])).toBe("MID");
+    expect(positionFromLabels(["attacking midfielder", "winger", "forward"])).toBe("FWD");
+    expect(positionFromLabels(["midfielder", "forward"])).toBe("MID");
+    expect(positionFromLabels(["wing-back", "midfielder"])).toBe("MID");
+    expect(positionFromLabels(["association football manager"])).toBeNull();
+  });
+
+  it("parses grouped labels by player id", () => {
+    const json = {
+      results: {
+        bindings: [
+          { player: { value: `${E}Q11908` }, positions: { value: "midfielder|attacking midfielder" } },
+          { player: { value: `${E}Q2} ` }, positions: { value: "coach" } },
+        ],
+      },
+    };
+    expect([...parsePositions(json)]).toEqual([["Q11908", "MID"]]);
+  });
+
+  it("only queries well-formed ids", () => {
+    const q = positionsQuery(["Q1", "Q2 } DROP", "Q33"]);
+    expect(q).toContain("VALUES ?player { wd:Q1 wd:Q33 }");
   });
 });

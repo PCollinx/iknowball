@@ -131,15 +131,49 @@ export async function getAnswerKeys(answers: AnswerRow[]): Promise<AnswerKeys[]>
 // Answer keys don't change once a part is under way (the maker locks a part as
 // soon as anyone starts it), so each server keeps them for a while instead of
 // reading three tables on every guess.
+/** Where on the pitch a Free Recall answer goes. */
+export type Position = "GK" | "DEF" | "MID" | "FWD";
+
+/**
+ * Each answer's position, from its linked player or else a player of the same
+ * name ("Ashley Cole"). Answers with no known position are left out.
+ */
+export async function answerPositions(answers: AnswerRow[]): Promise<Map<number, Position>> {
+  const out = new Map<number, Position>();
+  if (!answers.length) return out;
+  const admin = createAdminClient();
+  const ids = answers.map((a) => a.player_id).filter((id): id is number => id !== null);
+  const names = [...new Set(answers.filter((a) => a.player_id === null).map((a) => a.answer_text))];
+  const select = "id, full_name, known_as, position";
+  const [byId, byKnown, byFull] = await Promise.all([
+    ids.length ? admin.from("players").select(select).in("id", ids).not("position", "is", null) : null,
+    names.length ? admin.from("players").select(select).in("known_as", names).not("position", "is", null) : null,
+    names.length ? admin.from("players").select(select).in("full_name", names).not("position", "is", null) : null,
+  ]);
+  type Row = { id: number; full_name: string; known_as: string; position: Position };
+  const rows = [byId, byKnown, byFull].flatMap((r) => (r?.data ?? []) as Row[]);
+  const ofId = new Map(rows.map((r) => [r.id, r.position]));
+  const ofName = new Map<string, Position>();
+  for (const r of rows) {
+    for (const n of [r.known_as, r.full_name]) if (!ofName.has(n.toLowerCase())) ofName.set(n.toLowerCase(), r.position);
+  }
+  for (const a of answers) {
+    const p = (a.player_id !== null ? ofId.get(a.player_id) : undefined) ?? ofName.get(a.answer_text.toLowerCase());
+    if (p) out.set(a.id, p);
+  }
+  return out;
+}
+
 const KEY_TTL_MS = 10 * 60 * 1000;
-const keyCache = new Map<number, { at: number; answers: AnswerRow[]; keys: AnswerKeys[] }>();
+const keyCache = new Map<number, { at: number; answers: AnswerRow[]; keys: AnswerKeys[]; positions: Map<number, Position> }>();
 
 /** The answers and their match keys for a Daily, kept for a few minutes. */
-export async function cachedAnswerKeys(dailyId: number): Promise<{ answers: AnswerRow[]; keys: AnswerKeys[] }> {
+export async function cachedAnswerKeys(dailyId: number): Promise<{ answers: AnswerRow[]; keys: AnswerKeys[]; positions: Map<number, Position> }> {
   const hit = keyCache.get(dailyId);
   if (hit && Date.now() - hit.at < KEY_TTL_MS) return hit;
   const answers = await getAnswers(dailyId);
-  const entry = { at: Date.now(), answers, keys: await getAnswerKeys(answers) };
+  const [keys, positions] = await Promise.all([getAnswerKeys(answers), answerPositions(answers)]);
+  const entry = { at: Date.now(), answers, keys, positions };
   if (keyCache.size > 20) keyCache.clear();
   keyCache.set(dailyId, entry);
   return entry;
@@ -221,6 +255,8 @@ export async function foundAnswerIds(attemptId: number): Promise<number[]> {
 // ---------------------------------------------------------------------------
 
 type Shown = { id: number; text: string };
+/** A found Free Recall answer, with its position once known. */
+export type Found = Shown & { position: Position | null };
 
 export type RecallReveal = {
   daily: DailyRow;
@@ -243,7 +279,7 @@ export type PickAnswered = { id: number; choice: string; answer: string; right: 
 export type DailyView =
   | { kind: "none" }
   | { kind: "kickoff"; issue: number; daily: DailyRow; parts: DailyRow[]; total: number; before: RecallReveal | null }
-  | { kind: "recall"; issue: number; daily: DailyRow; attemptId: number; deadlineAt: string; serverNow: number; found: Shown[] }
+  | { kind: "recall"; issue: number; daily: DailyRow; attemptId: number; deadlineAt: string; serverNow: number; found: Found[] }
   | { kind: "order"; issue: number; daily: DailyRow; attemptId: number; deadlineAt: string; serverNow: number; items: Shown[] }
   | {
       kind: "pick";
@@ -434,9 +470,10 @@ export async function getDailyView(): Promise<DailyView> {
         };
       }
       if (daily.format === "free_recall") {
-        const answers = await getAnswers(daily.id);
+        const [{ answers, positions }, foundIds] = await Promise.all([cachedAnswerKeys(daily.id), foundAnswerIds(attempt.id)]);
         const byId = new Map(answers.map((a) => [a.id, a.answer_text]));
-        const found = (await foundAnswerIds(attempt.id)).map((id) => ({ id, text: byId.get(id) ?? "" }));
+        // Positions go to the browser only for answers already found.
+        const found = foundIds.map((id) => ({ id, text: byId.get(id) ?? "", position: positions.get(id) ?? null }));
         return { kind: "recall", issue, daily, attemptId: attempt.id, deadlineAt: attempt.deadline_at, serverNow, found };
       }
       const items = seededShuffle(

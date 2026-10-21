@@ -13,6 +13,7 @@ import {
   getDaily,
   isOpen,
   MAX_GUESSES,
+  type Position,
 } from "@/lib/daily/data";
 import { matchAnswer } from "@/lib/daily/match";
 import { clearTodaysAttempts, switchTestDaily } from "@/lib/daily/sample";
@@ -59,7 +60,7 @@ export async function startPart(formData: FormData) {
 }
 
 export type GuessResult =
-  | { status: "correct"; id: number; text: string; found: number; done: boolean }
+  | { status: "correct"; id: number; text: string; position: Position | null; found: number; done: boolean }
   | { status: "duplicate"; text: string }
   | { status: "wrong" }
   | { status: "closed" };
@@ -86,7 +87,7 @@ export async function submitGuess(attemptId: number, input: string): Promise<Gue
   if (!isOpen(attempt) || dailies.format !== "free_recall") return { status: "closed" };
   if (guesses.length >= MAX_GUESSES) return { status: "closed" };
 
-  const { answers, keys } = await cachedAnswerKeys(attempt.daily_id);
+  const { answers, keys, positions } = await cachedAnswerKeys(attempt.daily_id);
   const found = [...new Set((guesses as { answer_id: number | null }[]).map((g) => g.answer_id).filter((x) => x !== null))];
   const matched = matchAnswer(parsed.data.input, keys);
   const logGuess = admin.from("attempt_guesses").insert({ attempt_id: attempt.id, raw_input: parsed.data.input, answer_id: matched });
@@ -111,7 +112,7 @@ export async function submitGuess(attemptId: number, input: string): Promise<Gue
       })
       .eq("id", attempt.id),
   ]);
-  return { status: "correct", id: matched, text, found: total, done };
+  return { status: "correct", id: matched, text, position: positions.get(matched) ?? null, found: total, done };
 }
 
 export type PickResult = { status: "answered"; right: boolean; answer: string; done: boolean } | { status: "closed" };

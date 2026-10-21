@@ -1,7 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { TrackedClub } from "./clubs";
-import { fetchClubPlayers, type Spell } from "./wikidata";
+import { fetchClubPlayers, fetchPositions, type Position, type Spell } from "./wikidata";
 
 const BATCH = 500;
 
@@ -9,7 +9,7 @@ function chunks<T>(rows: T[]): T[][] {
   return Array.from({ length: Math.ceil(rows.length / BATCH) }, (_, i) => rows.slice(i * BATCH, (i + 1) * BATCH));
 }
 
-export type ImportResult = { club: string; players: number; spells: number } | { club: string; error: string };
+export type ImportResult = { club: string; players: number; spells: number; positions: number } | { club: string; error: string };
 
 /** Fetches one club's player histories from Wikidata and upserts them. */
 export async function importClub(club: TrackedClub): Promise<ImportResult> {
@@ -63,6 +63,17 @@ async function saveClub(admin: ReturnType<typeof createAdminClient>, club: Track
     for (const p of data ?? []) ids.set(p.wikidata_qid, p.id);
   }
 
+  // Positions (GK, DEF, MID, FWD) place Free Recall shirts on the pitch. Only
+  // known ones are written, so a Wikidata hiccup never wipes what we had.
+  const positions = await fetchPositions([...byPlayer.keys()]).catch(() => new Map<string, Position>());
+  for (const line of ["GK", "DEF", "MID", "FWD"] as const) {
+    const qids = [...positions].filter(([, p]) => p === line).map(([q]) => q);
+    for (const batch of chunks(qids)) {
+      const { error } = await admin.from("players").update({ position: line }).in("wikidata_qid", batch);
+      if (error) throw error;
+    }
+  }
+
   const aliases = [...byPlayer.values()].flatMap((s) => s.aliases.map((alias) => ({ player_id: ids.get(s.playerQid)!, alias })));
   for (const batch of chunks(aliases)) {
     const { error } = await admin.from("player_aliases").upsert(batch, { onConflict: "player_id,alias_normalized", ignoreDuplicates: true });
@@ -85,5 +96,5 @@ async function saveClub(admin: ReturnType<typeof createAdminClient>, club: Track
     );
     if (error) throw error;
   }
-  return { club: club.name, players: byPlayer.size, spells: spells.length };
+  return { club: club.name, players: byPlayer.size, spells: spells.length, positions: positions.size };
 }
