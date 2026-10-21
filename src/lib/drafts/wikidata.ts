@@ -92,3 +92,64 @@ export async function fetchClubPlayers(wikipediaTitle: string): Promise<Spell[]>
   if (!res.ok) throw new Error(`Wikidata answered ${res.status} for ${wikipediaTitle}`);
   return parseClubPlayers(await res.json());
 }
+
+/** Where a player plays, as the Daily's pitch lines it up. */
+export type Position = "GK" | "DEF" | "MID" | "FWD";
+
+/** Every "position played on team" (P413) label for a batch of players. */
+export function positionsQuery(playerQids: string[]): string {
+  const values = playerQids.filter((q) => /^Q\d+$/.test(q)).map((q) => `wd:${q}`).join(" ");
+  return `SELECT ?player (GROUP_CONCAT(DISTINCT ?posLabel; separator="|") AS ?positions) WHERE {
+  VALUES ?player { ${values} }
+  ?player wdt:P413 ?pos.
+  ?pos rdfs:label ?posLabel. FILTER(LANG(?posLabel) = "en")
+} GROUP BY ?player`;
+}
+
+const LINE: [RegExp, Position][] = [
+  [/goal ?keeper/i, "GK"],
+  [/back|defender|sweeper|libero|stopper/i, "DEF"],
+  [/midfield|playmaker|regista|mezzala|volante/i, "MID"],
+  [/forward|striker|winger|attacker|centre-forward|center forward|false nine/i, "FWD"],
+];
+
+/**
+ * One line from a player's Wikidata positions ("midfielder|forward"): a keeper
+ * is a keeper; otherwise the line most of their positions sit in, and a tie
+ * goes to midfield, then defence, then attack.
+ */
+export function positionFromLabels(labels: string[]): Position | null {
+  const lines = labels.map((l) => LINE.find(([re]) => re.test(l))?.[1]).filter((p): p is Position => Boolean(p));
+  if (!lines.length) return null;
+  if (lines.includes("GK")) return "GK";
+  const count = (p: Position) => lines.filter((l) => l === p).length;
+  return (["MID", "DEF", "FWD"] as const).reduce((best, p) => (count(p) > count(best) ? p : best));
+}
+
+export function parsePositions(json: { results: { bindings: Binding[] } }): Map<string, Position> {
+  const out = new Map<string, Position>();
+  for (const b of json.results.bindings) {
+    if (!b.player || !b.positions) continue;
+    const position = positionFromLabels(b.positions.value.split("|"));
+    if (position) out.set(qid(b.player.value), position);
+  }
+  return out;
+}
+
+/** Positions for players by Wikidata id, a couple of hundred per query. */
+export async function fetchPositions(playerQids: string[]): Promise<Map<string, Position>> {
+  const out = new Map<string, Position>();
+  for (let i = 0; i < playerQids.length; i += 200) {
+    const query = positionsQuery(playerQids.slice(i, i + 200));
+    const res = await fetch(WIKIDATA_SPARQL, {
+      method: "POST",
+      headers: { Accept: "application/sparql-results+json", "Content-Type": "application/x-www-form-urlencoded", "User-Agent": USER_AGENT },
+      body: new URLSearchParams({ query }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(65_000),
+    });
+    if (!res.ok) throw new Error(`Wikidata answered ${res.status} for positions`);
+    for (const [q, p] of parsePositions(await res.json())) out.set(q, p);
+  }
+  return out;
+}

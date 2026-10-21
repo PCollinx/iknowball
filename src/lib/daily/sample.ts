@@ -58,31 +58,84 @@ export async function ensureTestDaily(date = gameDate()): Promise<boolean> {
     await admin.from("dailies").update({ status: "scheduled" }).eq("play_date", date);
     return true;
   }
-  const { error: saveError } = await admin.rpc("maker_save_day", {
+  await saveSample(date, "picks");
+  return true;
+}
+
+/** The sample's two pairings: the tapped rounds, or the typed ones. */
+export type SampleKind = "picks" | "typed";
+
+const PARTS: Record<SampleKind, object[]> = {
+  picks: [
+    {
+      format: "pick",
+      title: "Chelsea v Arsenal",
+      prompt: "Tap the player who's played for both Chelsea and Arsenal since 1992.",
+      time_limit_seconds: 60,
+      source_note: SOURCE,
+      answers: picks(BOTH.map((answer, i) => ({ question: null, answer, wrong: ONE[i] }))),
+    },
+    {
+      format: "era",
+      title: "Era picks",
+      prompt: "When were they at Arsenal? Tap the right years.",
+      time_limit_seconds: 45,
+      source_note: SOURCE,
+      answers: picks(ERAS.map(([name, from, to], i) => ({ question: `${name} at Arsenal`, answer: `${from}–${to}`, wrong: eraDecoys(from, to, i, 2026)! }))),
+    },
+  ],
+  typed: [
+    {
+      format: "free_recall",
+      title: "Chelsea v Arsenal",
+      prompt: `Name the ${BOTH.length} players who've played for both Chelsea and Arsenal since 1992.`,
+      time_limit_seconds: 180,
+      source_note: SOURCE,
+      answers: BOTH.map((answer_text, i) => ({ answer_text, extra_aliases: [], position: i + 1, reveal_note: null, question: null, choices: [] })),
+    },
+    {
+      format: "in_order",
+      title: "In order",
+      prompt: "They all played for Arsenal. Earliest to join at the top.",
+      time_limit_seconds: 60,
+      source_note: SOURCE,
+      // ERAS is already in the order they joined.
+      answers: ERAS.map(([name, from], i) => ({ answer_text: name, extra_aliases: [], position: i + 1, reveal_note: `Joined ${from}`, question: null, choices: [] })),
+    },
+  ],
+};
+
+async function saveSample(date: string, kind: SampleKind): Promise<void> {
+  const { error } = await createAdminClient().rpc("maker_save_day", {
     p_play_date: date,
     p_status: "scheduled",
     p_checked_by: null,
-    p_parts: [
-      {
-        format: "pick",
-        title: "Chelsea v Arsenal",
-        prompt: "Tap the player who's played for both Chelsea and Arsenal since 1992.",
-        time_limit_seconds: 60,
-        source_note: SOURCE,
-        answers: picks(BOTH.map((answer, i) => ({ question: null, answer, wrong: ONE[i] }))),
-      },
-      {
-        format: "era",
-        title: "Era picks",
-        prompt: "When were they at Arsenal? Tap the right years.",
-        time_limit_seconds: 45,
-        source_note: SOURCE,
-        answers: picks(ERAS.map(([name, from, to], i) => ({ question: `${name} at Arsenal`, answer: `${from}–${to}`, wrong: eraDecoys(from, to, i, 2026)! }))),
-      },
-    ],
+    p_parts: PARTS[kind],
   });
-  if (saveError) throw saveError;
-  return true;
+  if (error) throw error;
+}
+
+/**
+ * On a test site, swaps today's Daily for the sample with the tapped or the
+ * typed rounds, so every round type can be tried on any day. It deletes the
+ * day's parts (and with them everyone's tries) and saves new ones: fine on the
+ * shared dev database, never run on production. New parts mean new ids, so no
+ * server's cached answer key for the old ones can be read for the new rounds.
+ */
+export async function switchTestDaily(kind: SampleKind, date = gameDate()): Promise<void> {
+  if (!isTestSite()) return;
+  const admin = createAdminClient();
+  const { data, error } = await admin.from("dailies").select("id").eq("play_date", date);
+  if (error) throw error;
+  const ids = (data ?? []).map((d) => d.id);
+  if (ids.length) {
+    // Tries first: their guesses point at answers, which would block deleting the parts.
+    const { error: triesError } = await admin.from("attempts").delete().in("daily_id", ids);
+    if (triesError) throw triesError;
+    const { error: partsError } = await admin.from("dailies").delete().in("id", ids);
+    if (partsError) throw partsError;
+  }
+  await saveSample(date, kind);
 }
 
 /** On a test site, wipes your own tries at today's Daily so you can play it again. */
