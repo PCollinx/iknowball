@@ -117,9 +117,10 @@ async function saveSample(date: string, kind: SampleKind): Promise<void> {
 
 /**
  * On a test site, swaps today's Daily for the sample with the tapped or the
- * typed rounds, so every round type can be tried on any day. A part can't be
- * changed once played, so this wipes everyone's tries at today's Daily first:
- * fine on the shared dev database, never run on production.
+ * typed rounds, so every round type can be tried on any day. It deletes the
+ * day's parts (and with them everyone's tries) and saves new ones: fine on the
+ * shared dev database, never run on production. New parts mean new ids, so no
+ * server's cached answer key for the old ones can be read for the new rounds.
  */
 export async function switchTestDaily(kind: SampleKind, date = gameDate()): Promise<void> {
   if (!isTestSite()) return;
@@ -128,8 +129,11 @@ export async function switchTestDaily(kind: SampleKind, date = gameDate()): Prom
   if (error) throw error;
   const ids = (data ?? []).map((d) => d.id);
   if (ids.length) {
-    const { error: wipeError } = await admin.from("attempts").delete().in("daily_id", ids);
-    if (wipeError) throw wipeError;
+    // Tries first: their guesses point at answers, which would block deleting the parts.
+    const { error: triesError } = await admin.from("attempts").delete().in("daily_id", ids);
+    if (triesError) throw triesError;
+    const { error: partsError } = await admin.from("dailies").delete().in("id", ids);
+    if (partsError) throw partsError;
   }
   await saveSample(date, kind);
 }
