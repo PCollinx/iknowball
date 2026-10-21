@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { endPart, submitGuess } from "@/app/(site)/daily/actions";
 import { FixtureTitle } from "./FixtureTitle";
-import { GiveUp, Pitch, RoundHead } from "./InPlay";
+import { GiveUp, Pitch, RoundHead, WhistleCover, type Whistle } from "./InPlay";
 import { ShirtBack, shirtName, type Kit } from "./ShirtBack";
 import { useCountdown } from "./useCountdown";
 
@@ -11,6 +11,8 @@ const RIGHT = ["Ball knowledge.", "Correct. Next one.", "Sharp. Keep going.", "Y
 const WRONG = ["Not on the list. Try again.", "Not on the list, chief.", "Who told you that one?", "E no dey the list."];
 
 type Props = {
+  /** Half-time or full time when this part ends. */
+  whistle: Whistle;
   partLabel: string;
   title: string;
   prompt: string;
@@ -66,6 +68,7 @@ export function FreeRecall(props: Props) {
 
   return (
     <main className="mx-auto grid w-full max-w-[560px] flex-1 grid-rows-[auto_1fr_auto] px-4 [grid-template-areas:'head'_'squad'_'answer'] lg:max-w-[1184px] lg:grid-cols-[400px_minmax(0,1fr)] lg:grid-rows-[auto_1fr] lg:gap-x-10 lg:[grid-template-areas:'head_squad'_'answer_squad']">
+      {closing && <WhistleCover whistle={props.whistle} />}
       <section className="[grid-area:head]">
         <RoundHead
           label={`${props.partLabel} · Free Recall`}

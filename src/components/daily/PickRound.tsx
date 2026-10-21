@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { endPart, submitPick } from "@/app/(site)/daily/actions";
 import type { PickAnswered, PickQuestion } from "@/lib/daily/data";
 import { FixtureTitle } from "./FixtureTitle";
-import { GiveUp, Pitch, RoundHead, Steps, type Step } from "./InPlay";
+import { GiveUp, Pitch, RoundHead, Steps, type Step, WhistleCover, type Whistle } from "./InPlay";
 import { ShirtBack, type Kit } from "./ShirtBack";
 import { useCountdown } from "./useCountdown";
 
@@ -14,6 +14,8 @@ const WRONG = ["Not that one, chief.", "Who told you that one?", "E no reach.", 
 const SHOW_MS = 800;
 
 type Props = {
+  /** Half-time or full time when this part ends. */
+  whistle: Whistle;
   partLabel: string;
   format: "pick" | "era";
   title: string;
@@ -94,6 +96,7 @@ export function PickRound(props: Props) {
 
   return (
     <main className="mx-auto grid w-full max-w-[560px] flex-1 grid-rows-[auto_1fr_auto] px-4 [grid-template-areas:'head'_'squad'_'answer'] lg:max-w-[1184px] lg:grid-cols-[400px_minmax(0,1fr)] lg:grid-rows-[auto_1fr] lg:gap-x-10 lg:[grid-template-areas:'head_squad'_'answer_squad']">
+      {closing && <WhistleCover whistle={props.whistle} />}
       <section className="[grid-area:head]">
         <RoundHead
           label={`${props.partLabel} · ${era ? "Era picks" : "Rapid picks"}`}

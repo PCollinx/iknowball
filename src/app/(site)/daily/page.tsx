@@ -85,6 +85,7 @@ async function DailyScreen() {
           <MatchLive />
           <FreeRecall
             key={view.attemptId}
+            whistle={view.daily.part === 1 ? "half" : "full"}
             partLabel={`Part ${view.daily.part}`}
             title={view.daily.title}
             prompt={view.daily.prompt}
@@ -103,6 +104,7 @@ async function DailyScreen() {
           <MatchLive />
           <PickRound
             key={view.attemptId}
+            whistle={view.daily.part === 1 ? "half" : "full"}
             partLabel={`Part ${view.daily.part}`}
             format={view.daily.format === "era" ? "era" : "pick"}
             title={view.daily.title}
@@ -122,6 +124,7 @@ async function DailyScreen() {
           <MatchLive />
           <InOrder
             key={view.attemptId}
+            whistle={view.daily.part === 1 ? "half" : "full"}
             partLabel={`Part ${view.daily.part}`}
             prompt={view.daily.prompt}
             attemptId={view.attemptId}

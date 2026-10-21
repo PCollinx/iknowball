@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { KeepyUppy } from "@/components/loading/KeepyUppy";
 import { clock } from "./clock";
 
 // Pieces shared by the Daily's rounds in play (step 2 of docs/redesign-plan.md,
@@ -96,5 +97,24 @@ export function GiveUp({ onClick, disabled }: { onClick: () => void; disabled: b
     <button type="button" onClick={onClick} disabled={disabled} className="shrink-0 text-[13px] font-semibold text-navy/70 underline underline-offset-[3px]">
       Give up and reveal
     </button>
+  );
+}
+
+/** Which whistle ends a part: half-time after Part 1, full time after Part 2. */
+export type Whistle = "half" | "full";
+
+const WHISTLE = {
+  half: { label: "Half-time", caption: "Dressing room…" },
+  full: { label: "Full time", caption: "Counting the goals…" },
+} as const;
+
+/** Covers the round from the moment a part ends until the next screen arrives,
+ * so the gap reads as the whistle, not a frozen page. */
+export function WhistleCover({ whistle }: { whistle: Whistle }) {
+  const { label, caption } = WHISTLE[whistle];
+  return (
+    <div className="fixed inset-0 z-40 grid place-items-center bg-white/95">
+      <KeepyUppy label={label} caption={caption} />
+    </div>
   );
 }

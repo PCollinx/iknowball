@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { submitOrder } from "@/app/(site)/daily/actions";
-import { RoundClock, Steps, type Step } from "./InPlay";
+import { RoundClock, Steps, type Step, WhistleCover, type Whistle } from "./InPlay";
 import { useCountdown } from "./useCountdown";
 
 type Props = {
+  /** Half-time or full time when this part ends. */
+  whistle: Whistle;
   partLabel: string;
   prompt: string;
   attemptId: number;
@@ -35,6 +37,7 @@ export function InOrder(props: Props) {
 
   return (
     <main className="mx-auto grid w-full max-w-[560px] flex-1 grid-rows-[1fr_auto] px-4 pt-4 lg:max-w-[1000px] lg:grid-rows-[auto_auto] lg:content-start lg:pt-8 lg:pb-10">
+      {locking && <WhistleCover whistle={props.whistle} />}
       {/* The round lives inside the kick-off's sticker. */}
       <section className="relative self-start border-[2.5px] border-navy bg-white shadow-[5px_5px_0_var(--color-navy)]">
         <div className="flex items-center justify-between gap-3 bg-navy px-2.5 py-1.5 text-white lg:px-4 lg:py-2">
