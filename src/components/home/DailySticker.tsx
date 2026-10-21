@@ -7,19 +7,24 @@ import type { HomeDaily } from "@/lib/daily/data";
 import { ClosesIn } from "./ClosesIn";
 import { Sticker, StickerHead, StickerSlot } from "./Sticker";
 
-// The Daily on the home page: a sticker in its album slot (picked 20 Oct
-// 2026), the fixture's two shirts floating over the number of answers.
+// The Daily as a sticker in its album slot (picked 20 Oct 2026), the
+// fixture's two shirts floating over the number of answers. On the home page
+// it is a link with a Play strip; on the Daily's kick-off ("kickoff", 21 Oct
+// 2026) it is the page's heading, and the Kick off button sits below it.
 
 type Props = {
   daily: HomeDaily | null;
   kits: [Kit | undefined, Kit | undefined];
   closesAt: string;
   serverNow: number;
+  variant?: "home" | "kickoff";
 };
 
 const CTA = { fresh: "Play today's Daily", playing: "Carry on", done: "See full time" } as const;
 
-export function DailySticker({ daily, kits, closesAt, serverNow }: Props) {
+export function DailySticker({ daily, kits, closesAt, serverNow, variant = "home" }: Props) {
+  const kickoff = variant === "kickoff";
+  const Heading = kickoff ? "h1" : "h2";
   const first = daily?.parts.find((p) => p.part === 1) ?? daily?.parts[0];
   const second = daily?.parts.find((p) => p.part === 2);
   const [home, away] = first ? splitFixture(first.title) : ["", null];
@@ -27,7 +32,9 @@ export function DailySticker({ daily, kits, closesAt, serverNow }: Props) {
 
   return (
     <StickerSlot
-      caption={daily ? `No. 01 · The Daily · Issue ${daily.issue}` : "No. 01 · The Daily"}
+      caption={
+        daily ? (kickoff ? `No. 01 · The Daily · Part 1 of ${daily.parts.length}` : `No. 01 · The Daily · Issue ${daily.issue}`) : "No. 01 · The Daily"
+      }
       aside={
         daily?.status === "done" ? (
           <Link href="/daily/table" className="text-royal underline-offset-2 hover:underline">
@@ -38,7 +45,7 @@ export function DailySticker({ daily, kits, closesAt, serverNow }: Props) {
         )
       }
     >
-      <Sticker href="/daily" className="-rotate-1 motion-safe:animate-deal-sticker">
+      <Sticker href={kickoff ? undefined : "/daily"} className="-rotate-1 motion-safe:animate-deal-sticker">
         <StickerHead n="01" name="Daily">
           <span className="label bg-navy px-2 py-1 text-[10px] text-white lg:px-2.5 lg:py-1.5 lg:text-xs">
             {daily?.status === "done" ? "Next in" : "Closes"} <ClosesIn closesAt={closesAt} serverNow={serverNow} />
@@ -63,9 +70,9 @@ export function DailySticker({ daily, kits, closesAt, serverNow }: Props) {
         </div>
 
         <div className="relative -mt-3.5 border-y-2 border-navy bg-royal sash px-3 py-2 text-white lg:-mt-4 lg:px-4 lg:py-2.5">
-          <h2 className="font-display text-[30px] leading-[0.9] uppercase lg:text-[44px]">
+          <Heading className="font-display text-[30px] leading-[0.9] uppercase lg:text-[44px]">
             {first ? headlineFixture(first.title) : "No Daily today"}
-          </h2>
+          </Heading>
           <p className="mt-0.5 line-clamp-2 text-[13px] lg:text-[15px]">{first ? first.prompt : "Back tomorrow with a new one."}</p>
         </div>
 
@@ -77,11 +84,13 @@ export function DailySticker({ daily, kits, closesAt, serverNow }: Props) {
           </dl>
         )}
 
-        <span className="block px-2.5 pt-1 pb-4 lg:px-3 lg:pb-5">
-          <span className="btn-navy block p-2 text-center font-display text-[22px] uppercase lg:p-2.5 lg:text-[28px]">
-            {daily ? CTA[daily.status] : "See you tomorrow"} →
+        {!kickoff && (
+          <span className="block px-2.5 pt-1 pb-4 lg:px-3 lg:pb-5">
+            <span className="btn-navy block p-2 text-center font-display text-[22px] uppercase lg:p-2.5 lg:text-[28px]">
+              {daily ? CTA[daily.status] : "See you tomorrow"} →
+            </span>
           </span>
-        </span>
+        )}
       </Sticker>
     </StickerSlot>
   );
