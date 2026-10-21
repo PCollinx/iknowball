@@ -15,7 +15,7 @@ import {
   MAX_GUESSES,
 } from "@/lib/daily/data";
 import { matchAnswer } from "@/lib/daily/match";
-import { clearTodaysAttempts } from "@/lib/daily/sample";
+import { clearTodaysAttempts, switchTestDaily } from "@/lib/daily/sample";
 import { partScore } from "@/lib/daily/score";
 import { isPick } from "@/components/daily/formats";
 
@@ -216,5 +216,12 @@ export async function submitOrder(attemptId: number, order: number[]) {
 export async function replayToday() {
   const userId = await currentUserId();
   if (userId) await clearTodaysAttempts(userId);
+  refresh();
+}
+
+/** Test sites only: swaps today's Daily for the sample with the tapped or typed rounds. */
+export async function switchTestRounds(formData: FormData) {
+  const kind = formData.get("kind") === "typed" ? "typed" : "picks";
+  await switchTestDaily(kind);
   refresh();
 }

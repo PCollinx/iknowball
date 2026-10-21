@@ -6,7 +6,7 @@ import { gameDateClosesAt } from "@/lib/time";
 import type { OrderReveal, RecallReveal } from "@/lib/daily/data";
 import { Masthead } from "./Masthead";
 import { NextDaily } from "./NextDaily";
-import { replayToday } from "@/app/(site)/daily/actions";
+import { replayToday, switchTestRounds } from "@/app/(site)/daily/actions";
 import { RecallGrid } from "./RecallGrid";
 import { ShareButtons } from "./ShareButtons";
 import { ShareCard } from "./ShareCard";
@@ -147,6 +147,19 @@ export function FullTime({ issue, playDate, recall, order, points, topPercent, p
             <button type="submit" className="shrink-0 bg-red-card px-4 py-1.5 font-display text-lg text-white uppercase">
               Play it again
             </button>
+          </form>
+        )}
+        {testSite && (
+          <form action={switchTestRounds} className="mt-2 grid gap-2 border-2 border-dashed border-red-card p-3">
+            <span className="text-sm font-semibold text-red-card">Test site only. Swap today for the sample Daily (clears everyone&apos;s tries today):</span>
+            <span className="flex flex-wrap gap-2">
+              <button type="submit" name="kind" value="typed" className="bg-red-card px-3 py-1.5 font-display text-base text-white uppercase">
+                Free Recall + In Order
+              </button>
+              <button type="submit" name="kind" value="picks" className="bg-red-card px-3 py-1.5 font-display text-base text-white uppercase">
+                Rapid + Era picks
+              </button>
+            </span>
           </form>
         )}
       </aside>
