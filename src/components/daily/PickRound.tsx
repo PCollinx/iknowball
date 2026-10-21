@@ -132,13 +132,18 @@ export function PickRound(props: Props) {
                     onClick={() => pick(current, choice)}
                     disabled={over || Boolean(tap)}
                     aria-label={choice}
-                    className={`group absolute grid w-[30cqw] -translate-1/2 justify-items-center transition-opacity lg:w-[22cqw] ${faded(state)}`}
+                    className={`group absolute grid w-[30cqw] -translate-1/2 justify-items-center transition-[opacity,scale] duration-200 lg:w-[22cqw] ${faded(state)} ${result && state === "idle" ? "scale-90" : ""}`}
                     style={{ left: `${x}%`, top: `${y}%` }}
                   >
-                    <span className="w-[26cqw] transition-transform group-enabled:group-hover:-translate-y-1 lg:w-[17cqw]">
-                      <ShirtBack kit={props.kit ?? undefined} num={String.fromCharCode(65 + i)} state={state === "wrong" ? "miss" : "hit"} />
+                    <span className="relative w-[26cqw] lg:w-[17cqw]">
+                      {state === "right" && (
+                        <span aria-hidden className="absolute inset-[-8%] rounded-full border-[1.2cqw] border-royal opacity-0 motion-safe:animate-pick-ring lg:border-[0.8cqw]" />
+                      )}
+                      <span className={`relative block transition-[translate,scale,filter] duration-150 ${SHIRT_MOVE[state]}`}>
+                        <ShirtBack kit={props.kit ?? undefined} num={String.fromCharCode(65 + i)} state={state === "wrong" ? "miss" : "hit"} />
+                      </span>
                     </span>
-                    <span className={`-mt-[0.5cqw] max-w-full truncate px-[2cqw] py-[0.8cqw] font-display text-[5cqw] leading-none text-white uppercase lg:text-[3.2cqw] ${PICK_TAG[state]}`}>
+                    <span className={`relative -mt-[0.5cqw] max-w-full truncate px-[2cqw] py-[0.8cqw] font-display text-[5cqw] leading-none uppercase transition-colors lg:text-[3.2cqw] ${PICK_TAG[state]}`}>
                       {tagName(choice)}
                     </span>
                   </button>
@@ -201,7 +206,7 @@ export function PickRound(props: Props) {
 function EraQuestion({ question }: { question: string | null }) {
   if (!question) return null;
   const name = eraClub(question) ? question.slice(0, question.lastIndexOf(" at ")) : question;
-  return <p className="font-display text-[44px] text-balance leading-[0.9] uppercase lg:text-7xl">{name}</p>;
+  return <p className="font-display text-[38px] text-balance leading-[0.9] uppercase lg:text-[65px]">{name}</p>;
 }
 
 function eraClub(question: string | null): string | null {
@@ -226,10 +231,19 @@ const SPOTS: [number, number][] = [
 const TILT = ["-rotate-[1.2deg]", "rotate-[0.8deg]", "-rotate-[0.6deg]", "rotate-[1.1deg]"];
 
 const PICK_TAG = {
-  idle: "bg-navy",
-  pending: "bg-navy outline-[3px] outline-offset-2 outline-teal outline",
-  right: "bg-royal outline-[3px] outline-offset-2 outline-royal outline",
-  wrong: "bg-red-card",
+  idle: "bg-navy text-white",
+  pending: "bg-teal-light text-navy outline-2 outline-navy outline",
+  right: "bg-royal text-white outline-[3px] outline-offset-2 outline-royal outline",
+  wrong: "bg-red-card text-white",
+} as const;
+
+/** The shirt itself: lifts on hover, squashes when pressed, stands up with a
+ * hard shadow while the tap is checked, then jumps (right) or shakes (wrong). */
+const SHIRT_MOVE = {
+  idle: "group-enabled:group-hover:-translate-y-1 group-enabled:group-active:scale-90",
+  pending: "-translate-y-[4%] scale-110 drop-shadow-[0.8cqw_1.2cqw_0_var(--color-navy)]",
+  right: "scale-110 -translate-y-[4%] drop-shadow-[0.8cqw_1.2cqw_0_var(--color-royal)] motion-safe:animate-pick-win",
+  wrong: "motion-safe:animate-pick-shake",
 } as const;
 
 const TICKET_TONE = {
