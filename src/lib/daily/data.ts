@@ -1,4 +1,5 @@
 import "server-only";
+import type { Position } from "@/lib/drafts/wikidata";
 import { cache } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -131,8 +132,9 @@ export async function getAnswerKeys(answers: AnswerRow[]): Promise<AnswerKeys[]>
 // Answer keys don't change once a part is under way (the maker locks a part as
 // soon as anyone starts it), so each server keeps them for a while instead of
 // reading three tables on every guess.
+
 /** Where on the pitch a Free Recall answer goes. */
-export type Position = "GK" | "DEF" | "MID" | "FWD";
+export type { Position };
 
 /**
  * Each answer's position, from its linked player or else a player of the same
