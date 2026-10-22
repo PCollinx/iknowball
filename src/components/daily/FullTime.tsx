@@ -263,7 +263,7 @@ function DayScore({ points }: { points: number }) {
       style={{ color: ink, WebkitTextStroke: edge ? "1.5px var(--color-navy)" : undefined }}
     >
       {points}
-      <span className="text-[32px] text-navy [-webkit-text-stroke:0] [text-shadow:none] lg:text-[40px]">/100</span>
+      <span className="text-[32px] text-navy [-webkit-text-stroke:0] [text-shadow:2px_2px_0_var(--color-track)] lg:text-[40px] lg:[text-shadow:3px_3px_0_var(--color-track)]">/100</span>
     </span>
   );
 }

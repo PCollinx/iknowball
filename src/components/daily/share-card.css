@@ -25,11 +25,11 @@
 .sc-fix span { color: var(--color-royal); }
 .sc-q { font-size: 2.9cqw; color: rgb(12 19 48 / 0.7); margin-top: 1cqw; padding-bottom: 2cqw; border-bottom: 1.2cqw double var(--color-navy); }
 .sc-mid { flex: 1; padding: 2.4cqw 0 2.8cqw; display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 3cqw; align-items: center; min-height: 0; }
-.sc-score { font-size: 24cqw; line-height: 0.78; font-variant-numeric: tabular-nums; text-shadow: 0.75cqw 0.75cqw 0 var(--color-track); }
-/* The score takes its rating's colour (set inline) on a light shadow, as navy
-   sat heavy on the card (Collins, 22 Oct 2026); yellow gets a navy edge. */
+.sc-score { font-size: 24cqw; line-height: 0.78; font-variant-numeric: tabular-nums; text-shadow: 0.75cqw 0.75cqw 0 var(--color-navy); }
+/* The score takes its rating's colour (set inline) on a navy shadow; the navy
+   "/100" gets a light one (Collins, 22 Oct 2026). Yellow gets a navy edge. */
 .sc-edge { -webkit-text-stroke: 0.35cqw var(--color-navy); }
-.sc-score small { font-size: 8cqw; color: var(--color-navy); text-shadow: none; -webkit-text-stroke: 0; }
+.sc-score small { font-size: 8cqw; color: var(--color-navy); text-shadow: 0.5cqw 0.5cqw 0 var(--color-track); -webkit-text-stroke: 0; }
 .sc-lab { display: block; margin-top: 1.6cqw; font-size: 2.4cqw; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
 /* The shirts shrink to the room left under the fixture, and the stamp sits
    below them in the flow, so neither can reach the stats row. */

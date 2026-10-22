@@ -134,13 +134,13 @@ export function ShareImage({ d }: { d: ShareCardData }) {
                 style={{
                   fontSize: 24 * u,
                   color: score.ink,
-                  textShadow: `${0.75 * u}px ${0.75 * u}px 0 ${C.track}`,
+                  textShadow: `${0.75 * u}px ${0.75 * u}px 0 ${C.navy}`,
                   ...(score.edge ? { WebkitTextStroke: `${0.35 * u}px ${C.navy}` } : {}),
                 }}
               >
                 {String(d.points)}
               </span>
-              <span style={{ fontSize: 8 * u }}>/100</span>
+              <span style={{ fontSize: 8 * u, textShadow: `${0.5 * u}px ${0.5 * u}px 0 ${C.track}` }}>/100</span>
             </div>
             <span style={{ display: "flex", marginTop: 1.6 * u, fontSize: 2.4 * u, ...label }}>{`Day score · ${d.timeUsed} used`}</span>
           </div>
