@@ -12,12 +12,15 @@ export type ShareCardData = {
   dateLabel: string;
   title: string;
   prompt: string;
+  /** The day score out of 100: the big number and the dare. */
+  points: number;
+  /** Part 1's answers found, as numbered and empty shirts. */
   found: number;
   total: number;
+  /** Both parts' time. */
   timeUsed: string;
-  /** Part 1's round, "Free Recall" or "Rapid picks". */
-  partLabel: string;
-  stats: { value: string; key: string }[];
+  /** Each half, then today's place; `accent` prints in teal. */
+  stats: { value: string; key: string; accent?: boolean }[];
   host: string;
   /** Your club, when it's in the fixture. */
   fanOf?: string | null;
@@ -71,6 +74,8 @@ export type ShareInput = {
   fanOf: string | null;
   kit: Kit | null;
   rating: number | null;
+  /** Time used on both parts, from today's table; Part 1's alone if missing. */
+  seconds: number | null;
 };
 
 /** "Mon 19 Oct 2026", the same on the server and in the browser. */
@@ -85,21 +90,23 @@ export function longDate(playDate: string): string {
 }
 
 /** What the card shows for a finished day. */
-export function shareCardData({ issue, playDate, recall, order, points, topPercent, siteUrl, fanOf, kit, rating }: ShareInput): ShareCardData {
+export function shareCardData({ issue, playDate, recall, order, points, topPercent, siteUrl, fanOf, kit, rating, seconds }: ShareInput): ShareCardData {
+  const found = recall.found.length;
+  const total = found + recall.missed.length;
   return {
     issue,
     dateLabel: longDate(playDate),
     title: recall.daily.title,
     prompt: recall.daily.prompt,
-    found: recall.found.length,
-    total: recall.found.length + recall.missed.length,
-    timeUsed: clock(recall.timeUsedSeconds),
-    partLabel: FORMAT_NAME[recall.daily.format],
+    points,
+    found,
+    total,
+    timeUsed: clock(seconds ?? recall.timeUsedSeconds),
+    // Each half, then where the day sits (the full-time mix, 22 Oct 2026).
     stats: [
+      { value: `${found}/${total}`, key: FORMAT_NAME[recall.daily.format] },
       ...(order ? [{ value: `${order.correct}/${order.slots.length}`, key: FORMAT_NAME[order.daily.format] }] : []),
-      { value: `${points}/100`, key: "Day score" },
-      { value: topPercent ? `Top ${topPercent}%` : "Early", key: "Today" },
-      { value: clock(recall.timeUsedSeconds), key: "Time used" },
+      { value: topPercent ? `Top ${topPercent}%` : "Early", key: "Today", accent: true },
     ],
     host: new URL(siteUrl).host,
     fanOf,

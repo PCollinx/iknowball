@@ -12,6 +12,13 @@ export function partScore(part: number, correct: number, answerCount: number): n
   return Math.round((PART_MAX[part] ?? 0) * share);
 }
 
+/** A half's rating out of 10 for full time (22 Oct 2026): its points over the
+ * most it could give, to one decimal like a match rating. */
+export function halfRating(part: number, score: number): number {
+  const max = PART_MAX[part] ?? 0;
+  return max ? Math.round((Math.max(0, Math.min(score, max)) / max) * 100) / 10 : 0;
+}
+
 /** "Top 36%": where a score sits among today's finished scores (higher is better). */
 export function topPercent(mine: number, scores: number[]): number | null {
   if (scores.length < 2) return null;

@@ -57,3 +57,37 @@ export function lineup(found: { id: number; text: string; position: Position | n
     fullXI,
   };
 }
+
+type Answer = { id: number; text: string; position: Position | null };
+
+/** Full time's squad (22 Oct 2026): found players take their places first,
+ * then the missed ones fill the gaps by position, keepers only in goal. */
+export type FullTimeLineup = {
+  /** The XI's places, `missed` marking a player you didn't find. */
+  pitch: (Spot & { missed: boolean })[];
+  /** Found players who didn't fit on the pitch. */
+  bench: Placed[];
+  /** Missed players who didn't fit on the pitch. */
+  away: Answer[];
+};
+
+export function fullTimeLineup(found: Answer[], missed: Answer[]): FullTimeLineup {
+  const pitch = FORMATION.map(([line, x, y]) => ({ line, x, y, player: null as Placed | null, missed: false }));
+  const free = (line: Position) => pitch.find((s) => s.line === line && !s.player);
+  const spotFor = (a: Answer) => (a.position ? free(a.position) : ANYWHERE.map(free).find(Boolean));
+  const bench: Placed[] = [];
+  const away: Answer[] = [];
+
+  found.forEach((f, k) => {
+    const player = { id: f.id, text: f.text, num: k + 1 };
+    const spot = spotFor(f);
+    if (spot) spot.player = player;
+    else bench.push(player);
+  });
+  for (const m of missed) {
+    const spot = spotFor(m);
+    if (spot) Object.assign(spot, { player: { id: m.id, text: m.text, num: 0 }, missed: true });
+    else away.push(m);
+  }
+  return { pitch: pitch.filter((s) => s.player || found.length + missed.length >= FORMATION.length), bench, away };
+}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 /** Live countdown to the moment today's Daily closes (midnight WAT). */
-export function NextDaily({ closesAt }: { closesAt: string }) {
+export function NextDaily({ closesAt, className = "text-[32px] text-teal" }: { closesAt: string; className?: string }) {
   const end = Date.parse(closesAt);
   const [left, setLeft] = useState<number | null>(null);
   useEffect(() => {
@@ -14,7 +14,7 @@ export function NextDaily({ closesAt }: { closesAt: string }) {
   }, [end]);
   const pad = (n: number) => String(n).padStart(2, "0");
   return (
-    <span className="font-display text-[32px] text-teal tabular-nums">
+    <span className={`font-display tabular-nums ${className}`}>
       {left === null ? "--:--:--" : `${pad(Math.floor(left / 3600))}:${pad(Math.floor(left / 60) % 60)}:${pad(left % 60)}`}
     </span>
   );

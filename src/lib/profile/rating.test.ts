@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatRating, overallRating, RATING_DAYS, ratingColours } from "./rating";
+import { formatRating, overallRating, RATING_DAYS, ratingColours, scoreInk } from "./rating";
 
 const days = (scores: number[]) => new Map(scores.map((s, i) => [`2026-10-${String(i + 1).padStart(2, "0")}`, s]));
 
@@ -41,5 +41,14 @@ describe("ratingColours", () => {
     expect(ratingColours(5).fill).toBe("#EE7A1A");
     expect(ratingColours(6.5).fill).toBe("#F4C21B");
     expect(ratingColours(7).fill).toBe("#1E9A4C");
+  });
+});
+
+describe("scoreInk", () => {
+  it("colours a day score like the rating it would make", () => {
+    expect(scoreInk(72)).toEqual({ ink: "#1E9A4C", edge: false });
+    expect(scoreInk(66)).toEqual({ ink: "#F4C21B", edge: true });
+    expect(scoreInk(50)).toEqual({ ink: "#EE7A1A", edge: false });
+    expect(scoreInk(31)).toEqual({ ink: "#D7263D", edge: false });
   });
 });

@@ -4,7 +4,7 @@ import { ROYAL_KIT } from "@/components/daily/ShirtBack";
 import { BODY, C, DISPLAY } from "@/lib/og/fonts";
 import { Shirt } from "@/lib/og/Shirt";
 import { emptyShirtSvg, shirtSvg } from "@/lib/og/shirt-svg";
-import { formatRating, ratingColours } from "@/lib/profile/rating";
+import { formatRating, ratingColours, scoreInk } from "@/lib/profile/rating";
 import { linesAt } from "@/lib/teaser/layout";
 
 // The share card ("Programme cover") as a 1080 x 1080 image, drawn by next/og.
@@ -29,6 +29,7 @@ export function ShareImage({ d }: { d: ShareCardData }) {
   const inner = SHARE_SIZE - BORDER * 2 - 10 * u;
   const kit = d.kit ?? ROYAL_KIT;
   const rate = ratingColours(d.rating);
+  const score = scoreInk(d.points);
   // The masthead is as tall as its tallest side: logo, date lines or the rating.
   const mastH = Math.max(7 * u * 0.9, (d.fanOf ? 3 : 2) * 2.4 * u * 1.35, RATE * u);
 
@@ -41,9 +42,11 @@ export function ShareImage({ d }: { d: ShareCardData }) {
     (2.6 * u + fixtureLines(fixture, size) * size * u * 0.9) +
     (1 * u + promptLines * 2.9 * u * 1.3 + 2 * u + 1.2 * u) +
     (0.35 * u + 1.8 * u + 5.2 * u * 0.9 + 2.1 * u * 1.3 + 2.2 * u) + // stats
-    (2.6 * u + 5.6 * u * 0.9 * 2 + 2.8 * u); // footer
+    (0.5 * u + 2.6 * u + 5.6 * u * 0.9 * 2 + 2.8 * u); // footer and its rule
   const mid = SHARE_SIZE - used;
-  const right = inner * 0.56 - 3 * u;
+  // The score takes the room its digits need (as the card's auto column), the shirts the rest.
+  const scoreW = Math.max(`Day score · ${d.timeUsed} used`.length * 2.4 * 0.72 * u, (String(d.points).length * 24 + 4 * 8) * 0.5 * u);
+  const right = inner - scoreW - 3 * u;
   const gap = right * 0.014;
   const rows = Math.ceil(d.total / COLS);
   const kitH = mid - 5.2 * u - (1.4 * u + 3.6 * u * 0.9 + 1.5 * u + 1.2 * u + 1 * u);
@@ -125,12 +128,21 @@ export function ShareImage({ d }: { d: ShareCardData }) {
 
         {/* Score beside the squad: how many, never who */}
         <div style={{ display: "flex", flexGrow: 1, alignItems: "center", padding: `${2.4 * u}px 0 ${2.8 * u}px` }}>
-          <div style={{ display: "flex", flexDirection: "column", width: inner * 0.44, marginRight: 3 * u }}>
+          <div style={{ display: "flex", flexDirection: "column", width: scoreW, marginRight: 3 * u }}>
             <div style={{ display: "flex", alignItems: "baseline", fontFamily: DISPLAY, lineHeight: 0.78 }}>
-              <span style={{ fontSize: 26 * u, color: C.royal }}>{String(d.found)}</span>
-              <span style={{ fontSize: 10 * u }}>{`/${d.total}`}</span>
+              <span
+                style={{
+                  fontSize: 24 * u,
+                  color: score.ink,
+                  textShadow: `${0.75 * u}px ${0.75 * u}px 0 ${C.navy}`,
+                  ...(score.edge ? { WebkitTextStroke: `${0.35 * u}px ${C.navy}` } : {}),
+                }}
+              >
+                {String(d.points)}
+              </span>
+              <span style={{ fontSize: 8 * u, textShadow: `${0.5 * u}px ${0.5 * u}px 0 ${C.track}` }}>/100</span>
             </div>
-            <span style={{ display: "flex", marginTop: 1.6 * u, fontSize: 2.4 * u, ...label }}>{`${d.partLabel} · ${d.timeUsed} used`}</span>
+            <span style={{ display: "flex", marginTop: 1.6 * u, fontSize: 2.4 * u, ...label }}>{`Day score · ${d.timeUsed} used`}</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", width: right }}>
             <div style={{ display: "flex", flexDirection: "column" }}>
@@ -183,7 +195,7 @@ export function ShareImage({ d }: { d: ShareCardData }) {
                 ...(i ? { borderLeft: `${0.35 * u}px solid ${C.track}` } : {}),
               }}
             >
-              <span style={{ fontFamily: DISPLAY, fontSize: 5.2 * u, lineHeight: 0.9, textTransform: "uppercase" }}>{s.value}</span>
+              <span style={{ fontFamily: DISPLAY, fontSize: 5.2 * u, lineHeight: 0.9, textTransform: "uppercase", color: s.accent ? C.teal : C.navy }}>{s.value}</span>
               <span style={{ fontSize: 2.1 * u, lineHeight: 1.3, ...label, letterSpacing: "0.1em", color: "rgba(12,19,48,0.7)" }}>{s.key}</span>
             </div>
           ))}
@@ -196,14 +208,15 @@ export function ShareImage({ d }: { d: ShareCardData }) {
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          background: C.teal,
-          color: "#FFFFFF",
+          background: C.tealLight,
+          color: C.navy,
+          borderTop: `${0.5 * u}px solid ${C.navy}`,
           padding: `${2.6 * u}px ${5 * u}px ${2.8 * u}px`,
         }}
       >
         <div style={{ display: "flex", flexDirection: "column", fontFamily: DISPLAY, fontSize: 5.6 * u, lineHeight: 0.9, textTransform: "uppercase" }}>
           <span>Think you know ball?</span>
-          <span>{`Beat ${d.found}.`}</span>
+          <span>{`Beat ${d.points}.`}</span>
         </div>
         <span style={{ fontSize: 2.6 * u, fontWeight: 600, letterSpacing: "0.1em" }}>{d.host.toUpperCase()}</span>
       </div>
