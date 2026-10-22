@@ -262,7 +262,8 @@ export type Found = Shown & { position: Position | null };
 
 export type RecallReveal = {
   daily: DailyRow;
-  found: Shown[];
+  /** With positions, so full time can line the squad up on the pitch. */
+  found: Found[];
   missed: string[];
   timeUsedSeconds: number;
   score: number;
@@ -304,26 +305,29 @@ export type DailyView =
       /** Your place in today's table, and how many are in it. */
       position: number | null;
       players: number;
+      /** Today's top three, and your own row (both parts' time in `seconds`). */
+      top: TableRow[];
+      me: TableRow | null;
     };
 
 async function recallReveal(daily: DailyRow, attempt: AttemptRow): Promise<RecallReveal> {
   const timeUsedSeconds = Math.round((Date.parse(attempt.submitted_at!) - Date.parse(attempt.started_at)) / 1000);
   if (daily.format === "pick") {
     // The same squad as Free Recall: the players you picked right, then the rest.
-    const results = await pickResults(daily, attempt);
+    const [results, { positions }] = await Promise.all([pickResults(daily, attempt), cachedAnswerKeys(daily.id)]);
     return {
       daily,
-      found: results.filter((r) => r.right).map((r) => ({ id: r.answer.id, text: r.answer.answer_text })),
+      found: results.filter((r) => r.right).map((r) => ({ id: r.answer.id, text: r.answer.answer_text, position: positions.get(r.answer.id) ?? null })),
       missed: results.filter((r) => !r.right).map((r) => r.answer.answer_text),
       timeUsedSeconds,
       score: partScore(daily.part, attempt.correct_count, daily.answer_count),
     };
   }
-  const [answers, foundIds] = await Promise.all([getAnswers(daily.id), foundAnswerIds(attempt.id)]);
+  const [{ answers, positions }, foundIds] = await Promise.all([cachedAnswerKeys(daily.id), foundAnswerIds(attempt.id)]);
   const byId = new Map(answers.map((a) => [a.id, a.answer_text]));
   return {
     daily,
-    found: foundIds.map((id) => ({ id, text: byId.get(id) ?? "" })),
+    found: foundIds.map((id) => ({ id, text: byId.get(id) ?? "", position: positions.get(id) ?? null })),
     missed: answers.filter((a) => !foundIds.includes(a.id)).map((a) => a.answer_text),
     timeUsedSeconds,
     score: partScore(daily.part, attempt.correct_count, daily.answer_count),
@@ -506,5 +510,7 @@ export async function getDailyView(): Promise<DailyView> {
     topPercent: mine ? topPercent(mine.score, table.map((r) => r.score)) : null,
     position: mine?.position ?? null,
     players: table.length,
+    top: table.slice(0, 3),
+    me: mine ?? null,
   };
 }

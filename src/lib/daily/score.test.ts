@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { partScore, rankTable, seededShuffle, topPercent } from "./score";
+import { halfRating, partScore, rankTable, seededShuffle, topPercent } from "./score";
 
 describe("partScore", () => {
   it("scores a part by its share of answers right", () => {
@@ -43,5 +43,21 @@ describe("rankTable", () => {
       { userId: "d", score: 70, seconds: 90 },
     ]);
     expect(table.map((e) => `${e.userId}${e.position}`)).toEqual(["b1", "c2", "a3", "d3"]);
+  });
+});
+
+describe("halfRating", () => {
+  it("turns a half's points into a rating out of 10, to one decimal", () => {
+    expect(halfRating(1, 42)).toBe(7);
+    expect(halfRating(1, 43)).toBe(7.2);
+    expect(halfRating(2, 24)).toBe(6);
+    expect(halfRating(2, 40)).toBe(10);
+    expect(halfRating(1, 0)).toBe(0);
+  });
+
+  it("stays between 0 and 10", () => {
+    expect(halfRating(2, 55)).toBe(10);
+    expect(halfRating(1, -3)).toBe(0);
+    expect(halfRating(3, 10)).toBe(0);
   });
 });

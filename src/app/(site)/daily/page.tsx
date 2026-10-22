@@ -9,7 +9,7 @@ import { PickRound } from "@/components/daily/PickRound";
 import { KickOff } from "@/components/daily/KickOff";
 import { Masthead, shortDate } from "@/components/daily/Masthead";
 import { currentUserId, getDailyView } from "@/lib/daily/data";
-import { clubInTitle, kitOf } from "@/lib/profile/club";
+import { clubInTitle, kitOf, type Club } from "@/lib/profile/club";
 import { clubChoices, getRating, getSupporter, kitForFixture, kitsForFixture } from "@/lib/profile/data";
 import { publicEnv } from "@/lib/env";
 import { isTestSite } from "@/lib/daily/sample";
@@ -151,8 +151,11 @@ async function DailyScreen() {
           topPercent={view.topPercent}
           position={view.position}
           players={view.players}
+          top={view.top}
+          me={view.me}
           siteUrl={publicEnv().NEXT_PUBLIC_SITE_URL}
           clubChoices={choices}
+          featuredClubs={choices ? featuredClubs(choices, title) : []}
           kit={kit}
           myKit={kitOf(supporter?.club ?? null)}
           rating={rating}
@@ -162,6 +165,16 @@ async function DailyScreen() {
       );
     }
   }
+}
+
+// The big clubs the picker shows after today's two (full time, 22 Oct 2026).
+const FEATURED = ["MUN", "LIV", "ARS", "CHE", "MCI", "TOT"];
+
+/** Four clubs for "Who do you support?": today's fixture first, then the big ones. */
+function featuredClubs(clubs: Club[], title: string): Club[] {
+  const today = clubs.filter((c) => clubInTitle(c, title));
+  const big = FEATURED.map((s) => clubs.find((c) => c.short_name === s)).filter((c): c is Club => Boolean(c));
+  return [...new Set([...today, ...big])].slice(0, 4);
 }
 
 /** The fixture the day is themed on ("Chelsea v Arsenal"), from Part 1. */

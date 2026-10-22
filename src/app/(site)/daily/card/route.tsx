@@ -29,6 +29,7 @@ export async function GET() {
     fanOf: club && clubInTitle(club, title) ? club.name : null,
     kit,
     rating,
+    seconds: view.me?.seconds ?? null,
   });
   return new ImageResponse(<ShareImage d={card} />, {
     width: SHARE_SIZE,

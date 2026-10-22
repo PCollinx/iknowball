@@ -24,9 +24,9 @@
 .sc-fix { font-size: 10.5cqw; line-height: 0.9; margin-top: 2.6cqw; }
 .sc-fix span { color: var(--color-royal); }
 .sc-q { font-size: 2.9cqw; color: rgb(12 19 48 / 0.7); margin-top: 1cqw; padding-bottom: 2cqw; border-bottom: 1.2cqw double var(--color-navy); }
-.sc-mid { flex: 1; padding: 2.4cqw 0 2.8cqw; display: grid; grid-template-columns: 44% 1fr; grid-template-rows: minmax(0, 1fr); gap: 3cqw; align-items: center; min-height: 0; }
-.sc-score { font-size: 26cqw; line-height: 0.78; color: var(--color-royal); font-variant-numeric: tabular-nums; }
-.sc-score small { font-size: 10cqw; color: var(--color-navy); }
+.sc-mid { flex: 1; padding: 2.4cqw 0 2.8cqw; display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 3cqw; align-items: center; min-height: 0; }
+.sc-score { font-size: 24cqw; line-height: 0.78; color: var(--color-royal); font-variant-numeric: tabular-nums; }
+.sc-score small { font-size: 8cqw; color: var(--color-navy); }
 .sc-lab { display: block; margin-top: 1.6cqw; font-size: 2.4cqw; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
 /* The shirts shrink to the room left under the fixture, and the stamp sits
    below them in the flow, so neither can reach the stats row. */
@@ -38,11 +38,13 @@
   display: grid; grid-template-columns: repeat(6, var(--w)); gap: var(--gap);
 }
 .sc-stamp { flex: none; margin: 1.4cqw -1cqw 0 0; transform: rotate(-3deg); white-space: nowrap; border: 0.6cqw solid var(--color-red-card); color: var(--color-red-card); background: #fff; padding: 0.6cqw 1.6cqw 0.9cqw; font-size: 3.6cqw; line-height: 0.9; }
-.sc-stats { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 0.35cqw solid var(--color-navy); }
+.sc-stats { display: grid; grid-auto-columns: 1fr; grid-auto-flow: column; border-top: 0.35cqw solid var(--color-navy); }
 .sc-stats > div { padding: 1.8cqw 0 2.2cqw; min-width: 0; }
 .sc-stats > div + div { border-left: 0.35cqw solid var(--color-track); padding-left: 2.2cqw; }
 .sc-val { display: block; font-size: 5.2cqw; line-height: 0.9; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.sc-accent { color: var(--color-teal); }
 .sc-key { font-size: 2.1cqw; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgb(12 19 48 / 0.7); }
-.sc-foot { background: var(--color-teal); color: #fff; display: flex; justify-content: space-between; align-items: center; gap: 2cqw; padding: 2.6cqw 5cqw 2.8cqw; }
+/* The dare in light teal under a navy rule (the full-time mix, 22 Oct 2026). */
+.sc-foot { background: var(--color-teal-light); color: var(--color-navy); border-top: 0.5cqw solid var(--color-navy); display: flex; justify-content: space-between; align-items: center; gap: 2cqw; padding: 2.6cqw 5cqw 2.8cqw; }
 .sc-dare { font-size: 5.6cqw; line-height: 0.9; }
 .sc-url { font-size: 2.6cqw; font-weight: 600; letter-spacing: 0.1em; text-align: right; }
