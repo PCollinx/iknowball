@@ -264,7 +264,7 @@ export type RecallReveal = {
   daily: DailyRow;
   /** With positions, so full time can line the squad up on the pitch. */
   found: Found[];
-  missed: string[];
+  missed: Found[];
   timeUsedSeconds: number;
   score: number;
 };
@@ -318,7 +318,7 @@ async function recallReveal(daily: DailyRow, attempt: AttemptRow): Promise<Recal
     return {
       daily,
       found: results.filter((r) => r.right).map((r) => ({ id: r.answer.id, text: r.answer.answer_text, position: positions.get(r.answer.id) ?? null })),
-      missed: results.filter((r) => !r.right).map((r) => r.answer.answer_text),
+      missed: results.filter((r) => !r.right).map((r) => ({ id: r.answer.id, text: r.answer.answer_text, position: positions.get(r.answer.id) ?? null })),
       timeUsedSeconds,
       score: partScore(daily.part, attempt.correct_count, daily.answer_count),
     };
@@ -328,7 +328,7 @@ async function recallReveal(daily: DailyRow, attempt: AttemptRow): Promise<Recal
   return {
     daily,
     found: foundIds.map((id) => ({ id, text: byId.get(id) ?? "", position: positions.get(id) ?? null })),
-    missed: answers.filter((a) => !foundIds.includes(a.id)).map((a) => a.answer_text),
+    missed: answers.filter((a) => !foundIds.includes(a.id)).map((a) => ({ id: a.id, text: a.answer_text, position: positions.get(a.id) ?? null })),
     timeUsedSeconds,
     score: partScore(daily.part, attempt.correct_count, daily.answer_count),
   };

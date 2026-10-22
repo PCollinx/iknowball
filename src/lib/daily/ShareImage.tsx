@@ -4,7 +4,7 @@ import { ROYAL_KIT } from "@/components/daily/ShirtBack";
 import { BODY, C, DISPLAY } from "@/lib/og/fonts";
 import { Shirt } from "@/lib/og/Shirt";
 import { emptyShirtSvg, shirtSvg } from "@/lib/og/shirt-svg";
-import { formatRating, ratingColours } from "@/lib/profile/rating";
+import { formatRating, ratingColours, scoreInk } from "@/lib/profile/rating";
 import { linesAt } from "@/lib/teaser/layout";
 
 // The share card ("Programme cover") as a 1080 x 1080 image, drawn by next/og.
@@ -29,6 +29,7 @@ export function ShareImage({ d }: { d: ShareCardData }) {
   const inner = SHARE_SIZE - BORDER * 2 - 10 * u;
   const kit = d.kit ?? ROYAL_KIT;
   const rate = ratingColours(d.rating);
+  const score = scoreInk(d.points);
   // The masthead is as tall as its tallest side: logo, date lines or the rating.
   const mastH = Math.max(7 * u * 0.9, (d.fanOf ? 3 : 2) * 2.4 * u * 1.35, RATE * u);
 
@@ -129,7 +130,16 @@ export function ShareImage({ d }: { d: ShareCardData }) {
         <div style={{ display: "flex", flexGrow: 1, alignItems: "center", padding: `${2.4 * u}px 0 ${2.8 * u}px` }}>
           <div style={{ display: "flex", flexDirection: "column", width: scoreW, marginRight: 3 * u }}>
             <div style={{ display: "flex", alignItems: "baseline", fontFamily: DISPLAY, lineHeight: 0.78 }}>
-              <span style={{ fontSize: 24 * u, color: C.royal }}>{String(d.points)}</span>
+              <span
+                style={{
+                  fontSize: 24 * u,
+                  color: score.ink,
+                  textShadow: `${0.75 * u}px ${0.75 * u}px 0 ${C.track}`,
+                  ...(score.edge ? { WebkitTextStroke: `${0.35 * u}px ${C.navy}` } : {}),
+                }}
+              >
+                {String(d.points)}
+              </span>
               <span style={{ fontSize: 8 * u }}>/100</span>
             </div>
             <span style={{ display: "flex", marginTop: 1.6 * u, fontSize: 2.4 * u, ...label }}>{`Day score · ${d.timeUsed} used`}</span>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ClubPicker } from "@/components/profile/ClubPicker";
 import { RatingBadge } from "@/components/profile/RatingBadge";
+import { scoreInk } from "@/lib/profile/rating";
 import type { Club } from "@/lib/profile/club";
 import { gameDateClosesAt } from "@/lib/time";
 import type { OrderReveal, RecallReveal, TableRow } from "@/lib/daily/data";
@@ -11,7 +12,7 @@ import { Masthead, shortDate } from "./Masthead";
 import { NextDaily } from "./NextDaily";
 import { replayToday, switchTestRounds } from "@/app/(site)/daily/actions";
 import { Pitch } from "./InPlay";
-import { lineup } from "./lineup";
+import { fullTimeLineup } from "./lineup";
 import { ShareButtons } from "./ShareButtons";
 import { ShareCard } from "./ShareCard";
 import { FORMAT_NAME, ordinal } from "./formats";
@@ -61,7 +62,7 @@ const WORDS = ["None", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "E
 export function banter(recall: RecallReveal): string {
   const short = recall.missed.length;
   if (short === 0) return "Clean sweep. Unreal ball knowledge.";
-  return `${WORDS[short] ?? short} got away. ${shirtName(recall.missed[0])} was right there.`;
+  return `${WORDS[short] ?? short} got away. ${shirtName(recall.missed[0].text)} was right there.`;
 }
 
 export function FullTime(props: Props) {
@@ -92,32 +93,44 @@ export function FullTime(props: Props) {
         <div className="contents lg:block">
           <section className="order-1 pt-3 lg:pt-5">
             <span className="label text-royal">Match report · {recall ? headlineFixture(recall.daily.title) : "The Daily"}</span>
-            <div className="grid grid-cols-[auto_minmax(0,1fr)] items-end gap-3.5 border-b-[3px] border-double border-navy pb-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-6">
-              <h1 className="col-span-2 mt-1 font-display text-[64px] leading-[0.86] uppercase lg:col-span-1 lg:text-[104px] lg:leading-[0.84]">
-                Full <span className="sash-mark">time</span>
-              </h1>
-              <div className="font-display text-[120px] leading-[0.78] text-royal tabular-nums lg:row-span-2 lg:text-right lg:text-[150px]">
-                {points}
-                <span className="text-[38px] text-navy lg:text-[48px]">/100</span>
-                <span className="hidden lg:block">
-                  <Place position={position} players={players} />
+            <h1 className="mt-1 font-display text-[56px] leading-[0.86] uppercase lg:hidden">
+              Full <span className="sash-mark">time</span>
+            </h1>
+            {/* One even band: (desktop) the headline | the score in its rating colour | where it leaves you. */}
+            <div className="mt-3 grid grid-cols-[auto_minmax(0,1fr)] border-t-[3px] border-b-4 border-navy [border-bottom-style:double] lg:mt-2 lg:grid-cols-[auto_auto_minmax(0,1fr)]">
+              <div className="hidden items-center border-r-2 border-track py-3.5 pr-6 lg:flex">
+                <h1 className="font-display text-[84px] leading-[0.84] uppercase">
+                  Full
+                  <br />
+                  <span className="sash-mark">time</span>
+                </h1>
+              </div>
+              <div className="border-r-2 border-track py-3 pr-4 lg:px-6 lg:py-3.5">
+                <DayScore points={points} />
+                <span className="label mt-1.5 block lg:mt-2">Day score</span>
+              </div>
+              <div className="flex flex-col justify-center gap-2 py-3 pl-4 lg:gap-2.5 lg:pl-6">
+                <span className="self-start bg-teal px-2 py-1 font-display text-[22px] leading-none text-white uppercase lg:px-2.5 lg:text-[26px]">
+                  {position ? `${ordinal(position)} of ${players}` : "Early doors"}
+                </span>
+                <span className="label leading-relaxed text-navy/80">
+                  {topPercent ? `Top ${topPercent}% today` : "First in today"}
+                  {seconds !== null && (
+                    <>
+                      <br />
+                      {clock(seconds)} used
+                    </>
+                  )}
                 </span>
               </div>
-              <div className="pb-1 lg:hidden">
-                <Place position={position} players={players} />
-                <div className="label mt-1.5 text-[10px] text-navy/80">
-                  {topPercent ? `Top ${topPercent}% today` : "Early doors"}
-                  {seconds !== null && ` · ${clock(seconds)} used`}
-                </div>
-              </div>
-              {recall && (
-                <p className="col-span-2 mt-1 font-display text-[30px] leading-[0.95] uppercase lg:col-span-1 lg:mt-0 lg:text-[34px]">
-                  <span className="text-red-card">“</span>
-                  {banterParts(recall)}
-                  <span className="text-red-card">”</span>
-                </p>
-              )}
             </div>
+            {recall && (
+              <p className="mt-2.5 font-display text-[20px] leading-none uppercase lg:mt-3 lg:text-2xl">
+                <span className="text-red-card">“</span>
+                {banterParts(recall)}
+                <span className="text-red-card">”</span>
+              </p>
+            )}
           </section>
 
           <section className="order-2 pt-3 lg:pt-4">
@@ -229,7 +242,7 @@ export function FullTime(props: Props) {
 /** The line with the first one who got away in red. */
 function banterParts(recall: RecallReveal) {
   const line = banter(recall);
-  const name = recall.missed.length ? shirtName(recall.missed[0]) : null;
+  const name = recall.missed.length ? shirtName(recall.missed[0].text) : null;
   if (!name) return line;
   const at = line.lastIndexOf(name);
   return (
@@ -241,10 +254,16 @@ function banterParts(recall: RecallReveal) {
   );
 }
 
-function Place({ position, players }: { position: number | null; players: number }) {
+/** The day score in its rating's colour with a hard navy shadow; yellow gets a navy edge. */
+function DayScore({ points }: { points: number }) {
+  const { ink, edge } = scoreInk(points);
   return (
-    <span className="inline-block bg-teal px-2 py-0.5 font-display text-xl leading-tight text-white uppercase lg:mt-2.5 lg:text-[22px]">
-      {position ? `${ordinal(position)} of ${players}` : "Early doors"}
+    <span
+      className="block font-display text-[96px] leading-[0.8] tabular-nums [text-shadow:3px_3px_0_var(--color-navy)] lg:text-[120px] lg:[text-shadow:4px_4px_0_var(--color-navy)]"
+      style={{ color: ink, WebkitTextStroke: edge ? "1.5px var(--color-navy)" : undefined }}
+    >
+      {points}
+      <span className="text-[32px] text-navy [-webkit-text-stroke:0] [text-shadow:none] lg:text-[40px]">/100</span>
     </span>
   );
 }
@@ -263,44 +282,62 @@ function RatingSticker({ n, title, note, tilt, dark = false }: { n: number | nul
   );
 }
 
-/** Part 1's squad: found players on the pitch by position, the rest on the
- * bench, then the ones who got away. Names sit on the shirts' nameplates. */
+/** Part 1's squad (22 Oct 2026): found players on the pitch by position, then
+ * the missed ones in the gaps with an ×; whoever doesn't fit goes on the bench
+ * (found) or under "Got away" (missed). Names sit on the shirts' nameplates. */
 function Squad({ recall, kit }: { recall: RecallReveal; kit: Kit | null }) {
   const found = recall.found.length;
-  const team = lineup(recall.found, found + recall.missed.length);
-  const bench = team.bench.filter((p) => p !== null);
+  const team = fullTimeLineup(recall.found, recall.missed);
   return (
     <section className="order-5 mt-6" aria-label={`1st half squad: ${found} found, ${recall.missed.length} got away`}>
       <div className="flex items-baseline justify-between border-b-2 border-navy pb-1.5">
         <h2 className="label">1st half · the squad</h2>
-        <span className="label text-royal">{found} found</span>
+        <span className="label text-royal">
+          {found} found · <span className="text-red-card">{recall.missed.length} got away</span>
+        </span>
       </div>
       <div className="mt-2.5 lg:grid lg:grid-cols-[minmax(0,1fr)_170px] lg:gap-4">
         <Pitch half="attack" className="aspect-[358/400] lg:aspect-[4/3]">
           {team.pitch.map((spot) => (
             <div key={`${spot.x}-${spot.y}`} className="absolute w-[19cqw] -translate-1/2 lg:w-[14cqw]" style={{ left: `${spot.x}%`, top: `${spot.y}%` }}>
-              {spot.player ? (
-                <ShirtBack kit={kit ?? undefined} name={shirtName(spot.player.text)} num={spot.player.num} />
-              ) : (
+              {!spot.player ? (
                 <ShirtBack state="empty" />
+              ) : spot.missed ? (
+                <ShirtBack name={shirtName(spot.player.text)} num="×" state="miss" />
+              ) : (
+                <ShirtBack kit={kit ?? undefined} name={shirtName(spot.player.text)} num={spot.player.num} />
               )}
             </div>
           ))}
         </Pitch>
-        <div className="mt-2.5 grid grid-cols-5 gap-x-2 gap-y-1.5 lg:mt-0 lg:grid-cols-2 lg:content-start">
-          {bench.map((p) => (
-            <ShirtBack key={p.id} kit={kit ?? undefined} name={shirtName(p.text)} num={p.num} />
-          ))}
-          {recall.missed.map((m) => (
-            <ShirtBack key={m} name={shirtName(m)} num="×" state="miss" />
-          ))}
+        <div className="lg:content-start">
+          {team.bench.length > 0 && (
+            <OffPitch label="Bench">
+              {team.bench.map((p) => (
+                <ShirtBack key={p.id} kit={kit ?? undefined} name={shirtName(p.text)} num={p.num} />
+              ))}
+            </OffPitch>
+          )}
+          {team.away.length > 0 && (
+            <OffPitch label="Got away" miss>
+              {team.away.map((m) => (
+                <ShirtBack key={m.id} name={shirtName(m.text)} num="×" state="miss" />
+              ))}
+            </OffPitch>
+          )}
         </div>
       </div>
-      <div className="label mt-1.5 flex justify-between text-[10px] text-navy/80 lg:text-xs">
-        <span>Bench: {bench.length}</span>
-        <span className="text-red-card">Got away: {recall.missed.length}</span>
-      </div>
     </section>
+  );
+}
+
+/** A labelled row of shirts under the pitch (beside it on desktop). */
+function OffPitch({ label, miss = false, children }: { label: string; miss?: boolean; children: React.ReactNode }) {
+  return (
+    <div className="mt-2.5 grid grid-cols-[62px_minmax(0,1fr)] items-center gap-2 lg:mt-0 lg:mb-3 lg:grid-cols-1">
+      <span className={`label text-[10px] lg:text-xs ${miss ? "text-red-card" : "text-navy/80"}`}>{label}</span>
+      <div className="grid grid-cols-5 gap-x-2 gap-y-1.5 lg:grid-cols-2">{children}</div>
+    </div>
   );
 }
 

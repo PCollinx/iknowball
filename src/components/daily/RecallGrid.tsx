@@ -9,7 +9,7 @@ export function RecallGrid({ reveal, kit, wide = false }: { reveal: RecallReveal
         <ShirtBack key={f.id} kit={kit ?? undefined} name={shirtName(f.text)} num={k + 1} />
       ))}
       {reveal.missed.map((m) => (
-        <ShirtBack key={m} name={shirtName(m)} num="×" state="miss" />
+        <ShirtBack key={m.id} name={shirtName(m.text)} num="×" state="miss" />
       ))}
     </div>
   );

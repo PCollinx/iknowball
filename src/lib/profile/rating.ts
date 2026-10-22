@@ -30,6 +30,13 @@ export function formatRating(rating: number | null): string {
   return rating >= 10 ? "10" : rating.toFixed(1);
 }
 
+/** A day score out of 100 as type in its rating's colour (full time and the
+ * share card, 22 Oct 2026). Light fills (yellow) get a navy edge to read on white. */
+export function scoreInk(points: number): { ink: string; edge: boolean } {
+  const band = ratingColours(points / 10);
+  return { ink: band.fill, edge: band.text !== "#FFFFFF" };
+}
+
 /** The badge's colours, red to green like a match rating. */
 export const RATING_BANDS = [
   { from: -Infinity, fill: "#D7263D", text: "#FFFFFF" }, // red card

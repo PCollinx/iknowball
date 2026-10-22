@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { RatingBadge } from "@/components/profile/RatingBadge";
+import { scoreInk } from "@/lib/profile/rating";
 import { ShirtBack } from "./ShirtBack";
 import { headlineFixture, splitFixture } from "./fixture";
 import { fixtureSize, stampText, type ShareCardData } from "./share";
@@ -10,6 +11,7 @@ export function ShareCard(d: ShareCardData) {
   const fixture = headlineFixture(d.title);
   const [home, away] = splitFixture(fixture);
   const d900 = "font-display uppercase";
+  const score = scoreInk(d.points);
   return (
     <div className="sc-card" role="img" aria-label={`iKnowBall share card: ${d.points} out of 100 on ${d.title}`}>
       <div className="sc-inner">
@@ -45,7 +47,7 @@ export function ShareCard(d: ShareCardData) {
         <p className="sc-q">{d.prompt}</p>
         <div className="sc-mid">
           <div>
-            <div className={`${d900} sc-score`}>
+            <div className={`${d900} sc-score ${score.edge ? "sc-edge" : ""}`} style={{ color: score.ink }}>
               {d.points}
               <small>/100</small>
             </div>
