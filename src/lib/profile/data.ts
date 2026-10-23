@@ -11,7 +11,7 @@ import { bestFive, dayScores, PLACEMENT_DAYS, streak, tierFor, type PlayedPart, 
 // Data access for the profile and the favourite club. Reads with the service
 // role, always scoped to one player.
 
-const CLUB_COLUMNS = "id, name, short_name, shirt_colour, number_colour, trim_colour, kit_pattern, kit_collar, in_premier_league";
+export const CLUB_COLUMNS = "id, name, short_name, shirt_colour, number_colour, trim_colour, kit_pattern, kit_collar, in_premier_league";
 
 export type Supporter = {
   club: Club | null;

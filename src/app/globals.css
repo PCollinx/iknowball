@@ -24,6 +24,8 @@
   --color-track: #d9dfff;
   --color-red-card: #d7263d;
   --color-sky: #5cb8ff;
+  /* Your line and your row on today's table (Collins, 23 Oct 2026). */
+  --color-slate: #3a4466;
 
   /* Display: headings, numbers, shirt names. Body: everything else. */
   --font-display: var(--font-big-shoulders), "Arial Narrow", Impact, sans-serif;
@@ -237,6 +239,12 @@ body {
     translate: 3px 3px;
     box-shadow: 2px 2px 0 var(--btn-shadow);
   }
+}
+
+/* The sash pushed to the right edge, for a panel whose numbers run across its
+ * whole width (your line on today's table). Give the panel pr-[11%] so text stays clear. */
+@utility sash-edge {
+  background-image: linear-gradient(110deg, transparent 0 91%, var(--color-sky) 91% 97%, transparent 97%);
 }
 
 /* A short word ("or", "vs") whose letters carry the sash: royal letterforms

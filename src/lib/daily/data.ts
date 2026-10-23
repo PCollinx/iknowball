@@ -4,6 +4,8 @@ import { cache } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { CLUB_COLUMNS, getSupporter } from "@/lib/profile/data";
+import type { Club } from "@/lib/profile/club";
 import { gameDate } from "@/lib/time";
 import { buildKeys, type AnswerKeys } from "./match";
 import { ensureTestDaily } from "./sample";
@@ -367,7 +369,10 @@ async function orderReveal(daily: DailyRow, attempt: AttemptRow): Promise<OrderR
 export type TableRow = {
   userId: string;
   name: string;
-  club: string | null;
+  club: Club | null;
+  /** Each half's points, null when that part isn't finished. */
+  p1: number | null;
+  p2: number | null;
   score: number;
   seconds: number;
   /** Parts finished today. */
@@ -376,16 +381,20 @@ export type TableRow = {
 };
 
 type TableAttempt = {
+  id: number;
   user_id: string;
   daily_id: number;
   correct_count: number;
   started_at: string;
   submitted_at: string;
-  profiles: { username: string | null; clubs: { short_name: string } | null } | null;
+  profiles: { username: string | null; club: Club | null } | null;
 };
 
 /** A guest without a username, named so the same guest reads the same every day. */
 export const guestName = (userId: string) => `Guest ${userId.replace(/-/g, "").slice(0, 4).toUpperCase()}`;
+
+/** Rows per request: Supabase returns at most 1000 at a time. */
+const PAGE = 1000;
 
 /** Today's table: every player with a finished part, scored out of 100. Scores
  * are worked out from right answers, so attempts saved before the day score
@@ -393,24 +402,36 @@ export const guestName = (userId: string) => `Guest ${userId.replace(/-/g, "").s
 export async function dayTable(parts: DailyRow[]): Promise<TableRow[]> {
   if (!parts.length) return [];
   const byId = new Map(parts.map((p) => [p.id, p]));
-  const { data, error } = await createAdminClient()
-    .from("attempts")
-    .select("user_id, daily_id, correct_count, started_at, submitted_at, profiles(username, clubs(short_name))")
-    .in("daily_id", parts.map((p) => p.id))
-    .not("submitted_at", "is", null);
-  if (error) throw error;
+  const attempts: TableAttempt[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await createAdminClient()
+      .from("attempts")
+      .select(`id, user_id, daily_id, correct_count, started_at, submitted_at, profiles(username, club:clubs(${CLUB_COLUMNS}))`)
+      .in("daily_id", parts.map((p) => p.id))
+      .not("submitted_at", "is", null)
+      .order("id")
+      .range(from, from + PAGE - 1);
+    if (error) throw error;
+    attempts.push(...((data ?? []) as unknown as TableAttempt[]));
+    if (!data || data.length < PAGE) break;
+  }
   const players = new Map<string, Omit<TableRow, "position">>();
-  for (const a of (data ?? []) as unknown as TableAttempt[]) {
+  for (const a of attempts) {
     const daily = byId.get(a.daily_id)!;
     const row = players.get(a.user_id) ?? {
       userId: a.user_id,
       name: a.profiles?.username ?? guestName(a.user_id),
-      club: a.profiles?.clubs?.short_name ?? null,
+      club: a.profiles?.club ?? null,
+      p1: null,
+      p2: null,
       score: 0,
       seconds: 0,
       parts: 0,
     };
-    row.score += partScore(daily.part, a.correct_count, daily.answer_count);
+    const points = partScore(daily.part, a.correct_count, daily.answer_count);
+    if (daily.part === 1) row.p1 = points;
+    else row.p2 = points;
+    row.score += points;
     row.seconds += Math.max(0, Math.round((Date.parse(a.submitted_at) - Date.parse(a.started_at)) / 1000));
     row.parts += 1;
     players.set(a.user_id, row);
@@ -418,12 +439,56 @@ export async function dayTable(parts: DailyRow[]): Promise<TableRow[]> {
   return rankTable([...players.values()]);
 }
 
-/** Today's parts and table, for the table page. */
-export async function getDayTable(): Promise<{ issue: number; playDate: string; title: string; parts: number; rows: TableRow[]; me: string | null } | null> {
+/** A league you're in, with its members, for a tab on today's table. */
+export type TableLeague = { code: string; name: string; members: string[] };
+
+export type DayTable = {
+  issue: number;
+  playDate: string;
+  title: string;
+  parts: number;
+  rows: TableRow[];
+  me: string | null;
+  leagues: TableLeague[];
+  /** Your club, for the fans tab. */
+  club: Club | null;
+};
+
+/** Today's parts and table, for the table page, with your leagues and club for its tabs. */
+export async function getDayTable(): Promise<DayTable | null> {
+  await ensureTestDaily();
   const parts = await todaysParts();
   if (!parts.length) return null;
   const [issue, me, rows] = await Promise.all([issueNumber(), currentUserId(), dayTable(parts)]);
-  return { issue, playDate: parts[0].play_date, title: parts.find((p) => p.part === 1)?.title ?? parts[0].title, parts: parts.length, rows, me };
+  const [leagues, supporter] = me ? await Promise.all([myLeagues(me), getSupporter(me)]) : [[], null];
+  return {
+    issue,
+    playDate: parts[0].play_date,
+    title: parts.find((p) => p.part === 1)?.title ?? parts[0].title,
+    parts: parts.length,
+    rows,
+    me,
+    leagues,
+    club: supporter?.club ?? null,
+  };
+}
+
+/** Your leagues, oldest first, each with everyone in it. */
+async function myLeagues(me: string): Promise<TableLeague[]> {
+  const admin = createAdminClient();
+  const { data, error } = await admin.from("league_members").select("leagues(id, name, invite_code)").eq("user_id", me).order("joined_at");
+  if (error) throw error;
+  const leagues = ((data ?? []) as unknown as { leagues: { id: number; name: string; invite_code: string } | null }[])
+    .map((m) => m.leagues)
+    .filter((l) => l !== null);
+  if (!leagues.length) return [];
+  const members = await admin.from("league_members").select("league_id, user_id").in("league_id", leagues.map((l) => l.id));
+  if (members.error) throw members.error;
+  return leagues.map((l) => ({
+    code: l.invite_code,
+    name: l.name,
+    members: (members.data ?? []).filter((m) => m.league_id === l.id).map((m) => m.user_id),
+  }));
 }
 
 /** Today's Daily as the home page shows it: the parts, and how far you've got. */
