@@ -257,6 +257,11 @@ body {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+  /* The paint stops at the box, and tight headings (leading under 1) make the
+   * box shorter than the letters, clipping their tops: pad it out without
+   * moving the line. */
+  padding-block: 0.12em;
+  margin-block: -0.12em;
 }
 
 /* Small uppercase label used in mastheads, tables and the share card. */
