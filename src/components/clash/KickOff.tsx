@@ -1,62 +1,105 @@
+import Link from "next/link";
+import type { ReactNode } from "react";
 import { startSprint } from "@/app/(site)/clash/actions";
 import { SubmitButton } from "@/components/daily/SubmitButton";
-import { PENALTY_SECONDS, SPRINT_SECONDS } from "@/lib/clash/rules";
+import type { Kit } from "@/components/daily/ShirtBack";
 import type { Result } from "@/lib/clash/data";
-import { ClashMasthead } from "./Masthead";
+import { SET_SIZE, SPRINT_SECONDS } from "@/lib/clash/rules";
+import { AlbumPage, HigherOrLower, Pair, PlayerSticker, RefereesNotes, Slot } from "./Album";
 import { KickRow } from "./KickRow";
+import { ClashMasthead } from "./Masthead";
 
-/** Before a sprint: the rules, and on a challenge link, the score to beat. */
-export function ClashKickOff({ code, statLabel, setter }: { code?: string; statLabel?: string; setter?: Result | null }) {
+// Before a sprint, option E (picked 23 Oct 2026): on a challenge link the
+// challenge comes first ("Beat 14." and the setter's strip); a solo sprint gets
+// the Higher or lower heading and your best this week. Then a page from the
+// album showing what a call looks like, the referee's notes, and the button.
+
+// The example call on the album page: Shearer's Newcastle goals against Rooney's at United.
+const NEWCASTLE: Kit = { shirt: "#241F20", number: "#FFFFFF", trim: "#FFFFFF", pattern: "stripes" };
+const UNITED: Kit = { shirt: "#DA291C", number: "#FFFFFF", trim: "#000000", pattern: "sides", collar: "polo" };
+
+type Props = {
+  /** The challenge's code, on a challenge link. */
+  code?: string;
+  statLabel?: string;
+  setter?: Result | null;
+  /** Your best this week and last challenge (solo only), streamed in. */
+  best?: ReactNode;
+};
+
+export function ClashKickOff({ code, statLabel, setter, best }: Props) {
+  const challenge = Boolean(code);
   return (
-    <main className="mx-auto w-full flex-1 max-w-[1100px] px-4 pb-10 lg:grid lg:grid-cols-[minmax(0,1fr)_420px] lg:gap-x-12 lg:px-8">
-      <div className="lg:col-span-2">
-        <ClashMasthead right={statLabel ?? "Higher or lower"} />
-      </div>
-      <section>
-        <h1 className="border-b-[3px] border-double border-navy pt-5 pb-4 font-display text-[76px] leading-[0.82] uppercase sm:text-[104px] lg:text-[128px]">
+    <main className="mx-auto w-full max-w-295 flex-1 px-4 pb-10 lg:px-12">
+      <ClashMasthead left={challenge ? "Clash · Challenge" : "Clash · Sprint"} right={code ?? "60-second sprint"} />
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start lg:gap-14">
+        <div className="min-w-0 pt-3.5 lg:pt-6">
           {setter ? (
             <>
-              Beat <span className="text-royal">{setter.right}.</span>
+              <span className="label text-[10px] text-royal lg:text-xs">{setter.name} sent you a challenge</span>
+              <h1 className="mt-1 font-display text-[88px] leading-[0.8] uppercase lg:text-[128px]">
+                Beat <span className="sash-mark">{setter.right}.</span>
+              </h1>
+              <div className="mt-3 flex max-w-140 items-stretch border-[2.5px] border-navy shadow-[3px_3px_0_var(--color-navy)] lg:mt-4">
+                <span className="grid max-w-[40%] place-items-center truncate bg-royal px-2.5 font-display text-base text-white uppercase lg:text-xl">{setter.name}</span>
+                <span className="bg-teal px-2.5 pt-1 pb-0.5 font-display text-[34px] leading-none text-white tabular-nums lg:text-[44px]">{setter.right}</span>
+                <span className="flex flex-1 items-center bg-navy px-2 py-1">
+                  <KickRow kicks={setter.kicks} size="size-3 lg:size-4" className="gap-0.5" />
+                </span>
+              </div>
+              <p className="mt-2.5 text-sm leading-snug lg:mt-3 lg:text-base">
+                Same {SET_SIZE} players, same order, {SPRINT_SECONDS} seconds. One go each, so make it count.
+              </p>
             </>
           ) : (
             <>
-              Higher or <span className="text-royal">lower</span>
+              <HigherOrLower className="text-[60px] min-[380px]:text-[72px] lg:text-[100px]" />
+              <span className="label mt-3 block text-[10px] text-royal lg:mt-3.5 lg:text-[11px]">
+                {SPRINT_SECONDS} seconds · {SET_SIZE} players · {statLabel ?? "league goals or games for a club"}
+              </span>
+              {best}
             </>
           )}
-        </h1>
-        {setter && (
-          <div className="mt-4">
-            <p className="text-xl font-semibold">{setter.name} got {setter.right} right in a minute. Same players, same order. Your go.</p>
-            <KickRow kicks={setter.kicks} className="mt-3" />
-          </div>
-        )}
-        <ol className="mt-5 border-t-2 border-navy">
-          {[
-            ["Clock", `${SPRINT_SECONDS} seconds, on our clock, not your phone's.`],
-            ["Call", "Two shirts, one number. Tap the player with more, or Level if it's the same."],
-            ["Miss", `A wrong call takes ${PENALTY_SECONDS} seconds off and breaks your run.`],
-            ["Settle it", "At full time you get a link. Your mates play the exact same set."],
-          ].map(([k, line], i) => (
-            <li key={k} className="grid grid-cols-[40px_1fr] gap-x-2 border-b border-track py-3">
-              <span className="font-display text-[32px] leading-none text-royal">{i + 1}</span>
-              <span>
-                <span className="block font-display text-[26px] leading-none uppercase">{k}</span>
-                <span className="mt-1 block text-[15px] text-navy/80">{line}</span>
-              </span>
-            </li>
-          ))}
-        </ol>
-      </section>
-      <aside className="mt-6 lg:mt-0 lg:pt-5">
-        <form action={startSprint} className="border-[3px] border-navy p-4">
-          {code && <input type="hidden" name="code" value={code} />}
-          <span className="label">{statLabel ?? "A new stat every sprint"}</span>
-          <p className="mt-1 mb-4 font-display text-[40px] leading-[0.9] uppercase">
-            60 seconds. <span className="text-royal">Go.</span>
-          </p>
-          <SubmitButton pendingText="Picking players…">Kick off</SubmitButton>
-        </form>
-      </aside>
+
+          <AlbumPage label="League goals for the club" className="mt-7 max-w-140 lg:mt-8">
+            <Pair>
+              <Slot>
+                <PlayerSticker name="Alan Shearer" kit={NEWCASTLE} value={148} side="left" />
+              </Slot>
+              <Slot>
+                <PlayerSticker name="Wayne Rooney" kit={UNITED} value={null} side="right" />
+              </Slot>
+            </Pair>
+          </AlbumPage>
+        </div>
+
+        <div className="mt-7 grid gap-6 lg:mt-0 lg:gap-7 lg:pt-6">
+          <RefereesNotes />
+          <form action={startSprint}>
+            {code && <input type="hidden" name="code" value={code} />}
+            <SubmitButton tone="teal" pendingText="Picking players…">
+              {challenge ? "Take it on" : "Kick off"}
+            </SubmitButton>
+          </form>
+        </div>
+      </div>
     </main>
+  );
+}
+
+/** Your best this week and your latest challenge, as a strip under the heading. */
+export function YourBest({ best, lastCode }: { best: number | null; lastCode: string | null }) {
+  if (best === null && !lastCode) return null;
+  return (
+    <div className="mt-3 inline-flex max-w-full items-stretch border-[2.5px] border-navy shadow-[4px_4px_0_var(--color-navy)]">
+      <span className="grid place-items-center bg-royal px-2.5 font-display text-base text-white uppercase lg:px-3 lg:text-lg">Your best</span>
+      <span className="bg-teal px-3 pt-1 pb-0.5 font-display text-[32px] leading-none text-white tabular-nums lg:px-3.5 lg:text-[40px]">{best ?? "–"}</span>
+      {lastCode && (
+        <Link href={`/clash/${lastCode}`} className="flex min-w-0 items-center gap-2 bg-navy px-3 text-white lg:gap-2.5 lg:px-3.5">
+          <span className="label hidden text-[10px] text-teal-light min-[400px]:inline lg:text-[11px]">This week&apos;s challenge</span>
+          <span className="font-display tracking-[0.08em]">{lastCode} ↗</span>
+        </Link>
+      )}
+    </div>
   );
 }
