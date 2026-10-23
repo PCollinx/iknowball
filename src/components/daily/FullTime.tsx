@@ -420,7 +420,7 @@ function TodaysTable({ top, me, position, players }: { top: TableRow[]; me: Tabl
         </span>
         <span className="grid gap-0.5 text-[13px]">
           {rows.map((r) => (
-            <span key={r.userId} className={`flex justify-between gap-2 ${r.userId === me?.userId ? "-mx-1.5 bg-royal px-1.5" : ""}`}>
+            <span key={r.userId} className={`flex justify-between gap-2 ${r.userId === me?.userId ? "-mx-1.5 bg-slate px-1.5" : ""}`}>
               <span className="truncate">
                 {r.position} · {r.userId === me?.userId ? "You" : r.name}
               </span>

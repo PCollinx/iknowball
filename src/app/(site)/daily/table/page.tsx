@@ -11,6 +11,7 @@ import { ShirtBack } from "@/components/daily/ShirtBack";
 import { KeepyUppy } from "@/components/loading/KeepyUppy";
 import { getDayTable, type DayTable, type TableRow } from "@/lib/daily/data";
 import { isTestSite } from "@/lib/daily/sample";
+import { TabRow } from "./TabRow";
 import { chaseLine, tableView, type TableView } from "@/lib/daily/table";
 import { kitOf } from "@/lib/profile/club";
 import { gameDateClosesAt } from "@/lib/time";
@@ -73,7 +74,7 @@ async function TableScreen({ searchParams }: Pick<PageProps<"/daily/table">, "se
     <main className="mx-auto w-full max-w-[1180px] flex-1 px-4 pb-10 lg:px-12">
       <Masthead issue={day.issue} right={`${shortDate(day.playDate)} · Today's table`} />
       <div className="lg:grid lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)] lg:items-start lg:gap-14 xl:grid-cols-[480px_minmax(0,1fr)]">
-        <div className="grid gap-5 pt-3 lg:gap-6 lg:pt-5">
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-5 pt-3 lg:gap-6 lg:pt-5">
           <div>
             <span className="label text-royal">
               {headlineFixture(day.title)} · {day.rows.length} played
@@ -109,7 +110,7 @@ async function TableScreen({ searchParams }: Pick<PageProps<"/daily/table">, "se
 
 function Tabs({ tabs, on, sample }: { tabs: Tab[]; on: string; sample: boolean }) {
   return (
-    <nav aria-label="Tables" className="mt-3 flex snap-x gap-1.5 overflow-x-auto overscroll-x-contain pb-1 lg:mt-3.5 lg:flex-wrap">
+    <TabRow>
       {tabs.map((x) => (
         <Link
           key={x.key}
@@ -121,7 +122,7 @@ function Tabs({ tabs, on, sample }: { tabs: Tab[]; on: string; sample: boolean }
           {x.label} · {x.rows.length}
         </Link>
       ))}
-    </nav>
+    </TabRow>
   );
 }
 
