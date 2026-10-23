@@ -50,8 +50,17 @@ async function ClashScreen({ params }: { params: Params }) {
           </Link>
         </main>
       );
-    case "kickoff":
-      return <ClashKickOff code={view.set.code} statLabel={STATS[view.set.stat].label} setter={view.setter} />;
+    case "kickoff": {
+      // The challenge's own first call: its opening player's number shows from the first second anyway.
+      const [first, second] = view.set.items;
+      const clubs = await clubsByIds([first?.club_id, second?.club_id].filter((id): id is number => id != null));
+      const kitFor = (id: number | null) => (id !== null && clubs.has(id) ? kitOf(clubs.get(id)!) : undefined);
+      const firstCall =
+        first && second
+          ? { first: { name: first.name, kit: kitFor(first.club_id), value: first.value }, second: { name: second.name, kit: kitFor(second.club_id) } }
+          : undefined;
+      return <ClashKickOff code={view.set.code} statLabel={STATS[view.set.stat].label} setter={view.setter} firstCall={firstCall} />;
+    }
     case "play": {
       const ids = [...new Set(view.set.items.map((i) => i.club_id).filter((id): id is number => id !== null))];
       const clubs = await clubsByIds(ids);

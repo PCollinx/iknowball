@@ -11,7 +11,12 @@ import { AlbumPage, Pair, PlayerSticker, Slot, type StickerState } from "./Album
 import { KickRow } from "./KickRow";
 
 const RIGHT = ["Ball knowledge.", "Sharp.", "You know ball.", "Oya, next.", "Clinical."];
-const WRONG = ["Saved. 5 seconds off.", "Off the post. 5 off.", "Wide. 5 seconds gone.", "Keeper's ball. 5 off."];
+const WRONG = [
+  `Missed. ${PENALTY_SECONDS} seconds off.`,
+  `Missed. Off the post, ${PENALTY_SECONDS} off.`,
+  `Missed. Wide, ${PENALTY_SECONDS} seconds gone.`,
+  `Missed. Over the bar, ${PENALTY_SECONDS} off.`,
+];
 /** How long the revealed number stays up before the next player. */
 const SHOW_MS = 800;
 

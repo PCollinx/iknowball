@@ -14,21 +14,30 @@ import { ClashMasthead } from "./Masthead";
 // the Higher or lower heading and your best this week. Then a page from the
 // album showing what a call looks like, the referee's notes, and the button.
 
-// The example call on the album page: Shearer's Newcastle goals against Rooney's at United.
-const NEWCASTLE: Kit = { shirt: "#241F20", number: "#FFFFFF", trim: "#FFFFFF", pattern: "stripes" };
-const UNITED: Kit = { shirt: "#DA291C", number: "#FFFFFF", trim: "#000000", pattern: "sides", collar: "polo" };
+/** The first call of a set: the opening player with their number, the next one hidden. */
+export type FirstCall = { first: { name: string; kit?: Kit; value: number }; second: { name: string; kit?: Kit } };
+
+// A solo sprint has no set until kick-off, so its album page shows a call of the
+// kind you'll get: Shearer's Newcastle goals against Rooney's at United.
+const SOLO_CALL: FirstCall = {
+  first: { name: "Alan Shearer", kit: { shirt: "#241F20", number: "#FFFFFF", trim: "#FFFFFF", pattern: "stripes" }, value: 148 },
+  second: { name: "Wayne Rooney", kit: { shirt: "#DA291C", number: "#FFFFFF", trim: "#000000", pattern: "sides", collar: "polo" } },
+};
 
 type Props = {
   /** The challenge's code, on a challenge link. */
   code?: string;
   statLabel?: string;
   setter?: Result | null;
+  /** The challenge's own first call, shown on its album page. */
+  firstCall?: FirstCall;
   /** Your best this week and last challenge (solo only), streamed in. */
   best?: ReactNode;
 };
 
-export function ClashKickOff({ code, statLabel, setter, best }: Props) {
+export function ClashKickOff({ code, statLabel, setter, firstCall, best }: Props) {
   const challenge = Boolean(code);
+  const call = firstCall ?? SOLO_CALL;
   return (
     <main className="mx-auto w-full max-w-295 flex-1 px-4 pb-10 lg:px-12">
       <ClashMasthead left={challenge ? "Clash · Challenge" : "Clash · Sprint"} right={code ?? "60-second sprint"} />
@@ -61,15 +70,18 @@ export function ClashKickOff({ code, statLabel, setter, best }: Props) {
             </>
           )}
 
-          <AlbumPage label="League goals for the club" className="mt-7 max-w-140 lg:mt-8">
+          <AlbumPage label={firstCall && statLabel ? statLabel : "League goals for the club"} className="mt-7 max-w-140 lg:mt-8">
             <Pair>
               <Slot>
-                <PlayerSticker name="Alan Shearer" kit={NEWCASTLE} value={148} side="left" />
+                <PlayerSticker name={call.first.name} kit={call.first.kit} value={call.first.value} side="left" />
               </Slot>
               <Slot>
-                <PlayerSticker name="Wayne Rooney" kit={UNITED} value={null} side="right" />
+                <PlayerSticker name={call.second.name} kit={call.second.kit} value={null} side="right" />
               </Slot>
             </Pair>
+            <p className="mt-3 text-center text-[13px] lg:mt-4 lg:text-sm">
+              {firstCall ? "Your first call. Who has more?" : "How a call looks. Who has more?"}
+            </p>
           </AlbumPage>
         </div>
 
