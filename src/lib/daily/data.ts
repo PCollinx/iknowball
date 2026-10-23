@@ -4,13 +4,12 @@ import { cache } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-import { CLUB_COLUMNS, clubChoices, getSupporter } from "@/lib/profile/data";
+import { CLUB_COLUMNS, getSupporter } from "@/lib/profile/data";
 import type { Club } from "@/lib/profile/club";
 import { gameDate } from "@/lib/time";
 import { buildKeys, type AnswerKeys } from "./match";
-import { ensureTestDaily, isTestSite } from "./sample";
+import { ensureTestDaily } from "./sample";
 import { partScore, rankTable, seededShuffle, topPercent, type DailyFormat } from "./score";
-import { SAMPLE_LEAGUES, sampleMembers, sampleRows } from "./table";
 
 // Data access for The Daily. Reads the answer key and writes attempts with the
 // service role, always scoped to the signed-in player, so the browser only
@@ -453,21 +452,15 @@ export type DayTable = {
   leagues: TableLeague[];
   /** Your club, for the fans tab. */
   club: Club | null;
-  /** Filled with sample players (test sites only). */
-  sample: boolean;
 };
 
-/** Today's parts and table, for the table page, with your leagues and club for
- * its tabs. `sample` fills it with made-up players on test sites (never saved). */
-export async function getDayTable(sample = false): Promise<DayTable | null> {
+/** Today's parts and table, for the table page, with your leagues and club for its tabs. */
+export async function getDayTable(): Promise<DayTable | null> {
   await ensureTestDaily();
   const parts = await todaysParts();
   if (!parts.length) return null;
-  const [issue, me, real] = await Promise.all([issueNumber(), currentUserId(), dayTable(parts)]);
+  const [issue, me, rows] = await Promise.all([issueNumber(), currentUserId(), dayTable(parts)]);
   const [leagues, supporter] = me ? await Promise.all([myLeagues(me), getSupporter(me)]) : [[], null];
-  const club = supporter?.club ?? null;
-  const filled = sample && isTestSite();
-  const rows = filled ? rankTable([...real, ...sampleRows(await clubChoices(), club)]) : real;
   return {
     issue,
     playDate: parts[0].play_date,
@@ -475,14 +468,8 @@ export async function getDayTable(sample = false): Promise<DayTable | null> {
     parts: parts.length,
     rows,
     me,
-    leagues: filled
-      ? [
-          ...leagues.map((l, i) => ({ ...l, members: [...l.members, ...sampleMembers(i)] })),
-          ...SAMPLE_LEAGUES.map((name, i) => ({ code: `sample-${i}`, name, members: [...(me ? [me] : []), ...sampleMembers(leagues.length + i)] })),
-        ]
-      : leagues,
-    club,
-    sample: filled,
+    leagues,
+    club: supporter?.club ?? null,
   };
 }
 
