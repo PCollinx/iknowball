@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { chaseLine, tableView } from "./table";
+import { chaseLine, sampleMembers, sampleRows, tableView } from "./table";
 
 const row = (userId: string, score: number, seconds = 100) => ({ userId, name: userId, score, seconds });
 // a scores 100, b 99, … one point apart, so places follow the letters.
@@ -64,5 +64,20 @@ describe("chaseLine", () => {
   it("calls a dead heat level", () => {
     const rows = ranked([row("a", 70, 200), row("b", 70, 200)]);
     expect(chaseLine(rows, rows[1])).toBe("Level with a on points and time.");
+  });
+});
+
+describe("sampleRows", () => {
+  it("makes the same field every time, with your club in it", () => {
+    const rows = sampleRows(["a", "b", "c"], "mine");
+    expect(rows).toEqual(sampleRows(["a", "b", "c"], "mine"));
+    expect(new Set(rows.map((r) => r.userId)).size).toBe(rows.length);
+    expect(rows.some((r) => r.club === "mine")).toBe(true);
+    expect(rows.every((r) => r.p1 <= 60 && (r.p2 ?? 0) <= 40 && r.score === r.p1 + (r.p2 ?? 0))).toBe(true);
+  });
+
+  it("puts sample players in your leagues", () => {
+    const ids = new Set(sampleRows([], null).map((r) => r.userId));
+    expect(sampleMembers(0).every((id) => ids.has(id))).toBe(true);
   });
 });

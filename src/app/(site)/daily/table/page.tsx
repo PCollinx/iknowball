@@ -10,6 +10,7 @@ import { NextDaily } from "@/components/daily/NextDaily";
 import { ShirtBack } from "@/components/daily/ShirtBack";
 import { KeepyUppy } from "@/components/loading/KeepyUppy";
 import { getDayTable, type DayTable, type TableRow } from "@/lib/daily/data";
+import { isTestSite } from "@/lib/daily/sample";
 import { chaseLine, tableView, type TableView } from "@/lib/daily/table";
 import { kitOf } from "@/lib/profile/club";
 import { gameDateClosesAt } from "@/lib/time";
@@ -49,7 +50,8 @@ function tabsOf(day: DayTable): Tab[] {
 // Reads the session, today's attempts and the tab in the address, so it renders per request.
 async function TableScreen({ searchParams }: Pick<PageProps<"/daily/table">, "searchParams">) {
   await connection();
-  const [day, { t }] = await Promise.all([getDayTable(), searchParams]);
+  const { t, sample } = await searchParams;
+  const day = await getDayTable(sample === "1");
   if (!day) {
     return (
       <main className="mx-auto w-full max-w-[1180px] flex-1 px-4 lg:px-12">
@@ -79,7 +81,7 @@ async function TableScreen({ searchParams }: Pick<PageProps<"/daily/table">, "se
             <h1 className="mt-1 font-display text-[56px] leading-[0.86] uppercase lg:text-[84px] lg:leading-[0.84]">
               Today&apos;s <span className="sash-mark">table</span>
             </h1>
-            {tabs.length > 1 && <Tabs tabs={tabs} on={tab.key} />}
+            {tabs.length > 1 && <Tabs tabs={tabs} on={tab.key} sample={day.sample} />}
           </div>
           {view.podium.length > 0 && <Podium rows={view.podium} me={day.me} />}
           <YourLine view={view} rows={[...view.podium, ...view.list, ...view.around]} parts={day.parts} tab={tab} />
@@ -100,17 +102,18 @@ async function TableScreen({ searchParams }: Pick<PageProps<"/daily/table">, "se
         </section>
         <div className="mt-6 lg:hidden">{actions}</div>
       </div>
+      {isTestSite() && <SampleSwitch on={day.sample} tab={tab.key} />}
     </main>
   );
 }
 
-function Tabs({ tabs, on }: { tabs: Tab[]; on: string }) {
+function Tabs({ tabs, on, sample }: { tabs: Tab[]; on: string; sample: boolean }) {
   return (
     <nav aria-label="Tables" className="mt-3 flex snap-x gap-1.5 overflow-x-auto overscroll-x-contain pb-1 lg:mt-3.5 lg:flex-wrap">
       {tabs.map((x) => (
         <Link
           key={x.key}
-          href={x.key === "everyone" ? "/daily/table" : { pathname: "/daily/table", query: { t: x.key } }}
+          href={{ pathname: "/daily/table", query: { ...(x.key === "everyone" ? {} : { t: x.key }), ...(sample ? { sample: "1" } : {}) } }}
           scroll={false}
           aria-current={x.key === on ? "page" : undefined}
           className={`max-w-56 shrink-0 snap-start truncate border-[1.5px] border-navy px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap lg:px-3 lg:text-[13px] ${x.key === on ? "bg-navy text-white" : "hover:bg-mist"}`}
@@ -260,6 +263,21 @@ function Row({ row, me, parts }: { row: TableRow; me: boolean; parts: number }) 
       <span className={`text-right text-[13px] tabular-nums lg:text-[15px] ${me ? "text-white/80" : "text-slate"}`}>{clock(row.seconds)}</span>
       <span className="text-right font-display text-[22px] leading-none tabular-nums lg:text-[28px]">{row.score}</span>
     </li>
+  );
+}
+
+/** Test sites only: fill the table with made-up players to see it full. */
+function SampleSwitch({ on, tab }: { on: boolean; tab: string }) {
+  const query = { ...(tab === "everyone" ? {} : { t: tab }), ...(on ? {} : { sample: "1" }) };
+  return (
+    <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-2 border-dashed border-red-card p-3">
+      <span className="text-sm font-semibold text-red-card">
+        {on ? "Test site only. Sample players are filling this table; nothing is saved." : "Test site only. See the table full of made-up players (nothing is saved)."}
+      </span>
+      <Link href={{ pathname: "/daily/table", query }} scroll={false} className="shrink-0 bg-red-card px-4 py-1.5 font-display text-lg text-white uppercase">
+        {on ? "Hide sample players" : "Fill with sample players"}
+      </Link>
+    </div>
   );
 }
 
