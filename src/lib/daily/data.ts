@@ -10,7 +10,7 @@ import { gameDate } from "@/lib/time";
 import { buildKeys, type AnswerKeys } from "./match";
 import { ensureTestDaily, isTestSite } from "./sample";
 import { partScore, rankTable, seededShuffle, topPercent, type DailyFormat } from "./score";
-import { sampleMembers, sampleRows } from "./table";
+import { SAMPLE_LEAGUES, sampleMembers, sampleRows } from "./table";
 
 // Data access for The Daily. Reads the answer key and writes attempts with the
 // service role, always scoped to the signed-in player, so the browser only
@@ -475,7 +475,12 @@ export async function getDayTable(sample = false): Promise<DayTable | null> {
     parts: parts.length,
     rows,
     me,
-    leagues: filled ? leagues.map((l, i) => ({ ...l, members: [...l.members, ...sampleMembers(i)] })) : leagues,
+    leagues: filled
+      ? [
+          ...leagues.map((l, i) => ({ ...l, members: [...l.members, ...sampleMembers(i)] })),
+          ...SAMPLE_LEAGUES.map((name, i) => ({ code: `sample-${i}`, name, members: [...(me ? [me] : []), ...sampleMembers(leagues.length + i)] })),
+        ]
+      : leagues,
     club,
     sample: filled,
   };

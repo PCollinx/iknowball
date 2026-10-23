@@ -85,6 +85,9 @@ export function sampleRows<C>(clubs: C[], myClub: C | null): { userId: string; n
   });
 }
 
+/** Made-up leagues, so the tab row fills and scrolls (shown with the sample players). */
+export const SAMPLE_LEAGUES = ["Sunday League", "Office Ballers", "Uni Lads WhatsApp", "Lagos Derby", "Five-a-side Fridays"];
+
 /** Sample players in each of your leagues: a different dozen in each. */
 export function sampleMembers(leagueIndex: number): string[] {
   return Array.from({ length: 12 }, (_, i) => `sample-${(leagueIndex * 17 + i * 11) % SAMPLE_PLAYERS}`);
