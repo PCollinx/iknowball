@@ -3,15 +3,20 @@
 import { useState, useTransition } from "react";
 import { answerClash, endSprint } from "@/app/(site)/clash/actions";
 import type { Card } from "@/lib/clash/data";
-import type { Guess } from "@/lib/clash/rules";
-import { ShirtBack, shirtName, type Kit } from "@/components/daily/ShirtBack";
+import { PENALTY_SECONDS, type Guess } from "@/lib/clash/rules";
+import type { Kit } from "@/components/daily/ShirtBack";
 import { clock } from "@/components/daily/clock";
 import { useCountdown } from "@/components/daily/useCountdown";
-import { ClashMasthead } from "./Masthead";
+import { AlbumPage, Pair, PlayerSticker, Slot, type StickerState } from "./Album";
 import { KickRow } from "./KickRow";
 
 const RIGHT = ["Ball knowledge.", "Sharp.", "You know ball.", "Oya, next.", "Clinical."];
-const WRONG = ["Saved. 5 seconds off.", "Off the post. 5 off.", "Wide. 5 seconds gone.", "Keeper's ball. 5 off."];
+const WRONG = [
+  `Missed. ${PENALTY_SECONDS} seconds off.`,
+  `Missed. Off the post, ${PENALTY_SECONDS} off.`,
+  `Missed. Wide, ${PENALTY_SECONDS} seconds gone.`,
+  `Missed. Over the bar, ${PENALTY_SECONDS} off.`,
+];
 /** How long the revealed number stays up before the next player. */
 const SHOW_MS = 800;
 
@@ -31,8 +36,9 @@ type Props = {
   kits: Record<number, Kit>;
 };
 
-/** The sprint: two shirts under the tale of the tape, tap the one with more.
- * The shootout row across the top keeps the score. */
+/** The sprint, option E (picked 23 Oct 2026): the score bug and the shootout row
+ * on top, the two players as shirt stickers on an album page, tap the one with
+ * more or Level. A call stamps the sticker "Goal" or "Missed". */
 export function Sprint(props: Props) {
   const [shown, setShown] = useState(props.shown);
   const [next, setNext] = useState<Card | null>(props.next);
@@ -72,102 +78,92 @@ export function Sprint(props: Props) {
   }
 
   const revealed = call?.value !== undefined;
+  const low = left <= 10 && !over;
   const feedback = over
     ? "Full time."
     : revealed
-      ? call.right
-        ? RIGHT[right % RIGHT.length]
-        : WRONG[kicks.length % WRONG.length]
+      ? call.guess === "level"
+        ? call.right
+          ? "Level. Spotted."
+          : `Not level. ${PENALTY_SECONDS} off.`
+        : call.right
+          ? RIGHT[right % RIGHT.length]
+          : WRONG[kicks.length % WRONG.length]
       : call
         ? "Checking…"
         : runs.current > 1
           ? `Run of ${runs.current}${runs.best > runs.current ? ` · best ${runs.best}` : ""}`
-          : "Who has more? Tap the shirt.";
-  const tone = (side: "shown" | "next") => {
-    if (!revealed) return call && (call.guess === "fewer") === (side === "shown") && call.guess !== "level" ? "border-royal" : "border-navy";
-    const picked = call.guess !== "level" && (call.guess === "fewer") === (side === "shown");
-    return picked ? (call.right ? "border-royal bg-royal/10" : "border-red-card bg-red-card/10") : "border-navy opacity-60";
+          : "Who has more?";
+  const ink = revealed ? (call.right ? "text-royal" : "text-red-card") : "";
+  /** The sticker's look once a call is in: the picked one stamped, the other faded. */
+  const state = (side: "shown" | "next"): StickerState => {
+    if (!revealed || call.guess === "level") return "idle";
+    const picked = (call.guess === "fewer") === (side === "shown");
+    return picked ? (call.right ? "right" : "wrong") : "faded";
   };
 
   return (
-    <main className="mx-auto w-full flex-1 max-w-[1100px] px-4 pb-6 lg:grid lg:grid-cols-[380px_minmax(0,1fr)] lg:gap-x-12 lg:px-8">
-      <div className="lg:col-span-2">
-        <ClashMasthead right={props.statLabel} />
-      </div>
-
-      <section className="lg:pt-4">
-        <div className="flex items-center gap-2.5 pt-3">
+    <main className="mx-auto w-full max-w-295 flex-1 px-4 pb-6 lg:px-12">
+      {/* The score bug (option C's, kept by Collins) with the shootout row beside it. */}
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5 pt-3.5 lg:pt-6">
+        <div className="flex items-stretch border-[2.5px] border-navy shadow-[3px_3px_0_var(--color-navy)] max-lg:w-full lg:shadow-[4px_4px_0_var(--color-navy)]">
+          <span className="grid place-items-center bg-royal px-2.5 font-display text-lg text-white uppercase lg:px-3.5 lg:text-[22px]">Clash</span>
           <span
             role="timer"
             aria-label={`${left} seconds left`}
-            className={`min-w-[76px] px-2 pt-1 pb-1.5 text-center font-display text-[40px] leading-[0.9] text-white tabular-nums ${left <= 10 && !over ? "bg-red-card" : "bg-teal"}`}
+            className={`px-3 pt-1 pb-0.5 font-display text-[40px] leading-none text-white tabular-nums lg:px-4 lg:text-[56px] ${low ? "bg-red-card" : "bg-teal"}`}
           >
             {clock(left)}
           </span>
-          <span className="h-2.5 flex-1 bg-track">
-            <span
-              className={`block h-full transition-[width] duration-300 ${left <= 10 ? "bg-red-card" : "bg-teal"}`}
-              style={{ width: `${Math.min(100, (left / 60) * 100)}%` }}
-            />
-          </span>
-          <span className="font-display text-[40px] leading-[0.9] tabular-nums">
-            {right}
-            <small className="text-base text-navy/60"> right</small>
+          <span className="flex flex-1 items-center justify-between gap-3.5 bg-navy px-3 text-white lg:px-4">
+            <span className="label text-[10px] text-teal-light lg:text-[11px]">Right</span>
+            <span className="font-display text-[40px] leading-none tabular-nums lg:text-[56px]">{right}</span>
           </span>
         </div>
-        <KickRow kicks={kicks} placeholder className="border-b-[3px] border-double border-navy py-2.5" />
-        <h1 className="mt-3 hidden font-display text-[72px] leading-[0.85] uppercase lg:block">
-          Who has <span className="text-royal">more?</span>
-        </h1>
-        <p className="mt-2 hidden text-lg lg:block">Tap the shirt with the higher number, or Level if you think they&apos;re the same. A wrong call costs 5 seconds.</p>
-      </section>
-
-      <section className="lg:pt-4">
-        <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2 lg:mt-0">
-          <i className="border-t border-navy" />
-          <span className="bg-navy px-2 pt-1 pb-1.5 font-display text-xl text-white uppercase lg:text-2xl">{props.statLabel}</span>
-          <i className="border-t border-navy" />
-        </div>
-        <p role="status" className={`mt-2 min-h-[24px] text-center font-semibold ${revealed && !call.right ? "text-red-card" : ""}`}>
+        <KickRow kicks={kicks} placeholder size="size-4.5 lg:size-5.5" className="min-w-0 flex-1" />
+        <p aria-hidden="true" className={`hidden font-display text-[28px] uppercase lg:block ${ink || "text-royal"}`}>
           {feedback}
         </p>
+      </div>
 
-        <div className="mt-2 grid grid-cols-2 border-y-[3px] border-double border-navy">
+      <AlbumPage label={props.statLabel} className="mx-auto mt-6 max-w-205 lg:mt-9">
+        <Pair>
           {(
             [
-              ["shown", shown, String(shown.value)],
-              ["next", next, revealed ? String(call.value) : "?"],
+              ["shown", shown, shown.value],
+              ["next", next, revealed ? call.value! : null],
             ] as const
-          ).map(([side, card, num]) =>
+          ).map(([side, card, value]) =>
             card ? (
-              <div key={`${side}-${card.name}`} className={`grid justify-items-center gap-1.5 px-2 pt-3 pb-2.5 text-center ${side === "next" ? "border-l border-navy" : ""}`}>
+              <Slot key={`${side}-${card.name}`}>
                 <button
                   type="button"
                   onClick={() => answer(side === "shown" ? "fewer" : "more")}
                   disabled={over || Boolean(call)}
                   aria-label={`${card.name} has more`}
-                  className={`w-full max-w-[220px] animate-deal-in border-[3px] p-1.5 transition-colors ${tone(side)}`}
+                  className="block w-full min-w-0 motion-safe:animate-deal-in disabled:cursor-default"
                 >
-                  <ShirtBack kit={kit(card)} name={shirtName(card.name)} num={num} pop={side === "next" && revealed} />
+                  <PlayerSticker name={card.name} kit={kit(card)} value={value} side={side === "shown" ? "left" : "right"} state={state(side)} pop={side === "next" && revealed} />
                 </button>
-                <span className={`font-display text-[64px] leading-[0.8] tabular-nums lg:text-[88px] ${side === "next" && !revealed ? "text-track" : "text-royal"}`}>
-                  {side === "next" && !revealed ? "??" : num}
-                </span>
-                <span className="label">{card.name}</span>
-              </div>
+              </Slot>
             ) : null,
           )}
-        </div>
+        </Pair>
+        <p role="status" className={`mt-3 text-center font-display text-[22px] leading-none uppercase lg:sr-only ${ink}`}>
+          {feedback}
+        </p>
+      </AlbumPage>
 
+      <div className="mx-auto mt-4.5 max-w-205 lg:mt-5 lg:flex lg:justify-center">
         <button
           type="button"
           onClick={() => answer("level")}
           disabled={over || Boolean(call)}
-          className="mt-4 w-full border-[3px] border-royal p-3 font-display text-[30px] text-royal uppercase disabled:opacity-50"
+          className="btn-white btn-press flex w-full items-baseline justify-center gap-2.5 p-2.5 font-display text-3xl leading-none uppercase disabled:translate-0 disabled:opacity-60 disabled:shadow-none lg:w-80 lg:text-[32px]"
         >
-          Level
+          = Level <span className="font-sans text-[13px] font-semibold text-slate normal-case lg:text-sm">same number</span>
         </button>
-      </section>
+      </div>
     </main>
   );
 }
