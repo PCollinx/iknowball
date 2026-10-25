@@ -119,7 +119,7 @@ redesign we take on (Collins, 21 Oct 2026).
 - [x] 3. The Daily: full time and sharing (PR #43)
 - [x] 4. Today's table (PR #44)
 - [x] 5. Clash: kick-off and sprint (PR #45)
-- [ ] 6. Clash: full time and challenges
+- [x] 6. Clash: full time and challenges (PR #46)
 - [ ] 7. The League hub
 - [ ] 8. A league
 - [ ] 9. Everyone and fans
