@@ -163,6 +163,22 @@ export async function getClashView(code: string): Promise<ClashView> {
   return { kind: "fulltime", set, run, table };
 }
 
+/** Whether a finished run is the player's best sprint of its matchweek (a tie counts). */
+export async function isWeekBest(run: RunRow): Promise<boolean> {
+  if (run.right_count === 0) return false;
+  const { startsOn, endsOn } = matchweekBounds(gameDate(new Date(run.started_at)));
+  const { data, error } = await createAdminClient()
+    .from("clash_runs")
+    .select("right_count")
+    .eq("user_id", run.user_id)
+    .gte("started_at", gameDateClosesAt(addDays(startsOn, -1)).toISOString())
+    .lt("started_at", gameDateClosesAt(endsOn).toISOString())
+    .gt("right_count", run.right_count)
+    .limit(1);
+  if (error) throw error;
+  return !data?.length;
+}
+
 /** Clash on the home page: your best sprint this matchweek and your latest challenge code. */
 export type HomeClash = { best: number | null; lastCode: string | null };
 
