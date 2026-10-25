@@ -6,7 +6,7 @@ type Image = { url: string; name: string };
 
 /** The card as an image: the share sheet on phones (with the result as its
  * text), a download on desktop. The only share button (Collins, 19 Oct 2026). */
-export function ShareButtons({ text, image }: { text: string; image: Image | null }) {
+export function ShareButtons({ text, image, className = "mt-4" }: { text: string; image: Image | null; className?: string }) {
   const [note, setNote] = useState("");
   const file = useRef<Promise<File | null> | null>(null);
   const url = image?.url;
@@ -46,7 +46,7 @@ export function ShareButtons({ text, image }: { text: string; image: Image | nul
       <button
         type="button"
         onClick={shareImage}
-        className="btn-white btn-press mt-4 mb-1 flex w-full items-center justify-between px-4 py-3 font-display text-[24px] uppercase lg:text-[26px]"
+        className={`btn-white btn-press ${className} mb-1 flex w-full items-center justify-between px-4 py-3 font-display text-[24px] uppercase lg:text-[26px]`}
       >
         <span>
           Share the <span className="sash-mark">card</span>
