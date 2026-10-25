@@ -33,6 +33,7 @@ describe("the album page", () => {
 
   it("fits the slots to the space, as big as they go", () => {
     expect(fitSlots(22, 920, 390, 6, 120)).toEqual({ cols: 8, slot: (920 - 42) / 8 });
+    expect(fitSlots(13, 920, 390, 6, 120)).toEqual({ cols: 7, slot: (920 - 36) / 7 });
     expect(fitSlots(3, 920, 390, 6, 120).slot).toBe(120);
   });
 });

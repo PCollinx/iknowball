@@ -55,13 +55,22 @@ export function slots(kicks: string, size: number): ("1" | "0" | null)[] {
   return Array.from({ length: Math.max(size, kicks.length) }, (_, i) => (kicks[i] === "1" || kicks[i] === "0" ? kicks[i] : null)) as ("1" | "0" | null)[];
 }
 
-/** Columns and slot size that fill a box with `n` square slots as large as they can be. */
+/** Columns and slot size for `n` square slots in a box: rows that span the
+ * full width at `max` or a touch over when they fit the height, else the
+ * largest slots that fit (the widest grid on a tie). */
 export function fitSlots(n: number, width: number, height: number, gap: number, max: number): { cols: number; slot: number } {
+  const count = Math.max(1, n);
+  const tall = (cols: number, slot: number) => Math.ceil(count / cols) * (slot + gap) - gap;
+  const full = Math.floor((width + gap) / (max + gap));
+  if (count >= full) {
+    const slot = (width - gap * (full - 1)) / full;
+    if (tall(full, slot) <= height) return { cols: full, slot };
+  }
   let best = { cols: 1, slot: 0 };
-  for (let cols = 1; cols <= Math.max(1, n); cols++) {
-    const rows = Math.ceil(Math.max(1, n) / cols);
+  for (let cols = 1; cols <= count; cols++) {
+    const rows = Math.ceil(count / cols);
     const slot = Math.min((width - gap * (cols - 1)) / cols, (height - gap * (rows - 1)) / rows, max);
-    if (slot > best.slot) best = { cols, slot };
+    if (slot >= best.slot) best = { cols, slot };
   }
   return best;
 }
