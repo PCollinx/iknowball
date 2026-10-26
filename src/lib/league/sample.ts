@@ -56,9 +56,9 @@ const OKAFORS: Sample[] = [
 
 /** The sample leagues by code; the first player is captain. */
 const LEAGUES: { league: League; players: Sample[] }[] = [
-  { league: { id: -1, name: "Yaba Ballers", invite_code: "K7Q2XY", owner_id: "" }, players: YABA },
-  { league: { id: -2, name: "Sunday League Legends", invite_code: "SUN9LG", owner_id: "" }, players: SUNDAY },
-  { league: { id: -3, name: "The Okafors", invite_code: "OKA4F5", owner_id: "" }, players: OKAFORS },
+  { league: { id: -1, name: "Yaba Ballers", invite_code: "IKB7QX", owner_id: "" }, players: YABA },
+  { league: { id: -2, name: "Sunday League Legends", invite_code: "IKBS9L", owner_id: "" }, players: SUNDAY },
+  { league: { id: -3, name: "The Okafors", invite_code: "IKBK4F", owner_id: "" }, players: OKAFORS },
 ];
 
 /** A Saturday in this week, so the form guide has days played and days to come. */

@@ -2,8 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { bareCode, leagueCode } from "@/components/league/format";
-import { newCode } from "@/lib/clash/rules";
+import { cleanCode, newLeagueCode } from "@/components/league/format";
 import { currentUserId } from "@/lib/daily/data";
 import { leagueByCode } from "@/lib/league/data";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -15,8 +14,8 @@ import { ensureUserId } from "@/lib/supabase/guest";
 const name = z.string().trim().min(2, "Give it a name of at least 2 letters.").max(40, "Keep the name to 40 letters.");
 const code = z
   .string()
-  .transform(bareCode)
-  .pipe(z.string().regex(/^[A-Z0-9]{6}$/, "Codes look like IKB-K7Q2XY: 6 letters and numbers after IKB."));
+  .transform(cleanCode)
+  .pipe(z.string().regex(/^[A-Z0-9]{6}$/, "Codes are 6 letters and numbers, like IKB7QX."));
 
 export type LeagueFormState = { error: string | null };
 
@@ -27,7 +26,7 @@ export async function createLeague(_: LeagueFormState, formData: FormData): Prom
   const userId = await ensureUserId();
   const admin = createAdminClient();
   for (let tries = 0; tries < 5; tries++) {
-    const { data, error } = await admin.from("leagues").insert({ name: parsed.data, owner_id: userId, invite_code: newCode() }).select("id, invite_code").single();
+    const { data, error } = await admin.from("leagues").insert({ name: parsed.data, owner_id: userId, invite_code: newLeagueCode() }).select("id, invite_code").single();
     if (error?.code === "23505") continue;
     if (error) throw error;
     const { error: joinError } = await admin.from("league_members").insert({ league_id: data.id, user_id: userId });
@@ -42,7 +41,7 @@ export async function joinLeague(_: LeagueFormState, formData: FormData): Promis
   const parsed = code.safeParse(formData.get("code"));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
   const league = await leagueByCode(parsed.data);
-  if (!league) return { error: `No league has the code ${leagueCode(parsed.data)}. Check it with whoever sent it.` };
+  if (!league) return { error: `No league has the code ${parsed.data}. Check it with whoever sent it.` };
   const userId = await ensureUserId();
   const { error } = await createAdminClient().from("league_members").insert({ league_id: league.id, user_id: userId });
   if (error?.message.includes("league_full")) return { error: "That league is full: 50 players is the most." };

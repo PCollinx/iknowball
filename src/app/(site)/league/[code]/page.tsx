@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { JoinButton, JoinLeague } from "@/components/league/Forms";
 import { FormTable, Invite, Podium, Rules, TeamSheet, ThisWeek } from "@/components/league/LeaguePage";
 import { LeagueLoading, LeagueMasthead } from "@/components/league/Masthead";
-import { bareCode, leagueCode, weekLabel } from "@/components/league/format";
+import { cleanCode, weekLabel } from "@/components/league/format";
 import { isTestSite } from "@/lib/daily/sample";
 import { getLeagueView, LEAGUE_MAX } from "@/lib/league/data";
 import { isLeaguePreview, previewLeague } from "@/lib/league/sample";
@@ -56,7 +56,7 @@ async function LeagueScreen({ params, searchParams }: { params: Params; searchPa
   const [{ code }, search] = await Promise.all([params, searchParams]);
   // Test sites only: ?preview=table|invite shows the page with sample data, writing nothing.
   const sample = isTestSite() && isLeaguePreview(search.preview);
-  const view = sample ? await previewLeague(search.preview as "table" | "invite", bareCode(code)) : await getLeagueView(bareCode(code));
+  const view = sample ? await previewLeague(search.preview as "table" | "invite", cleanCode(code)) : await getLeagueView(cleanCode(code));
 
   if (view.kind === "missing") {
     return (
@@ -75,7 +75,7 @@ async function LeagueScreen({ params, searchParams }: { params: Params; searchPa
     const { league, rows, captain, full } = view;
     return (
       <main className="mx-auto w-full max-w-[560px] flex-1 px-4 pb-10">
-        <LeagueMasthead right={`Invite · ${leagueCode(league.invite_code)}`} />
+        <LeagueMasthead right={`Invite · ${league.invite_code}`} />
         {/* The invite is a ticket: who sent it, the league, the way in. */}
         <section className="mt-[26px] grid -rotate-[0.6deg] grid-cols-[minmax(0,1fr)_84px] border-[3px] border-navy shadow-[5px_5px_0_var(--color-navy)]">
           <div className="min-w-0 py-3 pr-2.5 pl-3.5">

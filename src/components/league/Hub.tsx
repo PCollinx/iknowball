@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ShirtBack, shirtName } from "@/components/daily/ShirtBack";
 import { ordinal } from "@/components/daily/formats";
 import { fanName } from "@/components/daily/fixture";
+import { StartOne } from "@/components/league/StartOne";
 import type { Hub, HubLine } from "@/lib/league/data";
 import type { Club } from "@/lib/profile/club";
 import { kitOf } from "@/lib/profile/club";
@@ -41,9 +42,7 @@ export function LeagueAlbum({ leagues, preview = false }: { leagues: HubLine[]; 
               +
             </span>
             <span className="font-display text-xl leading-[0.95] uppercase lg:text-[22px]">Room for another</span>
-            <a href="#start" className="btn-teal btn-press px-2.5 py-1 font-display text-[17px] uppercase lg:text-lg">
-              Start one
-            </a>
+            <StartOne />
           </div>
         </li>
       </ul>
