@@ -3,6 +3,7 @@ import { currentUserId, guestName } from "@/lib/daily/data";
 import type { Club } from "@/lib/profile/club";
 import { clubsByIds } from "@/lib/profile/data";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { gapLine } from "./standing";
 import { addDays, gameDate, gameDateClosesAt, matchweekBounds } from "@/lib/time";
 import { fanbaseTable, movement, weekTable, type FanbaseRow, type WeekPart, type WeekRow, type WeekSprint } from "./week";
 
@@ -148,10 +149,11 @@ export async function leagueByCode(code: string): Promise<League | null> {
   return data;
 }
 
+/** `captain` is the owner's name: the owner wears the armband. */
 export type LeagueView =
   | { kind: "missing" }
-  | { kind: "invite"; league: League; members: Player[]; full: boolean }
-  | { kind: "table"; league: League; week: Week; rows: TableLine[]; owner: boolean };
+  | { kind: "invite"; league: League; week: Week; rows: TableLine[]; captain: string; full: boolean }
+  | { kind: "table"; league: League; week: Week; rows: TableLine[]; captain: string; owner: boolean };
 
 /** A league's page: its table for members, an invite to join for anyone else. */
 export async function getLeagueView(code: string): Promise<LeagueView> {
@@ -159,17 +161,19 @@ export async function getLeagueView(code: string): Promise<LeagueView> {
   if (!league) return { kind: "missing" };
   const week = currentWeek();
   const rows = await membersTable(league.id, week, me);
-  if (!me || !rows.some((r) => r.userId === me)) return { kind: "invite", league, members: rows.map(({ userId, name, club }) => ({ userId, name, club })), full: rows.length >= LEAGUE_MAX };
-  return { kind: "table", league, week, rows, owner: league.owner_id === me };
+  const captain = rows.find((r) => r.userId === league.owner_id)?.name ?? "The owner";
+  if (!me || !rows.some((r) => r.userId === me)) return { kind: "invite", league, week, rows, captain, full: rows.length >= LEAGUE_MAX };
+  return { kind: "table", league, week, rows, captain, owner: league.owner_id === me };
 }
 
-export type HubLine = { league: League; members: number; position: number | null; points: number };
+/** One of your leagues on the hub: your place, its top three, and how far you are from the next place that matters. */
+export type HubLine = { league: League; members: number; position: number | null; points: number; moved: number | null; top: TableLine[]; gap: string };
 
 /** Your leagues with this week's place in each, plus your place on the global table. */
 export type Hub = {
   week: Week;
   leagues: HubLine[];
-  everyone: { position: number | null; players: number; points: number };
+  everyone: { position: number | null; players: number; points: number; moved: number | null };
   club: Club | null;
   /** Your club's place among clubs with enough fans playing, if it has a place. */
   fanbase: { position: number | null; clubs: number };
@@ -178,14 +182,17 @@ export type Hub = {
 export async function getHub(): Promise<Hub> {
   const me = await currentUserId();
   const week = currentWeek();
-  const none = { week, leagues: [], everyone: { position: null, players: 0, points: 0 }, club: null, fanbase: { position: null, clubs: 0 } };
+  const none = { week, leagues: [], everyone: { position: null, players: 0, points: 0, moved: null }, club: null, fanbase: { position: null, clubs: 0 } };
   if (!me) return none;
   const admin = createAdminClient();
-  const [{ data, error }, { rows: everyone, clubOf }, people] = await Promise.all([
+  const [{ data, error }, parts, sprints, people] = await Promise.all([
     admin.from("league_members").select("leagues(id, name, invite_code, owner_id)").eq("user_id", me).order("joined_at"),
-    everyoneWeek(week),
+    weekParts(week),
+    weekSprints(week),
     players([me]),
   ]);
+  const everyone = weekTable(parts, week.startsOn, sprints);
+  const clubOf = new Map([...sprints, ...parts].map((p) => [p.userId, p.clubId]));
   const fans = fanbaseTable(everyone.map((r) => ({ points: r.points, clubId: clubOf.get(r.userId) ?? null })), FANBASE_MIN);
   const club = people.get(me)?.club ?? null;
   if (error) throw error;
@@ -194,14 +201,27 @@ export async function getHub(): Promise<Hub> {
     leagues.map(async (league) => {
       const rows = await membersTable(league.id, week, me);
       const mine = rows.find((r) => r.mine);
-      return { league, members: rows.length, position: mine && mine.points > 0 ? mine.position : null, points: mine?.points ?? 0 };
+      return {
+        league,
+        members: rows.length,
+        position: mine && mine.points > 0 ? mine.position : null,
+        points: mine?.points ?? 0,
+        moved: mine?.moved ?? null,
+        top: rows.slice(0, 3),
+        gap: gapLine(rows),
+      };
     }),
   );
   const mine = everyone.find((r) => r.userId === me);
   return {
     week,
     leagues: lines,
-    everyone: { position: mine?.position ?? null, players: everyone.length, points: mine?.points ?? 0 },
+    everyone: {
+      position: mine?.position ?? null,
+      players: everyone.length,
+      points: mine?.points ?? 0,
+      moved: movement(parts, sprints, week.startsOn, week.today).get(me) ?? null,
+    },
     club,
     fanbase: { position: fans.find((f) => f.clubId === club?.id)?.position ?? null, clubs: fans.length },
   };

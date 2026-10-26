@@ -87,6 +87,8 @@ who played the set, and the Clash result PNG.
 
 ### 8. A league
 `/league/[code]`: the invite (outsiders) and the table (members), the shirt ladder, leaving, ownership.
+Built together with step 7 (Collins, 26 Oct 2026): the hub's look decides the league page's, so both were
+mocked and picked as one (option D).
 
 ### 9. Everyone and fans
 `/league/everyone` and `/league/fans`.

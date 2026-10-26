@@ -2,110 +2,73 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { ordinal } from "@/components/daily/formats";
 import { JoinLeague, StartLeague } from "@/components/league/Forms";
+import { EmptyBoard, LeagueAlbum, TableStickers } from "@/components/league/Hub";
 import { LeagueLoading, LeagueMasthead } from "@/components/league/Masthead";
 import { weekLabel } from "@/components/league/format";
+import { isTestSite } from "@/lib/daily/sample";
 import { getHub } from "@/lib/league/data";
+import { isHubPreview, previewHub } from "@/lib/league/sample";
 
 export const metadata: Metadata = {
   title: "The League · iKnowBall",
-  description: "Mini-leagues with your mates, scored every matchweek. Best 5 Dailies and 3 Clash sprints count.",
+  description: "Mini-leagues with your friends, scored every matchweek. Best 5 Dailies and 3 Clash sprints count.",
 };
 
-export default function LeaguePage() {
+export default function LeaguePage({ searchParams }: PageProps<"/league">) {
   return (
     <Suspense fallback={<LeagueLoading />}>
-      <Hub />
+      <Hub searchParams={searchParams} />
     </Suspense>
   );
 }
 
-function Line({ href, name, sub, place, small }: { href: string; name: string; sub: string; place: string; small: string }) {
-  return (
-    <li>
-      <Link href={href} className="grid grid-cols-[1fr_auto_auto] items-center gap-2.5 border-b border-track py-3">
-        <span className="min-w-0">
-          <span className="block truncate font-display text-[26px] leading-[0.95] uppercase">{name}</span>
-          <span className="block text-[13px] text-navy/65">{sub}</span>
-        </span>
-        <span className="text-right font-display text-[30px] leading-none text-royal tabular-nums">
-          {place}
-          <small className="block font-sans text-[11px] leading-tight font-semibold tracking-widest text-navy/60">{small}</small>
-        </span>
-        <span aria-hidden="true" className="font-display text-xl">
-          →
-        </span>
-      </Link>
-    </li>
-  );
-}
-
 // Reads the session and the week, so it renders per request.
-async function Hub() {
+async function Hub({ searchParams }: Pick<PageProps<"/league">, "searchParams">) {
   await connection();
-  const hub = await getHub();
-  const { everyone, club, fanbase } = hub;
-  const share = everyone.position && everyone.players >= 20 ? Math.max(1, Math.ceil((everyone.position / everyone.players) * 100)) : null;
+  // Test sites only: ?preview=hub|first shows the hub with sample data.
+  const { preview } = await searchParams;
+  const hub = isTestSite() && isHubPreview(preview) ? await previewHub(preview) : await getHub();
+  const first = hub.leagues.length === 0;
 
   return (
-    <main className="mx-auto w-full flex-1 max-w-[560px] px-4 pb-10 lg:max-w-[1040px]">
+    <main className="mx-auto w-full max-w-[560px] flex-1 px-4 pb-10 lg:max-w-[1040px]">
       <LeagueMasthead right={weekLabel(hub.week)} />
-      <div className="lg:grid lg:grid-cols-[1fr_380px] lg:gap-10">
-        <section>
-          <h1 className="mt-4 font-display text-[56px] leading-[0.9] uppercase">
-            Your <span className="text-royal">leagues</span>
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-11">
+        <div className="min-w-0">
+          <h1 className="mt-3.5 font-display text-[60px] leading-[0.84] uppercase lg:mt-[18px] lg:text-[84px]">
+            Your <span className="sash-mark">leagues</span>
           </h1>
-          <p className="mt-1.5 text-navy/75">This week&apos;s places. Your best 5 Dailies and best 3 Clash sprints count, and tables lock Sunday at midnight.</p>
-          <ul className="mt-2">
-            {hub.leagues.map((l) => (
-              <Line
-                key={l.league.id}
-                href={`/league/${l.league.invite_code}`}
-                name={l.league.name}
-                sub={`${l.members} ${l.members === 1 ? "player" : "players"} · ${l.points} pts`}
-                place={l.position ? ordinal(l.position) : "–"}
-                small={`of ${l.members}`}
-              />
-            ))}
-            <Line
-              href="/league/everyone"
-              name="Everyone"
-              sub={`Global table · ${everyone.players.toLocaleString("en-GB")} ${everyone.players === 1 ? "player" : "players"}`}
-              place={everyone.position ? ordinal(everyone.position) : "–"}
-              small={everyone.position ? (share ? `top ${share}%` : `of ${everyone.players}`) : "not played"}
-            />
-            {club && (
-              <Line
-                href="/league/fans"
-                name={`${club.name} fans`}
-                sub={fanbase.position ? `Fanbase table · ${ordinal(fanbase.position)} of ${fanbase.clubs} clubs` : "Fanbase table · needs 25 fans playing"}
-                place={fanbase.position ? ordinal(fanbase.position) : "–"}
-                small="club"
-              />
+          <p className="mt-2 text-sm lg:mt-2.5 lg:text-[15px]">
+            {first
+              ? "Mini-leagues with your friends, scored Monday to Sunday. Your best 5 Dailies and best 3 sprints count."
+              : "Your best 5 Dailies and best 3 sprints count. Tables lock Sunday at midnight."}
+          </p>
+          <div className="mt-[18px] lg:mt-5">
+            {first ? (
+              <section aria-label="Your first league" className="grid grid-cols-[minmax(0,1fr)] gap-4 border-2 border-navy bg-mist px-3 pt-4 pb-[18px] lg:px-[18px] lg:pt-5">
+                <EmptyBoard />
+                <StartLeague look="slot" n={1} note="You get a code for the group chat · up to 50" />
+                <JoinLeague look="slot" n={2} note="Six letters and numbers from a friend" />
+              </section>
+            ) : (
+              <LeagueAlbum leagues={hub.leagues} />
             )}
-          </ul>
-          {!hub.leagues.length && (
-            <p className="mt-3 border-l-[3px] border-teal pl-3 text-[15px]">
-              No league yet. Start one and send the code to the group chat, or join with a code a mate sent you.
-            </p>
+          </div>
+        </div>
+
+        <aside className="mt-[22px] grid grid-cols-[minmax(0,1fr)] content-start gap-[22px] lg:mt-7">
+          <TableStickers everyone={hub.everyone} club={hub.club} fanbase={hub.fanbase} />
+          {first ? (
+            <Link href="/daily" className="block bg-royal sash p-3 font-display text-2xl text-white uppercase">
+              Play today&apos;s Daily
+            </Link>
+          ) : (
+            <div id="start" className="grid scroll-mt-4 grid-cols-[minmax(0,1fr)] gap-3.5">
+              <StartLeague />
+              <JoinLeague />
+            </div>
           )}
-          {!club && (
-            <p className="mt-3 text-[15px]">
-              Pick a club on your{" "}
-              <Link href="/profile" className="font-semibold text-royal underline underline-offset-2">
-                profile
-              </Link>{" "}
-              to play for its fanbase.
-            </p>
-          )}
-        </section>
-        <aside className="mt-6 grid grid-cols-[minmax(0,1fr)] content-start gap-3 lg:mt-[22px]">
-          <StartLeague />
-          <JoinLeague />
-          <Link href="/daily" className="block bg-navy p-3 text-center font-display text-[22px] text-white uppercase">
-            Play today&apos;s Daily
-          </Link>
         </aside>
       </div>
     </main>
