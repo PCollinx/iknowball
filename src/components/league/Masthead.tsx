@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { KeepyUppy } from "@/components/loading/KeepyUppy";
 
-/** `back` turns the left link into "← Your leagues", for a league's own page. `href` is where it goes (the hub). */
-export function LeagueMasthead({ right, back = false, href = "/league" }: { right: string; back?: boolean; href?: string }) {
+/** `back` turns the left link into "← Your leagues", for a league's own page. */
+export function LeagueMasthead({ right, back = false }: { right: string; back?: boolean }) {
   return (
     <div className="flex items-center justify-between gap-2 border-b border-navy pt-3.5 pb-2">
-      <Link href={href} className="label shrink-0">
+      <Link href="/league" className="label shrink-0">
         {back ? "← Your leagues" : "The League"}
       </Link>
       <span className="label truncate">{right}</span>

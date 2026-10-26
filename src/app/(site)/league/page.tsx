@@ -6,30 +6,25 @@ import { JoinLeague, StartLeague } from "@/components/league/Forms";
 import { EmptyBoard, LeagueAlbum, TableStickers } from "@/components/league/Hub";
 import { LeagueLoading, LeagueMasthead } from "@/components/league/Masthead";
 import { weekLabel } from "@/components/league/format";
-import { isTestSite } from "@/lib/daily/sample";
 import { getHub } from "@/lib/league/data";
-import { isHubPreview, previewHub } from "@/lib/league/sample";
 
 export const metadata: Metadata = {
   title: "The League · iKnowBall",
   description: "Mini-leagues with your friends, scored every matchweek. Best 5 Dailies and 3 Clash sprints count.",
 };
 
-export default function LeaguePage({ searchParams }: PageProps<"/league">) {
+export default function LeaguePage() {
   return (
     <Suspense fallback={<LeagueLoading />}>
-      <Hub searchParams={searchParams} />
+      <Hub />
     </Suspense>
   );
 }
 
 // Reads the session and the week, so it renders per request.
-async function Hub({ searchParams }: Pick<PageProps<"/league">, "searchParams">) {
+async function Hub() {
   await connection();
-  // Test sites only: ?preview=hub|first shows the hub with sample data.
-  const { preview } = await searchParams;
-  const sample = isTestSite() && isHubPreview(preview);
-  const hub = sample ? await previewHub(preview) : await getHub();
+  const hub = await getHub();
   const first = hub.leagues.length === 0;
 
   return (
@@ -53,13 +48,13 @@ async function Hub({ searchParams }: Pick<PageProps<"/league">, "searchParams">)
                 <JoinLeague look="slot" n={2} note="The IKB code a friend sent" />
               </section>
             ) : (
-              <LeagueAlbum leagues={hub.leagues} preview={sample} />
+              <LeagueAlbum leagues={hub.leagues} />
             )}
           </div>
         </div>
 
         <aside className="mt-[22px] grid grid-cols-[minmax(0,1fr)] content-start gap-[22px] lg:mt-7">
-          <TableStickers everyone={hub.everyone} club={hub.club} fanbase={hub.fanbase} preview={sample} />
+          <TableStickers everyone={hub.everyone} club={hub.club} fanbase={hub.fanbase} />
           {first ? (
             <Link href="/daily" className="btn-navy btn-press block p-2.5 text-center font-display text-2xl uppercase">
               Play today&apos;s Daily →

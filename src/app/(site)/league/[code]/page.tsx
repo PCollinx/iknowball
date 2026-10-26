@@ -5,9 +5,7 @@ import { JoinButton, JoinLeague } from "@/components/league/Forms";
 import { FormTable, Invite, Podium, Rules, TeamSheet, ThisWeek } from "@/components/league/LeaguePage";
 import { LeagueLoading, LeagueMasthead } from "@/components/league/Masthead";
 import { cleanCode, weekLabel } from "@/components/league/format";
-import { isTestSite } from "@/lib/daily/sample";
 import { getLeagueView, LEAGUE_MAX } from "@/lib/league/data";
-import { isLeaguePreview, previewLeague } from "@/lib/league/sample";
 import { dayIndex, splitPodium } from "@/lib/league/standing";
 import { CLASH_MAX, COUNTED_DAYS } from "@/lib/league/week";
 import { kitOf } from "@/lib/profile/club";
@@ -22,7 +20,7 @@ const WEEK_MAX = COUNTED_DAYS * 100 + CLASH_MAX;
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 type Params = Promise<{ code: string }>;
-type Search = Promise<{ new?: string; preview?: string }>;
+type Search = Promise<{ new?: string }>;
 
 export default function LeagueTablePage({ params, searchParams }: { params: Params; searchParams: Search }) {
   return (
@@ -54,9 +52,7 @@ const players = (n: number) => `${n} ${n === 1 ? "player" : "players"}`;
 async function LeagueScreen({ params, searchParams }: { params: Params; searchParams: Search }) {
   await connection();
   const [{ code }, search] = await Promise.all([params, searchParams]);
-  // Test sites only: ?preview=table|invite shows the page with sample data, writing nothing.
-  const sample = isTestSite() && isLeaguePreview(search.preview);
-  const view = sample ? await previewLeague(search.preview as "table" | "invite", cleanCode(code)) : await getLeagueView(cleanCode(code));
+  const view = await getLeagueView(cleanCode(code));
 
   if (view.kind === "missing") {
     return (
@@ -123,7 +119,7 @@ async function LeagueScreen({ params, searchParams }: { params: Params; searchPa
   const mine = rows.find((r) => r.mine);
   return (
     <main className="mx-auto w-full max-w-[560px] flex-1 px-4 pb-10 lg:max-w-[1040px]">
-      <LeagueMasthead back href={sample ? "/league?preview=hub" : "/league"} right={fresh ? "New league" : weekLabel(week)} />
+      <LeagueMasthead back right={fresh ? "New league" : weekLabel(week)} />
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-11">
         <div className="min-w-0">
           <span className="label mt-3.5 block text-[10px] text-royal lg:mt-[18px] lg:text-[11px]">

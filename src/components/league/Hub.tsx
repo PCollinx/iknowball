@@ -26,14 +26,14 @@ export function MoveTag({ moved, className = "" }: { moved: number | null; class
   );
 }
 
-/** The album page: one sticker per league, then "Room for another". `preview` keeps test sites' sample data on the links. */
-export function LeagueAlbum({ leagues, preview = false }: { leagues: HubLine[]; preview?: boolean }) {
+/** The album page: one sticker per league, then "Room for another". */
+export function LeagueAlbum({ leagues }: { leagues: HubLine[] }) {
   return (
     <section aria-label="Your leagues" className="border-2 border-navy bg-mist px-3 pt-4 pb-[18px] lg:px-[18px] lg:pt-5 lg:pb-[22px]">
       <ul className="grid grid-cols-2 gap-x-3 gap-y-3.5 lg:grid-cols-3 lg:gap-x-[18px] lg:gap-y-5">
         {leagues.map((l, i) => (
           <li key={l.league.id}>
-            <LeagueSticker line={l} tilt={TILTS[i % TILTS.length]} preview={preview} />
+            <LeagueSticker line={l} tilt={TILTS[i % TILTS.length]} />
           </li>
         ))}
         <li>
@@ -50,13 +50,13 @@ export function LeagueAlbum({ leagues, preview = false }: { leagues: HubLine[]; 
   );
 }
 
-function LeagueSticker({ line, tilt, preview }: { line: HubLine; tilt: string; preview: boolean }) {
+function LeagueSticker({ line, tilt }: { line: HubLine; tilt: string }) {
   const { league, members, position, points, moved, top, gap } = line;
   return (
     <>
       <div className="border-2 border-dashed border-[#9AA6C8] p-1.5 lg:p-2">
         <Link
-          href={`/league/${league.invite_code}${preview ? "?preview=table" : ""}`}
+          href={`/league/${league.invite_code}`}
           className={`block border-[3px] border-navy bg-white p-1 shadow-[4px_4px_0_var(--color-navy)] transition-[rotate,translate] duration-150 hover:-translate-y-1 hover:rotate-0 lg:p-[5px] lg:shadow-[6px_6px_0_var(--color-navy)] ${tilt}`}
         >
           <span className="block border-2 border-navy">
@@ -118,14 +118,13 @@ export function EmptyBoard() {
 }
 
 /** Everyone and your club's fans, two stickers side by side. */
-export function TableStickers({ everyone, club, fanbase, preview = false }: Pick<Hub, "everyone" | "club" | "fanbase"> & { preview?: boolean }) {
-  const q = preview ? "?preview=1" : "";
+export function TableStickers({ everyone, club, fanbase }: Pick<Hub, "everyone" | "club" | "fanbase">) {
   const share = everyone.position && everyone.players >= 20 ? Math.max(1, Math.ceil((everyone.position / everyone.players) * 100)) : null;
   const players = everyone.players.toLocaleString("en-GB");
   return (
     <section aria-label="Everyone's tables" className="grid grid-cols-2 gap-3">
       <Link
-        href={`/league/everyone${q}`}
+        href="/league/everyone"
         className="block -rotate-1 border-[3px] border-navy bg-navy p-2.5 text-white shadow-[4px_4px_0_var(--color-sky)] transition-[rotate,translate] duration-150 hover:-translate-y-1 hover:rotate-0 lg:p-3 lg:shadow-[5px_5px_0_var(--color-sky)]"
       >
         <span className="label text-[10px] text-teal-light lg:text-[11px]">Everyone</span>
@@ -141,15 +140,15 @@ export function TableStickers({ everyone, club, fanbase, preview = false }: Pick
           )}
         </span>
       </Link>
-      {club ? <FansSticker club={club} fanbase={fanbase} href={`/league/fans${q}`} /> : <PickClub />}
+      {club ? <FansSticker club={club} fanbase={fanbase} /> : <PickClub />}
     </section>
   );
 }
 
-function FansSticker({ club, fanbase, href }: { club: Club; fanbase: Hub["fanbase"]; href: string }) {
+function FansSticker({ club, fanbase }: { club: Club; fanbase: Hub["fanbase"] }) {
   return (
     <Link
-      href={href}
+      href="/league/fans"
       className="grid rotate-1 grid-cols-[minmax(0,1fr)_46px] items-end gap-1.5 border-[3px] border-navy bg-white p-2.5 shadow-[4px_4px_0_var(--color-navy)] transition-[rotate,translate] duration-150 hover:-translate-y-1 hover:rotate-0 lg:p-3 lg:shadow-[5px_5px_0_var(--color-navy)]"
     >
       <span className="min-w-0">
