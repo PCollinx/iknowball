@@ -122,8 +122,8 @@ redesign we take on (Collins, 21 Oct 2026).
 - [x] 4. Today's table (PR #44)
 - [x] 5. Clash: kick-off and sprint (PR #45)
 - [x] 6. Clash: full time and challenges (PR #46)
-- [ ] 7. The League hub
-- [ ] 8. A league
+- [x] 7. The League hub (PR #48)
+- [x] 8. A league (PR #48, built with step 7)
 - [ ] 9. Everyone and fans
 - [ ] 10. Your shirt
 - [ ] 11. Privacy, 404 and errors
