@@ -60,7 +60,7 @@ export function StartLeague(props: Look) {
   );
 }
 
-/** Join a league with the 6-character code a friend sent. */
+/** Join a league with the code a friend sent: IKB and 6 characters, with or without the IKB. */
 export function JoinLeague({ code = "", ...props }: Look & { code?: string }) {
   const [state, action, pending] = useActionState(joinLeague, START);
   return (
@@ -75,12 +75,12 @@ export function JoinLeague({ code = "", ...props }: Look & { code?: string }) {
             name="code"
             required
             defaultValue={code}
-            maxLength={6}
+            maxLength={12}
             autoCapitalize="characters"
             autoComplete="off"
             spellCheck={false}
-            placeholder="K7Q2XY"
-            className="min-w-0 flex-1 border-2 border-navy bg-white px-2.5 py-1 font-display text-[26px] tracking-[0.2em] uppercase"
+            placeholder="IKB-K7Q2XY"
+            className="min-w-0 flex-1 border-2 border-navy bg-white px-2.5 py-1 font-display text-[26px] tracking-[0.1em] uppercase"
           />
           <button type="submit" disabled={pending} className={`btn-teal ${SUBMIT}`}>
             {pending ? "…" : "Join"}

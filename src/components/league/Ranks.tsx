@@ -3,8 +3,9 @@ import { ShirtBack } from "@/components/daily/ShirtBack";
 import type { FanbaseLine, TableLine } from "@/lib/league/data";
 import { kitOf } from "@/lib/profile/club";
 
-/** Players or Fanbase: the two weekly tables everyone is on. */
-export function RankToggle({ on }: { on: "players" | "fans" }) {
+/** Players or Fanbase: the two weekly tables everyone is on. `preview` keeps test sites' sample data on the links. */
+export function RankToggle({ on, preview = false }: { on: "players" | "fans"; preview?: boolean }) {
+  const q = preview ? "?preview=1" : "";
   const tab = (key: typeof on, href: string, text: string) => (
     <Link
       href={href}
@@ -16,8 +17,8 @@ export function RankToggle({ on }: { on: "players" | "fans" }) {
   );
   return (
     <nav className="mt-3 grid grid-cols-2 border-2 border-navy">
-      {tab("players", "/league/everyone", "Players")}
-      {tab("fans", "/league/fans", "Fanbase")}
+      {tab("players", `/league/everyone${q}`, "Players")}
+      {tab("fans", `/league/fans${q}`, "Fanbase")}
     </nav>
   );
 }

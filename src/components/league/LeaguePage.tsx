@@ -1,5 +1,6 @@
 import { ChallengeButton } from "@/components/clash/ChallengeButton";
 import { ShirtBack, shirtName, type Kit } from "@/components/daily/ShirtBack";
+import { leagueCode } from "@/components/league/format";
 import { publicEnv } from "@/lib/env";
 import type { League, TableLine } from "@/lib/league/data";
 import { formGuide, type FormDay } from "@/lib/league/standing";
@@ -182,7 +183,8 @@ export function Invite({ league, kit, members, max }: { league: League; kit: Kit
       <span className="absolute -top-3.5 left-3 -rotate-2 border-2 border-navy bg-teal-light px-2.5 py-0.5 font-display text-[19px] uppercase shadow-[3px_3px_0_var(--color-navy)]">
         Invite code · {members} of {max}
       </span>
-      <div className="mt-2.5 grid grid-cols-6 gap-[5px]" aria-label={`Invite code ${league.invite_code}`} role="img">
+      <div className="mt-2.5 grid grid-cols-[auto_repeat(6,minmax(0,1fr))] items-center gap-[5px]" aria-label={`Invite code ${leagueCode(league.invite_code)}`} role="img">
+        <span className="bg-navy px-1 py-0.5 font-display text-[13px] tracking-[0.06em] text-teal-light lg:text-sm">IKB</span>
         {[...league.invite_code].map((ch, i) => (
           <ShirtBack key={i} kit={kit} num={ch} />
         ))}
@@ -191,7 +193,7 @@ export function Invite({ league, kit, members, max }: { league: League; kit: Kit
       <div className="mr-1">
         <ChallengeButton
           url={url}
-          text={`Join my league "${league.name}" on iKnowBall. Best 5 Dailies plus best 3 Clash sprints a week, out of ${WEEK_MAX}.`}
+          text={`Join my league "${league.name}" on iKnowBall with the code ${leagueCode(league.invite_code)}. Best 5 Dailies plus best 3 Clash sprints a week, out of ${WEEK_MAX}.`}
           label="Send the invite"
           tone="teal"
         />

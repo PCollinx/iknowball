@@ -28,7 +28,8 @@ async function Hub({ searchParams }: Pick<PageProps<"/league">, "searchParams">)
   await connection();
   // Test sites only: ?preview=hub|first shows the hub with sample data.
   const { preview } = await searchParams;
-  const hub = isTestSite() && isHubPreview(preview) ? await previewHub(preview) : await getHub();
+  const sample = isTestSite() && isHubPreview(preview);
+  const hub = sample ? await previewHub(preview) : await getHub();
   const first = hub.leagues.length === 0;
 
   return (
@@ -49,19 +50,19 @@ async function Hub({ searchParams }: Pick<PageProps<"/league">, "searchParams">)
               <section aria-label="Your first league" className="grid grid-cols-[minmax(0,1fr)] gap-4 border-2 border-navy bg-mist px-3 pt-4 pb-[18px] lg:px-[18px] lg:pt-5">
                 <EmptyBoard />
                 <StartLeague look="slot" n={1} note="You get a code for the group chat · up to 50" />
-                <JoinLeague look="slot" n={2} note="Six letters and numbers from a friend" />
+                <JoinLeague look="slot" n={2} note="The IKB code a friend sent" />
               </section>
             ) : (
-              <LeagueAlbum leagues={hub.leagues} />
+              <LeagueAlbum leagues={hub.leagues} preview={sample} />
             )}
           </div>
         </div>
 
         <aside className="mt-[22px] grid grid-cols-[minmax(0,1fr)] content-start gap-[22px] lg:mt-7">
-          <TableStickers everyone={hub.everyone} club={hub.club} fanbase={hub.fanbase} />
+          <TableStickers everyone={hub.everyone} club={hub.club} fanbase={hub.fanbase} preview={sample} />
           {first ? (
-            <Link href="/daily" className="block bg-royal sash p-3 font-display text-2xl text-white uppercase">
-              Play today&apos;s Daily
+            <Link href="/daily" className="btn-navy btn-press block p-2.5 text-center font-display text-2xl uppercase">
+              Play today&apos;s Daily →
             </Link>
           ) : (
             <div id="start" className="grid scroll-mt-4 grid-cols-[minmax(0,1fr)] gap-3.5">
