@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { fitSize, linesAt, parseTeaser, shirtGrid, shirtLabels, teaserQuery, withHeadline } from "./layout";
+import { fitSize, linesAt, parseTeaser, playerNames, shirtGrid, shirtKits, shirtLabels, splitName, teaserQuery, withHeadline } from "./layout";
+import type { Club } from "@/lib/profile/club";
 import { shirtSvg } from "@/lib/og/shirt-svg";
 
 describe("parseTeaser", () => {
@@ -34,6 +35,29 @@ describe("shirtLabels", () => {
       { big: "A", plate: "Campbell" },
       { big: "B", plate: "Jennings" },
     ]);
+  });
+});
+
+describe("pick one", () => {
+  const t = parseTeaser({ kind: "pick", names: "Kylian Mbappé, RMA\nLamine Yamal, Barcelona\nRodri" });
+  const real: Club = { id: 1, name: "Real Madrid", short_name: "RMA", shirt_colour: "#FFFFFF", number_colour: "#00529F", trim_colour: "#FEBE10", kit_pattern: "plain", kit_collar: "crew", in_premier_league: false };
+  const barca: Club = { ...real, id: 2, name: "Barcelona", short_name: "BAR", shirt_colour: "#A50044", kit_pattern: "stripes" };
+  const royal = { shirt: "#2440FF", number: "#FFFFFF" };
+
+  it("reads a pick and keeps clubs off the shirts' names", () => {
+    expect(t.kind).toBe("pick");
+    expect(splitName("Kylian Mbappé, RMA")).toEqual({ name: "Kylian Mbappé", club: "RMA" });
+    expect(playerNames(t)).toEqual(["Kylian Mbappé", "Lamine Yamal", "Rodri"]);
+    expect(shirtLabels(t)).toEqual([
+      { big: "A", plate: "Mbappé" },
+      { big: "B", plate: "Yamal" },
+      { big: "C", plate: "Rodri" },
+    ]);
+  });
+
+  it("dresses each shirt in its own club's kit, by short or full name", () => {
+    const kits = shirtKits(t, [real, barca], royal);
+    expect(kits.map((k) => k.shirt)).toEqual(["#FFFFFF", "#A50044", "#2440FF"]);
   });
 });
 

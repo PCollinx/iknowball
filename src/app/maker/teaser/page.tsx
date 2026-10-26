@@ -5,7 +5,7 @@ import { shortDate } from "@/components/daily/Masthead";
 import { MakerBar } from "@/components/maker/MakerBar";
 import { requireAdmin } from "@/lib/maker/data";
 import { allClubs, upcomingClashes } from "@/lib/teaser/data";
-import { FORMATS, MAX_SHIRTS, MIN_SHIRTS, parseTeaser, teaserQuery, withHeadline, type Teaser } from "@/lib/teaser/layout";
+import { FORMATS, MAX_SHIRTS, MIN_SHIRTS, parseTeaser, playerNames, teaserQuery, withHeadline, type Teaser } from "@/lib/teaser/layout";
 import { gameDate } from "@/lib/time";
 
 type Search = Record<string, string | string[] | undefined>;
@@ -32,7 +32,7 @@ async function TeaserMaker({ searchParams }: { searchParams: Promise<Search> }) 
     t,
     picked.map((c) => c.name),
   );
-  const clashes = drawn ? await upcomingClashes(picked, t.names) : [];
+  const clashes = drawn ? await upcomingClashes(picked, playerNames(t)) : [];
   const src = `/maker/teaser/image?${teaserQuery(full)}`;
 
   return (
@@ -60,6 +60,7 @@ async function TeaserMaker({ searchParams }: { searchParams: Promise<Search> }) 
                 [
                   ["recall", "Name them"],
                   ["order", "Put in order"],
+                  ["pick", "Pick one"],
                 ] as const
               ).map(([value, text]) => (
                 <label key={value} className="flex flex-1 cursor-pointer justify-center px-3 py-2 has-checked:bg-navy has-checked:text-white">
@@ -114,7 +115,7 @@ async function TeaserMaker({ searchParams }: { searchParams: Promise<Search> }) 
                 name="names"
                 defaultValue={t.names.join("\n")}
                 rows={4}
-                placeholder={"One per line.\nPut in order: the players.\nName them: leave blank, or fill in for the answers."}
+                placeholder={"One per line, with a club for its kit: Lamine Yamal, BAR\nPut in order or Pick one: the players.\nName them: leave blank, or fill in for the answers."}
                 className={input}
               />
             </label>

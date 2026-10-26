@@ -5,6 +5,6 @@ import { FORMATS, type Teaser } from "./layout";
 import { TeaserImage } from "./TeaserImage";
 
 /** The teaser as a PNG response. */
-export async function renderTeaser(t: Teaser, kit: Kit, headers?: Record<string, string>): Promise<ImageResponse> {
-  return new ImageResponse(<TeaserImage t={t} kit={kit} />, { ...FORMATS[t.format], headers, fonts: await ogFonts() });
+export async function renderTeaser(t: Teaser, kits: Kit[], headers?: Record<string, string>): Promise<ImageResponse> {
+  return new ImageResponse(<TeaserImage t={t} kits={kits} />, { ...FORMATS[t.format], headers, fonts: await ogFonts() });
 }

@@ -7,7 +7,8 @@ import { shirtSvg } from "@/lib/og/shirt-svg";
 // A teaser quiz for X, drawn by next/og (Satori: flexbox and inline styles
 // only). It's the Daily's matchday programme without the app's name: the name
 // is revealed on 1 Nov. Shirts are the Daily's kit shirts, half and half in
-// the two clubs, with the nameplate on the hem.
+// the two clubs, with the nameplate on the hem. A pick (a poll: who wins?)
+// dresses each candidate in their own club's kit.
 
 type Box = { pad: number; mastGap: number; foot: number; gap: number };
 const BOX: Record<Teaser["format"], Box> = {
@@ -15,7 +16,7 @@ const BOX: Record<Teaser["format"], Box> = {
   tall: { pad: 56, mastGap: 30, foot: 150, gap: 18 },
 };
 
-export function TeaserImage({ t, kit }: { t: Teaser; kit: Kit }) {
+export function TeaserImage({ t, kits }: { t: Teaser; kits: Kit[] }) {
   const { width, height } = FORMATS[t.format];
   const b = BOX[t.format];
   const wide = t.format === "wide";
@@ -29,13 +30,15 @@ export function TeaserImage({ t, kit }: { t: Teaser; kit: Kit }) {
   const headSize = fitSize(headline, textW, wide ? 150 : 140, 64, wide ? 3 : 2);
   const headLines = linesAt(headline, headSize, textW);
   const qSize = 34;
-  const tab = t.kind === "recall" && !t.names.length ? `${t.count} to name` : t.kind === "order" ? "Order of joining" : "The answers";
+  const tab =
+    t.kind === "pick" ? "Pick one" : t.kind === "recall" && !t.names.length ? `${t.count} to name` : t.kind === "order" ? "Order of joining" : "The answers";
 
   const wordsH = headSize * 0.92 * headLines + 28 + (t.question ? qSize * 1.25 * 2 + 12 : 0) + 64;
   const shirtsBox = wide ? { w: inner - textW - 56, h: bodyH } : { w: inner, h: bodyH - wordsH - 24 };
   const grid = shirtGrid(t.count, shirtsBox.w, shirtsBox.h, b.gap);
-  const shirt = shirtSvg(kit);
-  const labels = shirtLabels(t);
+  const drawn = new Map<Kit, string>();
+  const shirtOf = (kit: Kit) => drawn.get(kit) ?? drawn.set(kit, shirtSvg(kit)).get(kit)!;
+  const labels = shirtLabels(t).map((l, i) => ({ ...l, kit: kits[i] }));
   const rows = Array.from({ length: Math.ceil(t.count / grid.cols) }, (_, r) => labels.slice(r * grid.cols, r * grid.cols + grid.cols));
 
   return (
@@ -99,7 +102,7 @@ export function TeaserImage({ t, kit }: { t: Teaser; kit: Kit }) {
               {rows.map((row, r) => (
                 <div key={r} style={{ display: "flex", marginTop: r ? b.gap : 0 }}>
                   {row.map((l, i) => (
-                    <Shirt key={i} src={shirt} size={grid.shirt} big={l.big} plate={l.plate} kit={kit} style={{ marginLeft: i ? b.gap : 0 }} />
+                    <Shirt key={i} src={shirtOf(l.kit)} size={grid.shirt} big={l.big} plate={l.plate} kit={l.kit} style={{ marginLeft: i ? b.gap : 0 }} />
                   ))}
                 </div>
               ))}
