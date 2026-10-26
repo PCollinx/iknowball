@@ -4,13 +4,14 @@ import { kitOf, type Club } from "@/lib/profile/club";
 // Teaser images for X: the pure parts (reading the form, sizing type, laying
 // out the shirts), kept apart from the drawing so they can be tested.
 
-export type TeaserFormat = "wide" | "tall";
+export type TeaserFormat = "wide" | "square" | "tall";
 export type TeaserKind = "recall" | "order" | "pick";
 
-/** Pixel sizes. Wide is X's 16:9 in-feed image at 2x; tall is 4:5, which
- * fills more of a phone screen. */
+/** Pixel sizes. Wide is X's 16:9 in-feed image at 2x; square is 1:1, which
+ * crops nowhere; tall is 4:5, which fills more of a phone screen. */
 export const FORMATS: Record<TeaserFormat, { width: number; height: number; label: string }> = {
   wide: { width: 1600, height: 900, label: "Wide 16:9" },
+  square: { width: 1080, height: 1080, label: "Square 1:1" },
   tall: { width: 1080, height: 1350, label: "Tall 4:5" },
 };
 
@@ -49,6 +50,7 @@ const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n
 /** Reads a teaser from the form's query string, with safe defaults. */
 export function parseTeaser(p: Params): Teaser {
   const asKind = one(p, "kind");
+  const asFormat = one(p, "format");
   const kind: TeaserKind = asKind === "order" || asKind === "pick" ? asKind : "recall";
   const names = one(p, "names")
     .split(/\r?\n/)
@@ -58,7 +60,7 @@ export function parseTeaser(p: Params): Teaser {
   const asked = Number.parseInt(one(p, "count"), 10);
   const count = names.length || clamp(Number.isNaN(asked) ? 6 : asked, MIN_SHIRTS, MAX_SHIRTS);
   return {
-    format: one(p, "format") === "tall" ? "tall" : "wide",
+    format: Object.hasOwn(FORMATS, asFormat) ? (asFormat as TeaserFormat) : "wide",
     kind,
     no: clamp(Number.parseInt(one(p, "no"), 10) || 1, 1, 999),
     when: clip(one(p, "when"), 24),

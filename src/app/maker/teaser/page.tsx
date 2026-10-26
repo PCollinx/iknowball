@@ -178,7 +178,7 @@ async function TeaserMaker({ searchParams }: { searchParams: Promise<Search> }) 
                 alt="Teaser preview"
                 width={FORMATS[t.format].width}
                 height={FORMATS[t.format].height}
-                className={`h-auto w-full border border-track ${t.format === "tall" ? "max-w-[560px]" : ""}`}
+                className={`h-auto w-full border border-track ${t.format === "tall" ? "max-w-[560px]" : t.format === "square" ? "max-w-[640px]" : ""}`}
               />
               <div className="flex flex-wrap items-center gap-4">
                 <a href={`${src}&download=1`} className="bg-navy px-6 py-2.5 font-display text-2xl text-white uppercase">

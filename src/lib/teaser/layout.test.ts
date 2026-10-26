@@ -9,6 +9,11 @@ describe("parseTeaser", () => {
     expect(t).toMatchObject({ format: "wide", kind: "recall", no: 1, count: 6, names: [], home: null });
   });
 
+  it("reads the square size and falls back to wide", () => {
+    expect(parseTeaser({ format: "square" }).format).toBe("square");
+    expect(parseTeaser({ format: "toString" }).format).toBe("wide");
+  });
+
   it("clamps the shirt count and takes it from the names when given", () => {
     expect(parseTeaser({ count: "40" }).count).toBe(12);
     expect(parseTeaser({ count: "0" }).count).toBe(2);

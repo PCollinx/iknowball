@@ -13,6 +13,7 @@ import { shirtSvg } from "@/lib/og/shirt-svg";
 type Box = { pad: number; mastGap: number; foot: number; gap: number };
 const BOX: Record<Teaser["format"], Box> = {
   wide: { pad: 64, mastGap: 36, foot: 132, gap: 22 },
+  square: { pad: 52, mastGap: 26, foot: 120, gap: 16 },
   tall: { pad: 56, mastGap: 30, foot: 150, gap: 18 },
 };
 
@@ -24,12 +25,12 @@ export function TeaserImage({ t, kits }: { t: Teaser; kits: Kit[] }) {
   const mastH = 30 + 14; // label line plus the double rule
   const bodyH = height - b.pad - mastH - b.mastGap - b.foot - b.pad / 2;
 
-  // Wide: words left, shirts right. Tall: words on top, shirts below.
+  // Wide: words left, shirts right. Square and tall: words on top, shirts below.
   const textW = wide ? Math.round(inner * 0.5) : inner;
   const headline = t.headline || "Name them";
-  const headSize = fitSize(headline, textW, wide ? 150 : 140, 64, wide ? 3 : 2);
+  const headSize = fitSize(headline, textW, wide ? 150 : t.format === "square" ? 112 : 140, 64, wide ? 3 : 2);
   const headLines = linesAt(headline, headSize, textW);
-  const qSize = 34;
+  const qSize = t.format === "square" ? 30 : 34;
   const tab =
     t.kind === "pick" ? "Pick one" : t.kind === "recall" && !t.names.length ? `${t.count} to name` : t.kind === "order" ? "Order of joining" : "The answers";
 
@@ -122,7 +123,7 @@ export function TeaserImage({ t, kits }: { t: Teaser; kits: Kit[] }) {
           padding: `0 ${b.pad}px`,
         }}
       >
-        <span style={{ display: "flex", fontFamily: DISPLAY, fontSize: wide ? 58 : 52, color: "#FFFFFF", textTransform: "uppercase", lineHeight: 1 }}>
+        <span style={{ display: "flex", fontFamily: DISPLAY, fontSize: wide ? 58 : t.format === "square" ? 46 : 52, color: "#FFFFFF", textTransform: "uppercase", lineHeight: 1 }}>
           {t.dare || "Think you know ball?"}
         </span>
         {t.aside && (
