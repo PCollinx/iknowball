@@ -1,13 +1,17 @@
+import type { Kit } from "@/components/daily/ShirtBack";
+import { kitOf, type Club } from "@/lib/profile/club";
+
 // Teaser images for X: the pure parts (reading the form, sizing type, laying
 // out the shirts), kept apart from the drawing so they can be tested.
 
-export type TeaserFormat = "wide" | "tall";
-export type TeaserKind = "recall" | "order";
+export type TeaserFormat = "wide" | "square" | "tall";
+export type TeaserKind = "recall" | "order" | "pick";
 
-/** Pixel sizes. Wide is X's 16:9 in-feed image at 2x; tall is 4:5, which
- * fills more of a phone screen. */
+/** Pixel sizes. Wide is X's 16:9 in-feed image at 2x; square is 1:1, which
+ * crops nowhere; tall is 4:5, which fills more of a phone screen. */
 export const FORMATS: Record<TeaserFormat, { width: number; height: number; label: string }> = {
   wide: { width: 1600, height: 900, label: "Wide 16:9" },
+  square: { width: 1080, height: 1080, label: "Square 1:1" },
   tall: { width: 1080, height: 1350, label: "Tall 4:5" },
 };
 
@@ -25,7 +29,9 @@ export type Teaser = {
   away: number | null;
   /** Recall: how many shirts. Order: the number of names. */
   count: number;
-  /** Order: the players to put in order. Recall: the answers, for the reveal. */
+  /** Order: the players to put in order. Pick: the candidates. Recall: the
+   * answers, for the reveal. A line may end with a club ("Kylian Mbappé, RMA")
+   * to dress that shirt in its kit. */
   names: string[];
   dare: string;
   aside: string;
@@ -43,16 +49,18 @@ const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n
 
 /** Reads a teaser from the form's query string, with safe defaults. */
 export function parseTeaser(p: Params): Teaser {
-  const kind: TeaserKind = one(p, "kind") === "order" ? "order" : "recall";
+  const asKind = one(p, "kind");
+  const asFormat = one(p, "format");
+  const kind: TeaserKind = asKind === "order" || asKind === "pick" ? asKind : "recall";
   const names = one(p, "names")
     .split(/\r?\n/)
-    .map((n) => clip(n.trim(), 30))
+    .map((n) => clip(n.trim(), 44))
     .filter(Boolean)
     .slice(0, MAX_SHIRTS);
   const asked = Number.parseInt(one(p, "count"), 10);
   const count = names.length || clamp(Number.isNaN(asked) ? 6 : asked, MIN_SHIRTS, MAX_SHIRTS);
   return {
-    format: one(p, "format") === "tall" ? "tall" : "wide",
+    format: Object.hasOwn(FORMATS, asFormat) ? (asFormat as TeaserFormat) : "wide",
     kind,
     no: clamp(Number.parseInt(one(p, "no"), 10) || 1, 1, 999),
     when: clip(one(p, "when"), 24),
@@ -85,11 +93,22 @@ export function teaserQuery(t: Teaser): string {
   return q.toString();
 }
 
+/** A names line split into the player and the club whose kit they wear:
+ * "Kylian Mbappé, RMA" (a club's short name or full name, after the last comma). */
+export function splitName(line: string): { name: string; club: string } {
+  const at = line.lastIndexOf(",");
+  return at < 0 ? { name: line.trim(), club: "" } : { name: line.slice(0, at).trim(), club: line.slice(at + 1).trim() };
+}
+
+/** The players' names, without any clubs. */
+export const playerNames = (t: Teaser) => t.names.map((n) => splitName(n).name);
+
 /** What each shirt carries: the big number (or letter) and the nameplate. */
 export function shirtLabels(t: Teaser): { big: string; plate: string }[] {
+  const names = playerNames(t);
   return Array.from({ length: t.count }, (_, i) => {
-    const name = t.names[i] ? surname(t.names[i]) : "";
-    if (t.kind === "order") return { big: String.fromCharCode(65 + i), plate: name };
+    const name = names[i] ? surname(names[i]) : "";
+    if (t.kind !== "recall") return { big: String.fromCharCode(65 + i), plate: name };
     return { big: String(i + 1), plate: name || "?" };
   });
 }
@@ -144,4 +163,14 @@ export function shirtGrid(n: number, width: number, height: number, gap: number)
 /** A blank headline takes the clubs' names: "Arsenal and Spurs". */
 export function withHeadline(t: Teaser, clubNames: string[]): Teaser {
   return t.headline || !clubNames.length ? t : { ...t, headline: clubNames.join(" and ") };
+}
+
+/** Each shirt's kit: its own club's when the line names one, else the teaser's. */
+export function shirtKits(t: Teaser, clubs: Club[], fallback: Kit): Kit[] {
+  const key = (s: string) => s.toLowerCase();
+  return Array.from({ length: t.count }, (_, i) => {
+    const want = key(t.names[i] ? splitName(t.names[i]).club : "");
+    const club = want && clubs.find((c) => key(c.short_name) === want || key(c.name) === want);
+    return club ? kitOf(club) : fallback;
+  });
 }
