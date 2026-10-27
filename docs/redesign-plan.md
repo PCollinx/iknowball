@@ -124,7 +124,7 @@ redesign we take on (Collins, 21 Oct 2026).
 - [x] 6. Clash: full time and challenges (PR #46)
 - [x] 7. The League hub (PR #48)
 - [x] 8. A league (PR #48, built with step 7)
-- [ ] 9. Everyone and fans
+- [ ] 9. Everyone and fans (option C, "Team of the week", built on `claude/league-tables`)
 - [ ] 10. Your shirt
 - [ ] 11. Privacy, 404 and errors
 - [ ] 12. The maker (optional)

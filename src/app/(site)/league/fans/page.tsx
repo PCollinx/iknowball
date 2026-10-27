@@ -2,56 +2,77 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
+import { isTestSite } from "@/lib/daily/sample";
+import { ShirtBack } from "@/components/daily/ShirtBack";
 import { LeagueLoading, LeagueMasthead } from "@/components/league/Masthead";
-import { FanRanks, RankToggle } from "@/components/league/Ranks";
+import { AwayEnd, Gate, RankToggle } from "@/components/league/Ranks";
 import { weekLabel } from "@/components/league/format";
 import { getFanbaseTable } from "@/lib/league/data";
+import { isFansPreview, previewFans } from "@/lib/league/sample";
+import { dayIndex } from "@/lib/league/standing";
 
 export const metadata: Metadata = {
-  title: "Fanbase · The League · iKnowBall",
-  description: "Which club's fans know ball? Clubs ranked by their fans' average week.",
+  title: "The away end · The League · iKnowBall",
+  description: "Which club's fans know ball? Clubs ranked by their fans' average week, out of 600.",
 };
 
-export default function FansPage() {
+const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+export default function FansPage({ searchParams }: PageProps<"/league/fans">) {
   return (
     <Suspense fallback={<LeagueLoading />}>
-      <Fans />
+      <Fans searchParams={searchParams} />
     </Suspense>
   );
 }
 
 // Reads the session and the week, so it renders per request.
-async function Fans() {
+async function Fans({ searchParams }: Pick<PageProps<"/league/fans">, "searchParams">) {
   await connection();
-  const { week, rows, myClub, minFans } = await getFanbaseTable();
+  // Test sites only: ?preview= shows sample data (src/lib/league/sample.ts).
+  const preview = (await searchParams).preview;
+  const { week, rows, myClub, myClubFans, minFans } = await (isTestSite() && isFansPreview(preview) ? previewFans(preview) : getFanbaseTable());
   const placed = rows.some((r) => r.mine);
   return (
-    <main className="mx-auto w-full flex-1 max-w-[560px] px-4 pb-10">
-      <LeagueMasthead right={weekLabel(week)} />
-      <h1 className="mt-4 font-display text-[56px] leading-[0.9] uppercase">
-        Fan<span className="text-royal">base</span>
-      </h1>
-      <p className="mt-1.5 text-navy/75">Clubs by their fans&apos; average week, out of 600. A club needs {minFans} fans playing to make the table.</p>
-      <RankToggle on="fans" />
-      {rows.length ? (
-        <FanRanks rows={rows} />
-      ) : (
-        <p className="mt-4 text-lg">No club has {minFans} fans playing yet this week. Get your lot on it.</p>
-      )}
-      {myClub && !placed && (
-        <p className="mt-4 border-l-[3px] border-teal pl-3 text-[15px]">
-          {myClub.name} aren&apos;t on the table yet: they need {minFans} fans playing this week.
-        </p>
-      )}
-      {!myClub && (
-        <p className="mt-4 text-[15px]">
-          Pick a club on your{" "}
-          <Link href="/profile" className="font-semibold text-royal underline underline-offset-2">
-            profile
-          </Link>{" "}
-          to play for its fans.
-        </p>
-      )}
+    <main className="mx-auto w-full max-w-[560px] flex-1 px-4 pb-10 lg:max-w-[1040px]">
+      <LeagueMasthead back right={weekLabel(week)} />
+      <div className="lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] lg:gap-12">
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-[22px]">
+          <div>
+            <span className="label mt-3.5 block text-[10px] text-royal lg:mt-[18px] lg:text-[11px]">
+              {rows.length} {rows.length === 1 ? "club" : "clubs"} on the table · {WEEKDAYS[dayIndex(week.startsOn, week.today)]}
+            </span>
+            <h1 className="mt-0.5 font-display text-[52px] leading-[0.86] uppercase lg:text-[64px]">
+              The away <span className="sash-mark">end</span>
+            </h1>
+            <p className="mt-1.5 text-slate">
+              Clubs by their fans&apos; average week, out of 600. A club needs {minFans} fans playing to get through the gate.
+            </p>
+            <div className="mt-3.5">
+              <RankToggle on="fans" />
+            </div>
+          </div>
+          {myClub && !placed && <Gate club={myClub} fans={myClubFans} minFans={minFans} />}
+          {!myClub && (
+            <Link href="/profile" className="grid grid-cols-[44px_minmax(0,1fr)] items-center gap-2.5 border-2 border-dashed border-[#8E9BD6] p-3 hover:bg-mist">
+              <ShirtBack state="empty" num="?" />
+              <span>
+                <span className="label block text-[10px] text-royal">Your club&apos;s fans</span>
+                <span className="block font-display text-2xl leading-none uppercase">Pick a club to play for its fans →</span>
+              </span>
+            </Link>
+          )}
+        </div>
+        <div className="mt-[22px] lg:mt-[18px]">
+          {rows.length ? (
+            <AwayEnd rows={rows} />
+          ) : (
+            <p className="border-y-4 border-double border-navy py-3 text-lg">
+              Nobody&apos;s through the gate yet: no club has {minFans} fans playing this week. Get your lot on it.
+            </p>
+          )}
+        </div>
+      </div>
     </main>
   );
 }
