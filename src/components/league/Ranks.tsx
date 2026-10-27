@@ -200,7 +200,6 @@ export function Gate({ club, fans, minFans }: { club: Club; fans: number; minFan
         url={url}
         text={`${fanName(club.name)} fans: we need ${short} more playing iKnowBall this week to make the fanbase table.`}
         label="Bring your mates"
-        tone="teal"
       />
     </section>
   );

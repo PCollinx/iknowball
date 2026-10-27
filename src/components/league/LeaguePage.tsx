@@ -194,7 +194,6 @@ export function Invite({ league, kit, members, max }: { league: League; kit: Kit
           url={url}
           text={`Join my league "${league.name}" on iKnowBall with the code ${league.invite_code}. Best 5 Dailies plus best 3 Clash sprints a week, out of ${WEEK_MAX}.`}
           label="Send the invite"
-          tone="teal"
         />
       </div>
     </section>

@@ -51,8 +51,9 @@ async function ClashScreen({ params, searchParams }: { params: Params; searchPar
             No such <span className="text-royal">challenge</span>
           </h1>
           <p className="mt-3 text-lg">That link doesn&apos;t match a sprint. Check it, or start your own.</p>
-          <Link href="/clash" className="mt-5 block bg-royal sash p-3.5 text-center font-display text-[28px] text-white uppercase">
-            New sprint
+          <Link href="/clash" className="btn-teal btn-press mt-5 flex w-full items-center justify-between px-[18px] py-3.5 font-display text-[28px] uppercase">
+            <span>New sprint</span>
+            <span aria-hidden="true">→</span>
           </Link>
         </main>
       );

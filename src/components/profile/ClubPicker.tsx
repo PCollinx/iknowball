@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { chooseClub } from "@/app/(site)/profile/actions";
+import { chooseClub, type FormState } from "@/app/(site)/profile/actions";
 import { SubmitButton } from "@/components/daily/SubmitButton";
 import { ShirtBack } from "@/components/daily/ShirtBack";
 import { kitOf, type Club } from "@/lib/profile/club";
@@ -14,12 +14,18 @@ type Props = {
   mode: "prompt" | "change";
   /** A few clubs shown first, with "All clubs" opening the rest (full time, 22 Oct 2026). */
   featured?: Club[];
+  /** Called with the picked club's name ("Neutral" for none) once it's saved. */
+  onSaved?: (name: string) => void;
 };
 
 /** A rack of club shirts to pick from, plus neutral. With `featured`, only
  * those show until "All clubs" is tapped. */
-export function ClubPicker({ clubs, current, mode, featured = [] }: Props) {
-  const [state, action] = useActionState(chooseClub, null);
+export function ClubPicker({ clubs, current, mode, featured = [], onSaved }: Props) {
+  const [state, action] = useActionState(async (prev: FormState, data: FormData) => {
+    const result = await chooseClub(prev, data);
+    if (result && "ok" in result) onSaved?.(clubs.find((c) => String(c.id) === data.get("club"))?.name ?? "Neutral");
+    return result;
+  }, null);
   const [picked, setPicked] = useState(current ? String(current.id) : mode === "change" ? "neutral" : "");
   const [all, setAll] = useState(featured.length === 0);
   const premier = clubs.filter((c) => c.in_premier_league);
@@ -52,8 +58,8 @@ export function ClubPicker({ clubs, current, mode, featured = [] }: Props) {
       <p role="alert" className={`min-h-[24px] pt-1 font-semibold ${state && "error" in state ? "text-red-card" : "text-teal"}`}>
         {state && ("error" in state ? state.error : state.ok)}
       </p>
-      <SubmitButton pendingText="Saving…" tone={mode === "prompt" ? "white" : "royal"}>
-        {mode === "prompt" ? "That's my club" : "Switch club"}
+      <SubmitButton pendingText="Saving…" tone={mode === "prompt" ? "white" : "teal"}>
+        {mode === "prompt" || !current ? "That's my club" : "Switch club"}
       </SubmitButton>
       {mode === "prompt" && (
         <button type="submit" name="intent" value="skip" formNoValidate className="mt-2 w-full py-2.5 font-semibold underline underline-offset-4">
