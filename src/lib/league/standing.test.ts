@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dayIndex, formGuide, gapLine, splitPodium } from "./standing";
+import { dayIndex, formGuide, gapLine, splitPodium, teamOfTheWeek, yourSpot } from "./standing";
 
 const row = (name: string, points: number, mine = false) => ({ name, points, mine });
 
@@ -49,5 +49,32 @@ describe("formGuide", () => {
     const days = [55, 58, 60, 52, 49, 47, null];
     expect(formGuide(days, [0, 1, 2, 3, 4], 5).map((d) => d.kind)).toEqual(["counts", "counts", "counts", "counts", "counts", "dropped", "ahead"]);
     expect(formGuide([null, 70, null, null, null, null, null], [1], 2).map((d) => d.kind)).toEqual(["missed", "counts", "missed", "ahead", "ahead", "ahead", "ahead"]);
+  });
+});
+
+describe("teamOfTheWeek", () => {
+  it("fills the team, then the bench, leaving players on 0 out", () => {
+    const rows = Array.from({ length: 22 }, (_, i) => row(`p${i + 1}`, 100 - i));
+    const { xi, bench } = teamOfTheWeek(rows);
+    expect(xi.map((r) => r?.name)).toEqual(["p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9", "p10", "p11"]);
+    expect(bench.map((r) => r.name)).toEqual(["p12", "p13", "p14", "p15", "p16", "p17", "p18", "p19", "p20"]);
+  });
+  it("leaves empty places when few have played", () => {
+    const { xi, bench } = teamOfTheWeek([row("a", 9), row("b", 0)]);
+    expect(xi.filter(Boolean)).toHaveLength(1);
+    expect(xi).toHaveLength(11);
+    expect(bench).toEqual([]);
+  });
+});
+
+describe("yourSpot", () => {
+  it("knows the team, the bench and the rest", () => {
+    expect(yourSpot({ position: 4, points: 240 }, 224)).toEqual({ kind: "xi", gap: null });
+    expect(yourSpot({ position: 15, points: 212 }, 224)).toEqual({ kind: "bench", gap: 13 });
+    expect(yourSpot({ position: 214, points: 96 }, 224)).toEqual({ kind: "below", gap: 129 });
+  });
+  it("waits for you to play", () => {
+    expect(yourSpot(null, 224).kind).toBe("idle");
+    expect(yourSpot({ position: 30, points: 0 }, 224).kind).toBe("idle");
   });
 });

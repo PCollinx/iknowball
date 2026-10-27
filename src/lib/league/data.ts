@@ -228,20 +228,26 @@ export async function getHub(): Promise<Hub> {
 }
 
 /** Everyone who played this week: the top of the table plus your own row. */
-export async function getGlobalTable(): Promise<{ week: Week; top: TableLine[]; mine: TableLine | null; players: number }> {
+export async function getGlobalTable(): Promise<{ week: Week; top: TableLine[]; mine: TableLine | null; myClub: Club | null; players: number }> {
   const [me, week] = [await currentUserId(), currentWeek()];
   const { rows } = await everyoneWeek(week);
   const myRow = rows.find((r) => r.userId === me) ?? null;
   const shown = rows.slice(0, GLOBAL_TOP);
-  const people = await players([...new Set([...shown, ...(myRow ? [myRow] : [])].map((r) => r.userId))]);
+  const people = await players([...new Set([...shown.map((r) => r.userId), ...(me ? [me] : [])])]);
   const top = withPlayers(shown, people, me);
-  return { week, top, mine: myRow && myRow.position > GLOBAL_TOP ? withPlayers([myRow], people, me)[0] : null, players: rows.length };
+  return {
+    week,
+    top,
+    mine: myRow && myRow.position > GLOBAL_TOP ? withPlayers([myRow], people, me)[0] : null,
+    myClub: me ? (people.get(me)?.club ?? null) : null,
+    players: rows.length,
+  };
 }
 
 export type FanbaseLine = FanbaseRow & { club: Club; mine: boolean };
 
 /** Clubs ranked by their fans' average week. */
-export async function getFanbaseTable(): Promise<{ week: Week; rows: FanbaseLine[]; myClub: Club | null; minFans: number }> {
+export async function getFanbaseTable(): Promise<{ week: Week; rows: FanbaseLine[]; myClub: Club | null; myClubFans: number; minFans: number }> {
   const [me, week] = [await currentUserId(), currentWeek()];
   const { rows, clubOf } = await everyoneWeek(week);
   const ranked = fanbaseTable(rows.map((r) => ({ points: r.points, clubId: clubOf.get(r.userId) ?? null })), FANBASE_MIN);
@@ -251,6 +257,7 @@ export async function getFanbaseTable(): Promise<{ week: Week; rows: FanbaseLine
     week,
     rows: ranked.map((r) => ({ ...r, club: clubs.get(r.clubId)!, mine: r.clubId === myClubId })).filter((r) => r.club),
     myClub: myClubId ? (clubs.get(myClubId) ?? null) : null,
+    myClubFans: myClubId ? rows.filter((r) => clubOf.get(r.userId) === myClubId).length : 0,
     minFans: FANBASE_MIN,
   };
 }

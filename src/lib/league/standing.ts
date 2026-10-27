@@ -41,3 +41,24 @@ export function formGuide(days: (number | null)[], counted: number[], today: num
     return { kind: counted.includes(i) ? "counts" : "dropped", score };
   });
 }
+
+/** Places in the team of the week; the next nine sit on the bench. */
+export const XI = 11;
+export const BENCH = 9;
+
+/** Everyone's top 20 as a team: 11 on the pitch (empty places stay null) and the bench. Rows best first. */
+export function teamOfTheWeek<T extends { points: number }>(rows: T[]): { xi: (T | null)[]; bench: T[] } {
+  const played = rows.filter((r) => r.points > 0);
+  return {
+    xi: Array.from({ length: XI }, (_, i) => played[i] ?? null),
+    bench: played.slice(XI, XI + BENCH),
+  };
+}
+
+/** Where you stand against the team: in it, on the bench, further down, or not played. `eleventh` is 11th's points, if the team is full. */
+export function yourSpot(mine: { position: number; points: number } | null, eleventh: number | null) {
+  if (!mine || mine.points === 0) return { kind: "idle" as const, gap: null };
+  if (mine.position <= XI) return { kind: "xi" as const, gap: null };
+  const gap = eleventh === null ? null : Math.max(1, eleventh - mine.points + 1);
+  return { kind: mine.position <= XI + BENCH ? ("bench" as const) : ("below" as const), gap };
+}
