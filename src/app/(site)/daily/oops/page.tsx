@@ -1,5 +1,5 @@
-import { breakOnPurpose } from "@/lib/errors-preview";
+import { BreakOnPurpose } from "@/lib/errors-preview";
 
-export default async function DailyOops() {
-  return breakOnPurpose("the Daily");
+export default function DailyOops() {
+  return <BreakOnPurpose where="the Daily" />;
 }

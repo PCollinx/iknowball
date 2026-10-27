@@ -1,5 +1,5 @@
-import { breakOnPurpose } from "@/lib/errors-preview";
+import { BreakOnPurpose } from "@/lib/errors-preview";
 
-export default async function Oops() {
-  return breakOnPurpose("a page");
+export default function Oops() {
+  return <BreakOnPurpose where="a page" />;
 }
