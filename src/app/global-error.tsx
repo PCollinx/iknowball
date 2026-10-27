@@ -1,21 +1,17 @@
 "use client";
 
-import { useEffect } from "react";
+import { ErrorScreen } from "@/components/errors/ErrorScreen";
+import { fontVariables } from "./fonts";
+import "./globals.css";
 
-// Last-resort error screen when the root layout itself fails. Reports to Sentry.
-export default function GlobalError({ error }: { error: Error & { digest?: string } }) {
-  useEffect(() => {
-    // Imported here, not at the top, so Sentry stays out of the first-load bundle.
-    import("@sentry/nextjs").then((Sentry) => Sentry.captureException(error));
-  }, [error]);
-
+// Last-resort error screen when the root layout itself fails, so there's no
+// navbar or footer: the VAR's technical fault on its own. Reports to Sentry.
+export default function GlobalError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
   return (
-    <html lang="en">
-      <body>
-        <main style={{ maxWidth: 420, margin: "20vh auto", padding: "0 16px", fontFamily: "system-ui, sans-serif" }}>
-          <h1>Something went wrong</h1>
-          <p>We&apos;ve been told about it. Please refresh and try again.</p>
-        </main>
+    <html lang="en" className={fontVariables}>
+      <body className="flex min-h-dvh flex-col antialiased">
+        <title>Something went off · iKnowBall</title>
+        <ErrorScreen error={error} retry={retry} line="iKnowBall didn't load." safe="Your scores are safe on our side." hardLink />
       </body>
     </html>
   );
