@@ -31,11 +31,9 @@ type Props = {
   rating: number | null;
   /** This is your best sprint of its matchweek. */
   weekBest: boolean;
-  /** Test sites: the sample state on show, so the card draws the same one. */
-  preview?: string | null;
 };
 
-export function ClashFullTime({ code, statLabel, setSize, right, kicks, bestRun, table, siteUrl, rating, weekBest, preview = null }: Props) {
+export function ClashFullTime({ code, statLabel, setSize, right, kicks, bestRun, table, siteUrl, rating, weekBest }: Props) {
   const mine = table.find((r) => r.mine) ?? null;
   const setter = table.find((r) => r.setter && !r.mine) ?? null;
   const outcome = setter ? outcomeOf(right, setter.right) : null;
@@ -104,7 +102,7 @@ export function ClashFullTime({ code, statLabel, setSize, right, kicks, bestRun,
           <div className="grid gap-3">
             <ShareButtons
               text={`I got ${right} right in 60 seconds of Higher or Lower on iKnowBall. Beat that: ${url}`}
-              image={{ url: `/clash/${code}/card${preview ? `?preview=${preview}` : ""}`, name: `iknowball-clash-${code}.png` }}
+              image={{ url: `/clash/${code}/card`, name: `iknowball-clash-${code}.png` }}
               className="mt-0"
             />
             <form action={startSprint}>

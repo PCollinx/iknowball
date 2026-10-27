@@ -9,8 +9,6 @@ import { Sprint } from "@/components/clash/Sprint";
 import type { Kit } from "@/components/daily/ShirtBack";
 import { getClashView, isWeekBest } from "@/lib/clash/data";
 import { STATS } from "@/lib/clash/rules";
-import { isPreview, previewView } from "@/lib/clash/sample";
-import { isTestSite } from "@/lib/daily/sample";
 import { publicEnv } from "@/lib/env";
 import { kitOf } from "@/lib/profile/club";
 import { clubsByIds, getRating } from "@/lib/profile/data";
@@ -23,24 +21,20 @@ export const metadata: Metadata = {
 };
 
 type Params = Promise<{ code: string }>;
-type Search = Promise<{ preview?: string }>;
 
-export default function ClashSetPage({ params, searchParams }: { params: Params; searchParams: Search }) {
+export default function ClashSetPage({ params }: { params: Params }) {
   return (
     <Suspense fallback={<Loading />}>
-      <ClashScreen params={params} searchParams={searchParams} />
+      <ClashScreen params={params} />
     </Suspense>
   );
 }
 
 // Reads the session and the clock, so it renders per request.
-async function ClashScreen({ params, searchParams }: { params: Params; searchParams: Search }) {
+async function ClashScreen({ params }: { params: Params }) {
   await connection();
   const { code } = await params;
-  // Test sites only: ?preview=solo|challenge|level|lost shows full time with sample data.
-  const { preview } = await searchParams;
-  const sample = isTestSite() && isPreview(preview) ? preview : null;
-  const view = sample ? previewView(sample, code.toUpperCase()) : await getClashView(code.toUpperCase());
+  const view = await getClashView(code.toUpperCase());
 
   switch (view.kind) {
     case "missing":
@@ -92,7 +86,7 @@ async function ClashScreen({ params, searchParams }: { params: Params; searchPar
       );
     }
     case "fulltime": {
-      const [rating, weekBest] = sample ? [7.4, sample === "solo"] : await Promise.all([getRating(view.run.user_id), isWeekBest(view.run)]);
+      const [rating, weekBest] = await Promise.all([getRating(view.run.user_id), isWeekBest(view.run)]);
       return (
         <ClashFullTime
           code={view.set.code}
@@ -105,7 +99,6 @@ async function ClashScreen({ params, searchParams }: { params: Params; searchPar
           siteUrl={publicEnv().NEXT_PUBLIC_SITE_URL}
           rating={rating}
           weekBest={weekBest}
-          preview={sample}
         />
       );
     }
