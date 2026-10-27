@@ -34,7 +34,7 @@ export function UsernameForm({ current }: { current: string | null }) {
           required
           className={input}
         />
-        <button type="submit" disabled={pending} className={button}>
+        <button type="submit" disabled={pending} className="btn-teal btn-press px-4 font-display text-xl uppercase disabled:translate-0 disabled:bg-track disabled:shadow-none">
           {pending ? "…" : "Save"}
         </button>
       </div>
@@ -43,18 +43,21 @@ export function UsernameForm({ current }: { current: string | null }) {
   );
 }
 
-/** Email link: saves a guest's account in place, or signs in. A full-width
+/** Email link: saves a guest's account in place, or signs in. A white sticker
  * button like Google's that opens the address box; works without JavaScript. */
 export function EmailForm({ mode }: { mode: "save" | "signin" }) {
   const [state, action, pending] = useActionState(mode === "save" ? saveWithEmail : signInWithEmail, null);
   const label = mode === "save" ? "Save with email" : "Sign in with email";
   const sent = Boolean(state && "ok" in state);
   return (
-    <details className="group border-2 border-navy open:p-3">
-      <summary className="cursor-pointer list-none p-3 text-center font-display text-2xl uppercase group-open:p-0 group-open:pb-1 group-open:text-left group-open:text-lg [&::-webkit-details-marker]:hidden">
+    <details className="group">
+      <summary className="btn-white btn-press flex cursor-pointer list-none items-center justify-between px-4 py-3 font-display text-[22px] uppercase [&::-webkit-details-marker]:hidden">
         {label}
+        <span aria-hidden="true" className="transition-transform group-open:rotate-90">
+          →
+        </span>
       </summary>
-      <form action={action}>
+      <form action={action} className="mt-3 border-2 border-navy p-3">
         <label className="label" htmlFor={`email-${mode}`}>
           Your email
         </label>
