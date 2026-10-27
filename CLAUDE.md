@@ -107,15 +107,17 @@ Replanned 16 Oct 2026, updated 19 Oct (plan doc: https://claude.ai/code/artifact
 
 - Done by 19 Oct: setup; The Daily, the maker and Wikidata auto-drafts; accounts, profile shirt and favourite club; Daily polish (share-card PNGs, day scores out of 100, today's table, Rapid and Era picks); rating out of 10; waitlist page (PR #31, held until Nov 1); Clash solo sprint, challenge links and share card; Highlightly fixture sync; the League (mini-leagues, Everyone and fanbase tables); sign-in emails through Resend on dev and live.
 - Left before launch: a support page for the footer's "Support iKnowBall" (`SUPPORT_URL` in `src/lib/site.ts`, shown as "Soon" until set); the installable web app (PWA, on hold by Collins's choice); Collins testing and refining from 20 Oct; waitlist public Nov 1; switch Vercel to Pro.
-- Checkpoints still stand as tests: Nov 8 (Collins and three friends trade Clash challenge links), Nov 15 (a real league plays a week of Dailies and the table is right).
-- Nov 16 to 25: closed beta. **Launch Fri 27 Nov 2026** with The Daily, Clash and The League (fallback 4 Dec). Demo video recorded in the beta, published Thu 26 Nov on X and WhatsApp, pinned on the waitlist page.
+- **Replanned 27 Oct 2026 (Collins): launch moved up a week, beta moved to 1 Nov.** Fri 20 Nov was picked over the first week of November because the international break (no Premier League from 9 to 20 Nov; Round 10 is 6 to 8 Nov, Round 11 starts Sat 21 Nov) would have hit the first two weeks after launch, when the daily habit forms. The Daily still runs in a break (drafts pick any good unused club pair when there's no fixture).
+- Nov 1 to 19: closed beta, by invite. Checkpoints as tests: Nov 8 (Collins and three friends trade Clash challenge links), Nov 9 to 15 (a real league plays a full week of Dailies during the break and the table is right).
+- **Launch Fri 20 Nov 2026** with The Daily, Clash and The League, the day before Round 11, then Premier League every weekend into December (fallback Fri 27 Nov). Demo video recorded in the beta, published Thu 19 Nov on X and WhatsApp, pinned on the waitlist page.
+- **Waitlist, option A** (Collins, 27 Oct 2026): from Nov 1 until launch the public sees the waitlist at playiknowball.com instead of the games; beta testers get in by invite. Built fresh as step 12 of the redesign plan (PR #31 is out of date: it predates the `(site)` frame; reuse its action, checks, honeypot and queue number, then close it), behind a date switch so it can merge before Nov 1.
 - **Team of the week is part of our PR** (Collins, 27 Oct 2026): once we're public, the week's team of the week card (`/league/everyone/card`) goes out in our posts.
-- Audience warm-up on X: Oct 19 to 31 teaser quizzes as shirt-back images, no name (`/maker/teaser`); Nov 1 reveal the name and waitlist; Nov 16 to 25 beta invites to the most engaged followers; Nov 26 demo video. Never post a question from an upcoming Daily.
+- Audience warm-up on X: Oct 19 to 31 teaser quizzes as shirt-back images, no name (`/maker/teaser`); Nov 1 reveal the name and waitlist, and beta invites to the most engaged followers start; Nov 19 demo video; Nov 20 launch. Never post a question from an upcoming Daily.
 - Rate mode: 18 Dec 2026. Native decision: 1 Mar 2027. Android: July 2027.
 
 ## Where things stand (19 Oct 2026, evening)
 
-- Open PRs: #37 (profile "This week" adds Clash, `x / 600`) waits on Collins's merge; #31 (waitlist front page) is held until Nov 1, don't merge.
+- Open PRs: #37 (profile "This week" adds Clash, `x / 600`) waits on Collins's merge; #31 (waitlist front page) is out of date and won't be merged: step 12 rebuilds it (see Timeline), then close it.
 - Every migration on `main` is on dev and live as of 19 Oct. New migrations go to dev first, then live after merge (see the `db push` gotcha).
 - Fixture sync runs nightly at 00:30 WAT; the first scheduled run is the night of 19 Oct. Check `api_calls` and `fixtures` the next morning.
 - To check on 21 Oct: whether Wikidata gives Clash enough players. Run this on live; if both pools are over 100, Wikidata is enough, otherwise plan a Clash stat from Highlightly box scores:

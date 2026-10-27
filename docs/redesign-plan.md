@@ -102,8 +102,10 @@ Final privacy copy once Collins has reviewed it (drop the "Draft" tag, add the c
 404 and error screens in the new style.
 
 ### 12. The waitlist (last)
-PR #31, held until 1 Nov: rebase it onto the new home and frame, then redesign it in the same style. The last
-redesign we take on (Collins, 21 Oct 2026).
+Goes public on 1 Nov (beta starts the same day; launch Fri 20 Nov). Option A (Collins, 27 Oct 2026): until
+launch the public sees the waitlist at playiknowball.com instead of the games, and beta testers get in by
+invite. Built fresh in the new frame and style, reusing PR #31's sign-up action, checks, honeypot and queue
+number, behind a date switch; then close #31. The last redesign we take on (Collins, 21 Oct 2026).
 
 ## Also on the list
 
