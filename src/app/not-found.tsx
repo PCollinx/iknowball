@@ -22,8 +22,9 @@ export default function NotFound() {
           Off<span className="text-royal">side</span>
         </h1>
         <p className="mt-4 text-lg">That page doesn&apos;t exist, or it was in an offside position when we looked. Back onside:</p>
-        <Link href="/" className="mt-6 block bg-royal sash p-3.5 text-center font-display text-[28px] text-white uppercase">
-          Back to matchday
+        <Link href="/" className="btn-teal btn-press mt-6 flex w-full items-center justify-between px-[18px] py-3.5 font-display text-[28px] uppercase">
+          <span>Back to matchday</span>
+          <span aria-hidden="true">→</span>
         </Link>
       </main>
       <SiteFooter />

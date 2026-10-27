@@ -58,7 +58,7 @@ export function ClubPicker({ clubs, current, mode, featured = [], onSaved }: Pro
       <p role="alert" className={`min-h-[24px] pt-1 font-semibold ${state && "error" in state ? "text-red-card" : "text-teal"}`}>
         {state && ("error" in state ? state.error : state.ok)}
       </p>
-      <SubmitButton pendingText="Saving…" tone={mode === "prompt" ? "white" : "royal"}>
+      <SubmitButton pendingText="Saving…" tone={mode === "prompt" ? "white" : "teal"}>
         {mode === "prompt" || !current ? "That's my club" : "Switch club"}
       </SubmitButton>
       {mode === "prompt" && (

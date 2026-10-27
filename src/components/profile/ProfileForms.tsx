@@ -12,7 +12,6 @@ function Message({ state }: { state: FormState }) {
 }
 
 const input = "min-w-0 flex-1 border-2 border-navy p-3 text-lg";
-const button = "bg-royal px-4 font-display text-xl text-white uppercase disabled:bg-track disabled:text-navy/60";
 
 export function UsernameForm({ current }: { current: string | null }) {
   const [state, action, pending] = useActionState(setUsername, null);
@@ -70,8 +69,13 @@ export function EmailForm({ mode }: { mode: "save" | "signin" }) {
           placeholder="you@example.com"
           className="mt-1.5 block w-full border-2 border-navy p-3 text-lg"
         />
-        <button type="submit" disabled={pending} className={`mt-2 w-full py-3 ${button}`}>
-          {pending ? "Sending…" : sent ? "Send again" : "Email me a sign-in link"}
+        <button
+          type="submit"
+          disabled={pending}
+          className="btn-teal btn-press mt-3 flex w-full items-center justify-between px-4 py-3 font-display text-[22px] uppercase disabled:translate-0 disabled:bg-track disabled:shadow-none"
+        >
+          <span>{pending ? "Sending…" : sent ? "Send again" : "Email me a sign-in link"}</span>
+          <span aria-hidden="true">→</span>
         </button>
         <p className="mt-1.5 text-sm text-navy/70">No password. Tap the link we send and you&apos;re in.</p>
         <Message state={state} />

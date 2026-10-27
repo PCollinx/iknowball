@@ -287,7 +287,6 @@ function Ticket({ code, url, setSize, right, table, challenge }: { code: string;
             url={url}
             text={`Think you know ball? Beat ${beat.right} in 60 seconds of Higher or Lower on iKnowBall.`}
             label={challenge ? "Pass it on" : "Send it"}
-            tone="teal"
             code={code}
           />
         </div>

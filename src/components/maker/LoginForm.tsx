@@ -20,7 +20,7 @@ export function LoginForm() {
       <p role="alert" className="min-h-[22px] font-semibold text-red-card">
         {state?.error}
       </p>
-      <SubmitButton pendingText="Checking…">Sign in</SubmitButton>
+      <SubmitButton pendingText="Checking…" tone="teal">Sign in</SubmitButton>
     </form>
   );
 }

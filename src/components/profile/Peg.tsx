@@ -13,12 +13,11 @@ import { RatingBadge } from "./RatingBadge";
 // your peg, the stats are four stickers, the settings sections under double rules.
 
 /** The rail and the peg, with the shirt (or an empty one) hanging from it. */
-function Rail({ tag, children }: { tag?: string; children: React.ReactNode }) {
+function Rail({ children }: { children: React.ReactNode }) {
   return (
     <section className="relative mt-4 border-2 border-navy bg-mist pt-[30px] pb-[18px]">
       <span aria-hidden="true" className="absolute inset-x-0 top-3.5 h-2.5 bg-navy" />
       <span aria-hidden="true" className="absolute top-2 left-1/2 size-[22px] -translate-x-1/2 rounded-full border-[3px] border-navy bg-track" />
-      {tag && <span className="absolute top-[34px] left-3 max-w-[40%] truncate bg-navy px-2.5 py-1 font-display text-[15px] text-white uppercase">{tag}</span>}
       {children}
     </section>
   );
@@ -27,7 +26,7 @@ function Rail({ tag, children }: { tag?: string; children: React.ReactNode }) {
 export function Peg({ view }: { view: ProfileView }) {
   const name = view.username ?? "Guest";
   return (
-    <Rail tag={`Peg ${name.slice(0, 10)}`}>
+    <Rail>
       <div className="relative mx-auto mt-3.5 w-[72%] max-w-[300px] -rotate-[1.5deg] @container lg:w-[70%]">
         <ShirtBack kit={kitOf(view.club)} lettering="tag" name={name} num={view.tier ?? "Unplaced"} />
         <RatingBadge rating={view.rating} className="absolute -top-1.5 -right-2.5 w-[24cqw] border-[1cqw] text-[11cqw]" />
