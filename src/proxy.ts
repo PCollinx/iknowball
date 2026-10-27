@@ -24,6 +24,16 @@ export async function proxy(request: NextRequest) {
   return response;
 }
 
+// Server actions skip this: on Vercel the proxy is a hop of its own, measured
+// at about half a second from Nigeria (27 Oct 2026), paid on every answer. An
+// action refreshes the session itself if it has to (it can set cookies), so
+// skipping it is safe. Page requests still go through, prefetches included:
+// a page can't save cookies, so a refresh there would lose the new token.
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|api/health|api/jobs|ingest|monitoring|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
+  matcher: [
+    {
+      source: "/((?!_next/static|_next/image|favicon.ico|api/health|api/jobs|ingest|monitoring|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+      missing: [{ type: "header", key: "next-action" }],
+    },
+  ],
 };
