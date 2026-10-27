@@ -126,6 +126,6 @@ redesign we take on (Collins, 21 Oct 2026).
 - [x] 8. A league (PR #48, built with step 7)
 - [x] 9. Everyone and fans (PR #49)
 - [x] 10. Your shirt (PR #50)
-- [ ] 11. Privacy, 404 and errors
+- [x] 11. Privacy, 404 and errors (PR #51)
 - [ ] 12. The maker (optional)
 - [ ] 13. The waitlist
