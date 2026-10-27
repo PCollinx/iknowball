@@ -51,7 +51,7 @@ One step, before any redesign, so every later screen starts inside the same fram
   a full navbar and footer invite a mis-tap that throws away a timed attempt, so the navbar shrinks to the
   logo (not a link) and a "Live" tag, the round keeps its own clock, and the footer hides, until full time.
 - **Add a 404 page** in the same frame (there isn't one yet), and put the Daily's error screen inside it.
-- **Out of scope:** the maker (`/maker/*`) keeps its own admin bar.
+- **Out of scope:** the maker (`/maker/*`) keeps its own admin bar and look; its redesign was dropped (Collins, 27 Oct 2026).
 
 Screens covered: `/clash`, `/clash/[code]`, `/daily`, `/daily/table`, `/league`, `/league/[code]`,
 `/league/everyone`, `/league/fans`, `/profile`, `/privacy`, home, 404, errors.
@@ -101,10 +101,7 @@ rule), name, email or Google save, sign out. Fix the missing "Saved" after picki
 Final privacy copy once Collins has reviewed it (drop the "Draft" tag, add the contact address), and the
 404 and error screens in the new style.
 
-### 12. The maker (optional, admin only)
-`/maker`, `/maker/day`, `/maker/teaser`, `/maker/login`. Only if time allows before launch.
-
-### 13. The waitlist (last)
+### 12. The waitlist (last)
 PR #31, held until 1 Nov: rebase it onto the new home and frame, then redesign it in the same style. The last
 redesign we take on (Collins, 21 Oct 2026).
 
@@ -127,5 +124,4 @@ redesign we take on (Collins, 21 Oct 2026).
 - [x] 9. Everyone and fans (PR #49)
 - [x] 10. Your shirt (PR #50)
 - [x] 11. Privacy, 404 and errors (PR #51)
-- [ ] 12. The maker (optional)
-- [ ] 13. The waitlist
+- [ ] 12. The waitlist
