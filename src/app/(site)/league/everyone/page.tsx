@@ -3,9 +3,11 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { isTestSite } from "@/lib/daily/sample";
+import { ShareButtons } from "@/components/daily/ShareButtons";
 import { LeagueLoading, LeagueMasthead } from "@/components/league/Masthead";
 import { Bench, RankToggle, TeamOfTheWeek, YourSpot } from "@/components/league/Ranks";
 import { weekLabel } from "@/components/league/format";
+import { publicEnv } from "@/lib/env";
 import { getGlobalTable } from "@/lib/league/data";
 import { isEveryonePreview, previewEveryone } from "@/lib/league/sample";
 import { dayIndex, teamOfTheWeek, XI } from "@/lib/league/standing";
@@ -30,7 +32,8 @@ async function Everyone({ searchParams }: Pick<PageProps<"/league/everyone">, "s
   await connection();
   // Test sites only: ?preview= shows sample data (src/lib/league/sample.ts).
   const preview = (await searchParams).preview;
-  const { week, top, mine, myClub, players } = await (isTestSite() && isEveryonePreview(preview) ? previewEveryone(preview) : getGlobalTable());
+  const sample = isTestSite() && isEveryonePreview(preview) ? preview : null;
+  const { week, top, mine, myClub, players } = await (sample ? previewEveryone(sample) : getGlobalTable());
   const { xi, bench } = teamOfTheWeek(top);
   const me = mine ?? top.find((r) => r.mine) ?? null;
   const eleventh = xi[XI - 1]?.points ?? null;
@@ -59,6 +62,13 @@ async function Everyone({ searchParams }: Pick<PageProps<"/league/everyone">, "s
           </div>
           <Bench rows={bench} />
           <YourSpot mine={me} club={myClub} eleventh={xi.every(Boolean) ? eleventh : null} players={players} />
+          {xi[0] && (
+            <ShareButtons
+              text={`This week's team of the week on iKnowBall. Think you know ball? Make the XI: ${publicEnv().NEXT_PUBLIC_SITE_URL.replace(/\/$/, "")}/league/everyone`}
+              image={{ url: `/league/everyone/card${sample ? `?preview=${sample}` : ""}`, name: "iknowball-team-of-the-week.png" }}
+              className="mt-0"
+            />
+          )}
           {!me?.points && (
             <Link href="/daily" className="btn-navy btn-press justify-self-start px-4 py-2.5 font-display text-[22px] leading-none uppercase">
               Play today&apos;s Daily →

@@ -367,3 +367,17 @@ export async function getHomeBoard(me: string | null): Promise<{ tabs: BoardTab[
     ],
   };
 }
+
+/** This week's Premier League matchweek (the highest round with a fixture in it), or null in a week with none. */
+export async function weekRound(week: Week): Promise<number | null> {
+  const { data, error } = await createAdminClient()
+    .from("fixtures")
+    .select("pl_round")
+    .gte("kickoff_at", gameDateClosesAt(addDays(week.startsOn, -1)).toISOString())
+    .lt("kickoff_at", gameDateClosesAt(week.endsOn).toISOString())
+    .not("pl_round", "is", null)
+    .order("pl_round", { ascending: false })
+    .limit(1);
+  if (error) throw error;
+  return data?.[0]?.pl_round ?? null;
+}
