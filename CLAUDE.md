@@ -109,7 +109,7 @@ Project memory for Claude Code, carried over from the Claude project where the p
 Replanned 16 Oct 2026, updated 19 Oct (plan doc: https://claude.ai/code/artifact/ddd3e7d2-6471-4dfa-845b-6b90ef603740). The build is about three weeks ahead:
 
 - Done by 19 Oct: setup; The Daily, the maker and Wikidata auto-drafts; accounts, profile shirt and favourite club; Daily polish (share-card PNGs, day scores out of 100, today's table, Rapid and Era picks); rating out of 10; waitlist page (PR #31, held until Nov 1); Clash solo sprint, challenge links and share card; Highlightly fixture sync; the League (mini-leagues, Everyone and fanbase tables); sign-in emails through Resend on dev and live.
-- Left before launch: a support page for the footer's "Support iKnowBall" (`SUPPORT_URL` in `src/lib/site.ts`, shown as "Soon" until set); the installable web app (PWA, on hold by Collins's choice); Collins testing and refining from 20 Oct; waitlist public Nov 1; switch Vercel to Pro.
+- Left before launch: the installable web app (PWA, on hold by Collins's choice); Collins testing and refining from 20 Oct; waitlist public Nov 1. The footer's "Support iKnowBall" (`SUPPORT_URL` in `src/lib/site.ts`) stays "Soon" at launch (see Hosting).
 - Checkpoints still stand as tests: Nov 8 (Collins and three friends trade Clash challenge links), Nov 15 (a real league plays a week of Dailies and the table is right).
 - Nov 16 to 25: closed beta. **Launch Fri 27 Nov 2026** with The Daily, Clash and The League (fallback 4 Dec). Demo video recorded in the beta, published Thu 26 Nov on X and WhatsApp, pinned on the waitlist page.
 - **Team of the week is part of our PR** (Collins, 27 Oct 2026): once we're public, the week's team of the week card (`/league/everyone/card`) goes out in our posts.
@@ -149,4 +149,4 @@ Replanned 16 Oct 2026, updated 19 Oct (plan doc: https://claude.ai/code/artifact
 ## Open items
 
 - Whether to buy iknowball.com.
-- Switch Vercel to Pro ($20/mo) before launch: Hobby is non-commercial only.
+- **Hosting** (Collins, 27 Oct 2026): launch on Vercel Hobby, not Pro. Hobby allows only non-commercial use (no ads, payments or donations), so nothing on the site takes money: `SUPPORT_URL` stays unset ("Soon"). Switch to Pro ($20/mo) the day a support link, ads or a sponsor goes live. If we leave Vercel after launch, the pick is Cloudflare Workers Paid ($5/mo; the free plan's 10 ms CPU and 3 MB cap are too tight for our pages and PNG cards), moved after launch, never before. Netlify (site pauses when free credits run out), Render (sleeps, no cron), Railway ($1 credit) and Fly.io (no free tier) were ruled out.
