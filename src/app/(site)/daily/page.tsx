@@ -91,6 +91,9 @@ async function DailyScreen() {
             prompt={view.daily.prompt}
             answerCount={view.daily.answer_count}
             attemptId={view.attemptId}
+            dailyId={view.daily.id}
+            begun={view.begun}
+            limitSeconds={view.daily.time_limit_seconds}
             deadlineAt={view.deadlineAt}
             serverNow={view.serverNow}
             found={view.found}
@@ -110,6 +113,9 @@ async function DailyScreen() {
             title={view.daily.title}
             prompt={view.daily.prompt}
             attemptId={view.attemptId}
+            dailyId={view.daily.id}
+            begun={view.begun}
+            limitSeconds={view.daily.time_limit_seconds}
             deadlineAt={view.deadlineAt}
             serverNow={view.serverNow}
             questions={view.questions}
@@ -128,6 +134,9 @@ async function DailyScreen() {
             partLabel={`Part ${view.daily.part}`}
             prompt={view.daily.prompt}
             attemptId={view.attemptId}
+            dailyId={view.daily.id}
+            begun={view.begun}
+            limitSeconds={view.daily.time_limit_seconds}
             deadlineAt={view.deadlineAt}
             serverNow={view.serverNow}
             items={view.items}

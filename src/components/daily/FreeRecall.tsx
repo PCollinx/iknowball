@@ -1,12 +1,12 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
-import { endPart, submitGuess } from "@/app/(site)/daily/actions";
+import { beginPart, endPart, submitGuess } from "@/app/(site)/daily/actions";
 import { FixtureTitle } from "./FixtureTitle";
 import { GiveUp, Pitch, RoundHead, WhistleCover, type Whistle } from "./InPlay";
 import { ShirtBack, shirtName, type Kit } from "./ShirtBack";
 import { lineup } from "./lineup";
-import { useCountdown } from "./useCountdown";
+import { useRoundClock } from "./useRoundClock";
 import type { Found } from "@/lib/daily/data";
 
 const RIGHT = ["Ball knowledge.", "Correct. Next one.", "Sharp. Keep going.", "You know ball.", "Oya, next."];
@@ -20,8 +20,12 @@ type Props = {
   prompt: string;
   answerCount: number;
   attemptId: number;
+  dailyId: number;
   deadlineAt: string;
   serverNow: number;
+  /** Whether the clock had started when the page rendered. */
+  begun: boolean;
+  limitSeconds: number;
   found: Found[];
   /** The fixture's kit for the answer shirts. */
   kit: Kit | null;
@@ -39,7 +43,14 @@ export function FreeRecall(props: Props) {
   const input = useRef<HTMLInputElement>(null);
 
   const close = () => startClosing(() => endPart(props.attemptId));
-  const left = useCountdown(props.deadlineAt, props.serverNow, close);
+  const { left } = useRoundClock({
+    deadlineAt: props.deadlineAt,
+    serverNow: props.serverNow,
+    begun: props.begun,
+    limitSeconds: props.limitSeconds,
+    begin: () => beginPart(props.attemptId, props.dailyId),
+    onZero: close,
+  });
 
   function guess(formData: FormData) {
     const value = String(formData.get("guess") ?? "").trim();
@@ -48,7 +59,7 @@ export function FreeRecall(props: Props) {
     // Say at once what's being checked, so the box never looks stuck.
     setPending(value);
     startGuess(async () => {
-      const r = await submitGuess(props.attemptId, value);
+      const r = await submitGuess(props.attemptId, props.dailyId, value);
       if (r.status === "correct") {
         setFound((f) => (f.some((x) => x.id === r.id) ? f : [...f, { id: r.id, text: r.text, position: r.position }]));
         setFresh(r.id);

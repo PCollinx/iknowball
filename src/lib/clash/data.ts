@@ -18,6 +18,8 @@ export type RunRow = {
   set_id: number;
   user_id: string;
   started_at: string;
+  /** When the clock started: the sprint on screen. Null between Kick off and then. */
+  begun_at: string | null;
   deadline_at: string;
   submitted_at: string | null;
   answered: number;
@@ -38,6 +40,21 @@ export async function getSet(code: string): Promise<SetRow | null> {
   const { data, error } = await createAdminClient().from("clash_sets").select("id, code, stat, items, created_by").eq("code", code).maybeSingle();
   if (error) throw error;
   return data as SetRow | null;
+}
+
+// A set never changes once made, so each server keeps the ones in play: an
+// answer then costs one database call, not two.
+const setCache = new Map<string, SetRow>();
+
+export async function cachedSet(code: string): Promise<SetRow | null> {
+  const hit = setCache.get(code);
+  if (hit) return hit;
+  const set = await getSet(code);
+  if (set) {
+    if (setCache.size > 200) setCache.clear();
+    setCache.set(code, set);
+  }
+  return set;
 }
 
 export async function getRun(setId: number, userId: string): Promise<RunRow | null> {
@@ -145,7 +162,7 @@ async function setTable(set: SetRow, me: string | null): Promise<Result[]> {
 }
 
 export async function getClashView(code: string): Promise<ClashView> {
-  const [set, userId] = await Promise.all([getSet(code), currentUserId()]);
+  const [set, userId] = await Promise.all([cachedSet(code), currentUserId()]);
   if (!set) return { kind: "missing" };
   const found = userId ? await getRun(set.id, userId) : null;
 

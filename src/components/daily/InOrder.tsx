@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
-import { submitOrder } from "@/app/(site)/daily/actions";
+import { beginPart, submitOrder } from "@/app/(site)/daily/actions";
 import { RoundClock, Steps, type Step, WhistleCover, type Whistle } from "./InPlay";
-import { useCountdown } from "./useCountdown";
+import { useRoundClock } from "./useRoundClock";
 
 type Props = {
   /** Half-time or full time when this part ends. */
@@ -11,8 +11,12 @@ type Props = {
   partLabel: string;
   prompt: string;
   attemptId: number;
+  dailyId: number;
   deadlineAt: string;
   serverNow: number;
+  /** Whether the clock had started when the page rendered. */
+  begun: boolean;
+  limitSeconds: number;
   items: { id: number; text: string }[];
 };
 
@@ -26,7 +30,14 @@ export function InOrder(props: Props) {
 
   // When the clock runs out, whatever is placed is locked in.
   const lock = () => startLock(() => submitOrder(props.attemptId, placedRef.current));
-  const left = useCountdown(props.deadlineAt, props.serverNow, lock);
+  const { left } = useRoundClock({
+    deadlineAt: props.deadlineAt,
+    serverNow: props.serverNow,
+    begun: props.begun,
+    limitSeconds: props.limitSeconds,
+    begin: () => beginPart(props.attemptId, props.dailyId),
+    onZero: lock,
+  });
   const over = left === 0 || locking;
   const byId = new Map(props.items.map((i) => [i.id, i.text]));
   const total = props.items.length;

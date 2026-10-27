@@ -36,6 +36,8 @@ export type AttemptRow = {
   daily_id: number;
   user_id: string;
   started_at: string;
+  /** When the clock started: the round on screen. Null between Kick off and then. */
+  begun_at: string | null;
   deadline_at: string;
   submitted_at: string | null;
   correct_count: number;
@@ -169,15 +171,18 @@ export async function answerPositions(answers: AnswerRow[]): Promise<Map<number,
 }
 
 const KEY_TTL_MS = 10 * 60 * 1000;
-const keyCache = new Map<number, { at: number; answers: AnswerRow[]; keys: AnswerKeys[]; positions: Map<number, Position> }>();
+type AnswerKeyEntry = { at: number; daily: DailyRow | null; answers: AnswerRow[]; keys: AnswerKeys[]; positions: Map<number, Position> };
+const keyCache = new Map<number, AnswerKeyEntry>();
 
-/** The answers and their match keys for a Daily, kept for a few minutes. */
-export async function cachedAnswerKeys(dailyId: number): Promise<{ answers: AnswerRow[]; keys: AnswerKeys[]; positions: Map<number, Position> }> {
+/** A Daily part, its answers and their match keys, kept for a few minutes so
+ * an answer costs one database call. The in-play page loads it, so the
+ * first guess finds it ready. */
+export async function cachedAnswerKeys(dailyId: number): Promise<AnswerKeyEntry> {
   const hit = keyCache.get(dailyId);
   if (hit && Date.now() - hit.at < KEY_TTL_MS) return hit;
-  const answers = await getAnswers(dailyId);
+  const [daily, answers] = await Promise.all([getDaily(dailyId), getAnswers(dailyId)]);
   const [keys, positions] = await Promise.all([getAnswerKeys(answers), answerPositions(answers)]);
-  const entry = { at: Date.now(), answers, keys, positions };
+  const entry = { at: Date.now(), daily, answers, keys, positions };
   if (keyCache.size > 20) keyCache.clear();
   keyCache.set(dailyId, entry);
   return entry;
@@ -284,8 +289,8 @@ export type PickAnswered = { id: number; choice: string; answer: string; right: 
 export type DailyView =
   | { kind: "none" }
   | { kind: "kickoff"; issue: number; daily: DailyRow; parts: DailyRow[]; total: number; before: RecallReveal | null }
-  | { kind: "recall"; issue: number; daily: DailyRow; attemptId: number; deadlineAt: string; serverNow: number; found: Found[] }
-  | { kind: "order"; issue: number; daily: DailyRow; attemptId: number; deadlineAt: string; serverNow: number; items: Shown[] }
+  | { kind: "recall"; issue: number; daily: DailyRow; attemptId: number; deadlineAt: string; serverNow: number; begun: boolean; found: Found[] }
+  | { kind: "order"; issue: number; daily: DailyRow; attemptId: number; deadlineAt: string; serverNow: number; begun: boolean; items: Shown[] }
   | {
       kind: "pick";
       issue: number;
@@ -293,6 +298,7 @@ export type DailyView =
       attemptId: number;
       deadlineAt: string;
       serverNow: number;
+      begun: boolean;
       questions: PickQuestion[];
       answered: PickAnswered[];
     }
@@ -524,7 +530,7 @@ export async function getDailyView(): Promise<DailyView> {
     if (!attempt) return { kind: "kickoff", issue, daily, parts, total: parts.length, before };
     if (!attempt.submitted_at) {
       if (daily.format === "pick" || daily.format === "era") {
-        const [answers, guesses] = await Promise.all([getAnswers(daily.id), pickGuesses(attempt.id)]);
+        const [{ answers }, guesses] = await Promise.all([cachedAnswerKeys(daily.id), pickGuesses(attempt.id)]);
         const byId = new Map(answers.map((a) => [a.id, a]));
         return {
           kind: "pick",
@@ -533,6 +539,7 @@ export async function getDailyView(): Promise<DailyView> {
           attemptId: attempt.id,
           deadlineAt: attempt.deadline_at,
           serverNow,
+          begun: attempt.begun_at !== null,
           questions: byPosition(answers).map((a) => ({ id: a.id, question: a.question, choices: a.choices })),
           answered: guesses.map((g) => {
             const answer = byId.get(g.answer_id)?.answer_text ?? "";
@@ -545,13 +552,13 @@ export async function getDailyView(): Promise<DailyView> {
         const byId = new Map(answers.map((a) => [a.id, a.answer_text]));
         // Positions go to the browser only for answers already found.
         const found = foundIds.map((id) => ({ id, text: byId.get(id) ?? "", position: positions.get(id) ?? null }));
-        return { kind: "recall", issue, daily, attemptId: attempt.id, deadlineAt: attempt.deadline_at, serverNow, found };
+        return { kind: "recall", issue, daily, attemptId: attempt.id, deadlineAt: attempt.deadline_at, serverNow, begun: attempt.begun_at !== null, found };
       }
       const items = seededShuffle(
         (await getAnswers(daily.id)).map((a) => ({ id: a.id, text: a.answer_text })),
         attempt.id,
       );
-      return { kind: "order", issue, daily, attemptId: attempt.id, deadlineAt: attempt.deadline_at, serverNow, items };
+      return { kind: "order", issue, daily, attemptId: attempt.id, deadlineAt: attempt.deadline_at, serverNow, begun: attempt.begun_at !== null, items };
     }
     if (daily.part === 1) before = await recallReveal(daily, attempt);
   }
