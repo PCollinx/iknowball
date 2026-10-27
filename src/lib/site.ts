@@ -10,5 +10,6 @@ export const SOCIAL = {
  * set up a support page. Until then the footer shows the link as "Soon". */
 export const SUPPORT_URL: string | null = null;
 
-/** Where privacy requests go. #todo before launch: set a real address. */
-export const PRIVACY_EMAIL: string | null = null;
+/** Where privacy requests go. Cloudflare Email Routing forwards it to Collins's
+ * inbox; replies go out through Resend's SMTP. */
+export const PRIVACY_EMAIL: string | null = "privacy@playiknowball.com";
