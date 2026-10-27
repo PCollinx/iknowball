@@ -72,6 +72,9 @@ async function ClashScreen({ params }: { params: Params }) {
           <Sprint
             key={view.run.id}
             runId={view.run.id}
+            setCode={view.set.code}
+            at={view.run.answered}
+            begun={view.run.begun_at !== null}
             statLabel={STATS[view.set.stat].label}
             shown={{ name: view.shown.name, clubId: view.shown.club_id, value: view.shown.value }}
             next={view.next}

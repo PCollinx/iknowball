@@ -11,19 +11,23 @@ import {
   getAnswers,
   getAttempt,
   getDaily,
+  GRACE_MS,
   isOpen,
   MAX_GUESSES,
   type Position,
 } from "@/lib/daily/data";
 import { matchAnswer } from "@/lib/daily/match";
 import { clearTodaysAttempts, switchTestDaily } from "@/lib/daily/sample";
-import { partScore } from "@/lib/daily/score";
-import { isPick } from "@/components/daily/formats";
+import { PART_MAX, partScore } from "@/lib/daily/score";
+import type { ClockStart } from "@/components/daily/useRoundClock";
 
 // Every action re-reads the player from the session and the attempt from the
 // database: the browser only ever sends ids and what the player typed.
 
 const id = z.coerce.number().int().positive();
+
+/** A part's clock starts when it's on screen, at most this long after Kick off. */
+const START_ALLOWANCE_SECONDS = 10;
 
 /** Starts the clock on one part of today's Daily. Signs in a guest if needed. */
 export async function startPart(formData: FormData) {
@@ -52,11 +56,27 @@ export async function startPart(formData: FormData) {
       daily_id: daily.id,
       user_id: userId,
       started_at: new Date(now).toISOString(),
-      deadline_at: new Date(now + daily.time_limit_seconds * 1000).toISOString(),
+      // Until the part is on screen (beginPart): the latest its clock can run to.
+      deadline_at: new Date(now + (daily.time_limit_seconds + START_ALLOWANCE_SECONDS) * 1000).toISOString(),
     },
     { onConflict: "daily_id,user_id", ignoreDuplicates: true },
   );
   refresh();
+}
+
+/** Starts a part's clock once the round is on screen. Also loads the answer
+ * key into this server's cache, so the first answer is as quick as the rest. */
+export async function beginPart(attemptId: number, dailyId: number): Promise<ClockStart | null> {
+  const parsed = z.object({ attemptId: id, dailyId: id }).safeParse({ attemptId, dailyId });
+  if (!parsed.success) return null;
+  const userId = await currentUserId();
+  if (!userId) return null;
+  const [{ data, error }] = await Promise.all([
+    createAdminClient().rpc("begin_attempt", { p_attempt: parsed.data.attemptId, p_user: userId, p_allow: START_ALLOWANCE_SECONDS }),
+    cachedAnswerKeys(parsed.data.dailyId),
+  ]);
+  if (error || !data) return null;
+  return { deadlineAt: data as string, serverNow: Date.now() };
 }
 
 export type GuessResult =
@@ -65,99 +85,63 @@ export type GuessResult =
   | { status: "wrong" }
   | { status: "closed" };
 
-/** Checks one Free Recall guess against the answer key. Built for speed, since
- * the player is racing the clock: one read for the attempt, its Daily and its
- * guesses so far, the answer key from the server's cache, and both writes at once. */
-export async function submitGuess(attemptId: number, input: string): Promise<GuessResult> {
-  const parsed = z.object({ attemptId: id, input: z.string().trim().min(1).max(60) }).safeParse({ attemptId, input });
+/** Checks one Free Recall guess. Built for speed, since the player is racing
+ * the clock: the answer key comes from this server's cache, and one database
+ * call checks the attempt is theirs and open, logs the guess and moves the score. */
+export async function submitGuess(attemptId: number, dailyId: number, input: string): Promise<GuessResult> {
+  const parsed = z.object({ attemptId: id, dailyId: id, input: z.string().trim().min(1).max(60) }).safeParse({ attemptId, dailyId, input });
   if (!parsed.success) return { status: "wrong" };
-  const userId = await currentUserId();
-  if (!userId) return { status: "closed" };
+  const [userId, { daily, answers, keys, positions }] = await Promise.all([currentUserId(), cachedAnswerKeys(parsed.data.dailyId)]);
+  if (!userId || !daily) return { status: "closed" };
 
-  const admin = createAdminClient();
-  const { data: row } = await admin
-    .from("attempts")
-    .select("*, dailies!inner(format, part), attempt_guesses(id, answer_id)")
-    .eq("id", parsed.data.attemptId)
-    .eq("user_id", userId)
-    .order("id", { referencedTable: "attempt_guesses" })
-    .maybeSingle();
-  if (!row) return { status: "closed" };
-  const { dailies, attempt_guesses: guesses, ...attempt } = row;
-  if (!isOpen(attempt) || dailies.format !== "free_recall") return { status: "closed" };
-  if (guesses.length >= MAX_GUESSES) return { status: "closed" };
-
-  const { answers, keys, positions } = await cachedAnswerKeys(attempt.daily_id);
-  const found = [...new Set((guesses as { answer_id: number | null }[]).map((g) => g.answer_id).filter((x) => x !== null))];
   const matched = matchAnswer(parsed.data.input, keys);
-  const logGuess = admin.from("attempt_guesses").insert({ attempt_id: attempt.id, raw_input: parsed.data.input, answer_id: matched });
-
-  if (matched === null || found.includes(matched)) {
-    await logGuess;
-    if (matched === null) return { status: "wrong" };
-    return { status: "duplicate", text: answers.find((a) => a.id === matched)!.answer_text };
-  }
-
+  const { data } = await createAdminClient().rpc("daily_guess", {
+    p_attempt: parsed.data.attemptId,
+    p_user: userId,
+    p_daily: daily.id,
+    p_input: parsed.data.input,
+    p_answer: matched,
+    p_answers: answers.length,
+    p_part_max: PART_MAX[daily.part] ?? 0,
+    p_max_guesses: MAX_GUESSES,
+    p_grace_ms: GRACE_MS,
+  });
+  const row = (data as { r_status: string; r_found: number; r_done: boolean }[] | null)?.[0];
+  if (!row || row.r_status === "closed") return { status: "closed" };
+  if (row.r_status === "wrong" || matched === null) return { status: "wrong" };
   const text = answers.find((a) => a.id === matched)!.answer_text;
-  const total = found.length + 1;
-  const done = total >= answers.length;
-  await Promise.all([
-    logGuess,
-    admin
-      .from("attempts")
-      .update({
-        correct_count: total,
-        score: partScore(dailies.part, total, answers.length),
-        ...(done ? { submitted_at: new Date().toISOString() } : {}),
-      })
-      .eq("id", attempt.id),
-  ]);
-  return { status: "correct", id: matched, text, position: positions.get(matched) ?? null, found: total, done };
+  if (row.r_status === "duplicate") return { status: "duplicate", text };
+  return { status: "correct", id: matched, text, position: positions.get(matched) ?? null, found: row.r_found, done: row.r_done };
 }
 
 export type PickResult = { status: "answered"; right: boolean; answer: string; done: boolean } | { status: "closed" };
 
-/** Records one Rapid or Era picks tap. Each question takes one tap, checked here. */
-export async function submitPick(attemptId: number, questionId: number, choice: string): Promise<PickResult> {
-  const parsed = z.object({ attemptId: id, questionId: id, choice: z.string().min(1).max(60) }).safeParse({ attemptId, questionId, choice });
+/** Records one Rapid or Era picks tap. Each question takes one tap, checked here
+ * against the cached answer key; one database call records it. */
+export async function submitPick(attemptId: number, dailyId: number, questionId: number, choice: string): Promise<PickResult> {
+  const parsed = z
+    .object({ attemptId: id, dailyId: id, questionId: id, choice: z.string().min(1).max(60) })
+    .safeParse({ attemptId, dailyId, questionId, choice });
   if (!parsed.success) return { status: "closed" };
-  const userId = await currentUserId();
-  if (!userId) return { status: "closed" };
-
-  const admin = createAdminClient();
-  const { data: row } = await admin
-    .from("attempts")
-    .select("*, dailies!inner(format, part), attempt_guesses(answer_id, raw_input)")
-    .eq("id", parsed.data.attemptId)
-    .eq("user_id", userId)
-    .maybeSingle();
-  if (!row) return { status: "closed" };
-  const { dailies, attempt_guesses: tapped, ...attempt } = row;
-  if (!isOpen(attempt) || !isPick(dailies.format)) return { status: "closed" };
-
-  const { answers } = await cachedAnswerKeys(attempt.daily_id);
+  const [userId, { daily, answers }] = await Promise.all([currentUserId(), cachedAnswerKeys(parsed.data.dailyId)]);
+  if (!userId || !daily) return { status: "closed" };
   const question = answers.find((a) => a.id === parsed.data.questionId);
   if (!question || !question.choices.includes(parsed.data.choice)) return { status: "closed" };
-  const guesses = tapped as { answer_id: number | null; raw_input: string }[];
-  const before = guesses.find((g) => g.answer_id === question.id);
-  // A question already answered keeps its first tap.
-  if (before) return { status: "answered", right: before.raw_input === question.answer_text, answer: question.answer_text, done: false };
 
-  const right = parsed.data.choice === question.answer_text;
-  const correct = guesses.filter((g) => answers.some((a) => a.id === g.answer_id && a.answer_text === g.raw_input)).length + (right ? 1 : 0);
-  const done = guesses.length + 1 >= answers.length;
-  await Promise.all([
-    admin.from("attempt_guesses").insert({ attempt_id: attempt.id, raw_input: parsed.data.choice, answer_id: question.id }),
-    admin
-      .from("attempts")
-      .update({
-        correct_count: correct,
-        score: partScore(dailies.part, correct, answers.length),
-        ...(done ? { submitted_at: new Date().toISOString() } : {}),
-      })
-      .eq("id", attempt.id),
-  ]);
-  return { status: "answered", right, answer: question.answer_text, done };
+  const { data } = await createAdminClient().rpc("daily_pick", {
+    p_attempt: parsed.data.attemptId,
+    p_user: userId,
+    p_daily: daily.id,
+    p_question: question.id,
+    p_choice: parsed.data.choice,
+    p_answers: answers.length,
+    p_part_max: PART_MAX[daily.part] ?? 0,
+    p_grace_ms: GRACE_MS,
+  });
+  const row = (data as { r_status: string; r_choice: string; r_done: boolean }[] | null)?.[0];
+  if (!row || row.r_status === "closed") return { status: "closed" };
+  // A question already answered keeps its first tap.
+  return { status: "answered", right: row.r_choice === question.answer_text, answer: question.answer_text, done: row.r_done };
 }
 
 /** Ends a part early ("give up"), or closes it when the clock hits zero. */

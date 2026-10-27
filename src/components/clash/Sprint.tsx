@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { answerClash, endSprint } from "@/app/(site)/clash/actions";
+import { answerClash, beginSprint, endSprint } from "@/app/(site)/clash/actions";
 import type { Card } from "@/lib/clash/data";
-import { PENALTY_SECONDS, type Guess } from "@/lib/clash/rules";
+import { PENALTY_SECONDS, SPRINT_SECONDS, type Guess } from "@/lib/clash/rules";
 import type { Kit } from "@/components/daily/ShirtBack";
 import { clock } from "@/components/daily/clock";
-import { useCountdown } from "@/components/daily/useCountdown";
+import { useRoundClock } from "@/components/daily/useRoundClock";
 import { AlbumPage, Pair, PlayerSticker, Slot, type StickerState } from "./Album";
 import { KickRow } from "./KickRow";
 
@@ -24,6 +24,11 @@ type Shown = Card & { value: number };
 
 type Props = {
   runId: number;
+  setCode: string;
+  /** The player on show: how many calls the run has made. */
+  at: number;
+  /** Whether the clock had started when the page rendered. */
+  begun: boolean;
   statLabel: string;
   shown: Shown;
   next: Card;
@@ -42,7 +47,7 @@ type Props = {
 export function Sprint(props: Props) {
   const [shown, setShown] = useState(props.shown);
   const [next, setNext] = useState<Card | null>(props.next);
-  const [deadlineAt, setDeadlineAt] = useState(props.deadlineAt);
+  const [at, setAt] = useState(props.at);
   const [kicks, setKicks] = useState(props.kicks);
   const [runs, setRuns] = useState({ current: props.currentRun, best: props.bestRun });
   // The call waiting on the server, then its result while the number shows.
@@ -51,7 +56,14 @@ export function Sprint(props: Props) {
   const [, startCall] = useTransition();
 
   const close = () => startClosing(() => endSprint(props.runId));
-  const left = useCountdown(deadlineAt, props.serverNow, close);
+  const { left, moveDeadline } = useRoundClock({
+    deadlineAt: props.deadlineAt,
+    serverNow: props.serverNow,
+    begun: props.begun,
+    limitSeconds: SPRINT_SECONDS,
+    begin: () => beginSprint(props.runId, props.setCode),
+    onZero: close,
+  });
   const over = left === 0 || closing;
   const right = [...kicks].filter((k) => k === "1").length;
   const kit = (c: Card) => (c.clubId !== null ? props.kits[c.clubId] : undefined);
@@ -60,10 +72,10 @@ export function Sprint(props: Props) {
     if (call || over || !next) return;
     setCall({ guess });
     startCall(async () => {
-      const r = await answerClash(props.runId, guess);
+      const r = await answerClash(props.runId, props.setCode, at, guess);
       if (r.status === "closed") return close();
       setCall({ guess, value: r.value, right: r.right });
-      setDeadlineAt(r.deadlineAt);
+      moveDeadline(r.deadlineAt);
       setKicks((k) => k + (r.right ? "1" : "0"));
       setRuns((s) => {
         const current = r.right ? s.current + 1 : 0;
@@ -73,6 +85,7 @@ export function Sprint(props: Props) {
       if (r.done || !r.upcoming) return close();
       setShown({ ...next, value: r.value });
       setNext(r.upcoming);
+      setAt((i) => i + 1);
       setCall(null);
     });
   }

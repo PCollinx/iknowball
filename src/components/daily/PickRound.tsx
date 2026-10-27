@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { endPart, submitPick } from "@/app/(site)/daily/actions";
+import { beginPart, endPart, submitPick } from "@/app/(site)/daily/actions";
 import type { PickAnswered, PickQuestion } from "@/lib/daily/data";
 import { FixtureTitle } from "./FixtureTitle";
 import { GiveUp, Pitch, RoundHead, Steps, type Step, WhistleCover, type Whistle } from "./InPlay";
 import { ShirtBack, type Kit } from "./ShirtBack";
-import { useCountdown } from "./useCountdown";
+import { useRoundClock } from "./useRoundClock";
 
 const RIGHT = ["Ball knowledge.", "Correct. Next one.", "Sharp.", "You know ball.", "Oya, next."];
 const WRONG = ["Not that one, chief.", "Who told you that one?", "E no reach.", "Wrong shout."];
@@ -21,8 +21,12 @@ type Props = {
   title: string;
   prompt: string;
   attemptId: number;
+  dailyId: number;
   deadlineAt: string;
   serverNow: number;
+  /** Whether the clock had started when the page rendered. */
+  begun: boolean;
+  limitSeconds: number;
   questions: PickQuestion[];
   answered: PickAnswered[];
   /** The fixture's kit for Rapid picks shirts. */
@@ -38,7 +42,14 @@ export function PickRound(props: Props) {
   const [, startPick] = useTransition();
 
   const close = () => startClosing(() => endPart(props.attemptId));
-  const left = useCountdown(props.deadlineAt, props.serverNow, close);
+  const { left } = useRoundClock({
+    deadlineAt: props.deadlineAt,
+    serverNow: props.serverNow,
+    begun: props.begun,
+    limitSeconds: props.limitSeconds,
+    begin: () => beginPart(props.attemptId, props.dailyId),
+    onZero: close,
+  });
   const over = left === 0 || closing;
 
   const done = new Set(answered.map((a) => a.id));
@@ -51,7 +62,7 @@ export function PickRound(props: Props) {
     if (tap || over) return;
     setTap({ id: q.id, choice });
     startPick(async () => {
-      const r = await submitPick(props.attemptId, q.id, choice);
+      const r = await submitPick(props.attemptId, props.dailyId, q.id, choice);
       if (r.status === "closed") return close();
       const result = { id: q.id, choice, answer: r.answer, right: r.right };
       setTap({ id: q.id, choice, result });
