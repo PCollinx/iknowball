@@ -2,13 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { isTestSite } from "@/lib/daily/sample";
 import { ShirtBack } from "@/components/daily/ShirtBack";
 import { LeagueLoading, LeagueMasthead } from "@/components/league/Masthead";
 import { AwayEnd, Gate, RankToggle } from "@/components/league/Ranks";
 import { weekLabel } from "@/components/league/format";
 import { getFanbaseTable } from "@/lib/league/data";
-import { isFansPreview, previewFans } from "@/lib/league/sample";
 import { dayIndex } from "@/lib/league/standing";
 
 export const metadata: Metadata = {
@@ -18,20 +16,18 @@ export const metadata: Metadata = {
 
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-export default function FansPage({ searchParams }: PageProps<"/league/fans">) {
+export default function FansPage() {
   return (
     <Suspense fallback={<LeagueLoading />}>
-      <Fans searchParams={searchParams} />
+      <Fans />
     </Suspense>
   );
 }
 
 // Reads the session and the week, so it renders per request.
-async function Fans({ searchParams }: Pick<PageProps<"/league/fans">, "searchParams">) {
+async function Fans() {
   await connection();
-  // Test sites only: ?preview= shows sample data (src/lib/league/sample.ts).
-  const preview = (await searchParams).preview;
-  const { week, rows, myClub, myClubFans, minFans } = await (isTestSite() && isFansPreview(preview) ? previewFans(preview) : getFanbaseTable());
+  const { week, rows, myClub, myClubFans, minFans } = await getFanbaseTable();
   const placed = rows.some((r) => r.mine);
   return (
     <main className="mx-auto w-full max-w-[560px] flex-1 px-4 pb-10 lg:max-w-[1040px]">

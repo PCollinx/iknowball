@@ -2,14 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { isTestSite } from "@/lib/daily/sample";
 import { ShareButtons } from "@/components/daily/ShareButtons";
 import { LeagueLoading, LeagueMasthead } from "@/components/league/Masthead";
 import { Bench, RankToggle, TeamOfTheWeek, YourSpot } from "@/components/league/Ranks";
 import { weekLabel } from "@/components/league/format";
 import { publicEnv } from "@/lib/env";
 import { getGlobalTable } from "@/lib/league/data";
-import { isEveryonePreview, previewEveryone } from "@/lib/league/sample";
 import { dayIndex, teamOfTheWeek, XI } from "@/lib/league/standing";
 
 export const metadata: Metadata = {
@@ -19,21 +17,18 @@ export const metadata: Metadata = {
 
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-export default function EveryonePage({ searchParams }: PageProps<"/league/everyone">) {
+export default function EveryonePage() {
   return (
     <Suspense fallback={<LeagueLoading />}>
-      <Everyone searchParams={searchParams} />
+      <Everyone />
     </Suspense>
   );
 }
 
 // Reads the session and the week, so it renders per request.
-async function Everyone({ searchParams }: Pick<PageProps<"/league/everyone">, "searchParams">) {
+async function Everyone() {
   await connection();
-  // Test sites only: ?preview= shows sample data (src/lib/league/sample.ts).
-  const preview = (await searchParams).preview;
-  const sample = isTestSite() && isEveryonePreview(preview) ? preview : null;
-  const { week, top, mine, myClub, players } = await (sample ? previewEveryone(sample) : getGlobalTable());
+  const { week, top, mine, myClub, players } = await getGlobalTable();
   const { xi, bench } = teamOfTheWeek(top);
   const me = mine ?? top.find((r) => r.mine) ?? null;
   const eleventh = xi[XI - 1]?.points ?? null;
@@ -65,7 +60,7 @@ async function Everyone({ searchParams }: Pick<PageProps<"/league/everyone">, "s
           {xi[0] && (
             <ShareButtons
               text={`This week's team of the week on iKnowBall. Think you know ball? Make the XI: ${publicEnv().NEXT_PUBLIC_SITE_URL.replace(/\/$/, "")}/league/everyone`}
-              image={{ url: `/league/everyone/card${sample ? `?preview=${sample}` : ""}`, name: "iknowball-team-of-the-week.png" }}
+              image={{ url: "/league/everyone/card", name: "iknowball-team-of-the-week.png" }}
               className="mt-0"
             />
           )}
