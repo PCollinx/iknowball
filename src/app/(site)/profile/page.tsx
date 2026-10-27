@@ -8,10 +8,8 @@ import { GoogleButton } from "@/components/profile/GoogleButton";
 import { EmptyPeg, LeagueStickers, Peg, Section, StatStickers } from "@/components/profile/Peg";
 import { EmailForm, UsernameForm } from "@/components/profile/ProfileForms";
 import { currentUser } from "@/lib/daily/data";
-import { isTestSite } from "@/lib/daily/sample";
 import { getHub } from "@/lib/league/data";
 import { clubChoices, getProfileView } from "@/lib/profile/data";
-import { isProfilePreview, previewProfile } from "@/lib/profile/sample";
 import { gameDate, seasonLabel, seasonOf } from "@/lib/time";
 import { KeepyUppy } from "@/components/loading/KeepyUppy";
 
@@ -76,11 +74,9 @@ async function ProfileScreen({ searchParams }: { searchParams: SearchParams }) {
     );
   }
 
-  const preview = isTestSite() && isProfilePreview(params.preview) ? await previewProfile(params.preview) : null;
-  const [real, clubs, hub] = await Promise.all([preview ? null : getProfileView(user.id), clubChoices(), preview ? null : getHub()]);
-  const view = preview?.view ?? real!;
-  const leagues = preview?.leagues ?? hub!.leagues;
-  const guest = preview ? preview.view.username === null : Boolean(user.is_anonymous);
+  const [view, clubs, hub] = await Promise.all([getProfileView(user.id), clubChoices(), getHub()]);
+  const leagues = hub.leagues;
+  const guest = Boolean(user.is_anonymous);
 
   return (
     <main className="mx-auto w-full flex-1 max-w-[1200px] px-4 pb-10 lg:grid lg:grid-cols-[420px_minmax(0,1fr)] lg:content-start lg:items-start lg:gap-x-14 lg:px-8">
