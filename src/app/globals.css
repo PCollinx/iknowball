@@ -294,11 +294,14 @@ body {
 [data-nav-brand] {
   display: none;
 }
-body:has([data-match-live]) [data-nav-full],
-body:has([data-match-live]) [data-site-footer] {
+/* A route Next keeps in the background after you leave it (React's Activity)
+ * still holds its marker, hidden with an inline display: none on it or on an
+ * ancestor; those don't count, or the "Live" tag stays on the next screen. */
+body:has([data-match-live]:not([style*="display: none"], [style*="display: none"] *)) [data-nav-full],
+body:has([data-match-live]:not([style*="display: none"], [style*="display: none"] *)) [data-site-footer] {
   display: none;
 }
-body:has([data-match-live]) [data-nav-live],
-body:has([data-match-live]) [data-nav-brand] {
+body:has([data-match-live]:not([style*="display: none"], [style*="display: none"] *)) [data-nav-live],
+body:has([data-match-live]:not([style*="display: none"], [style*="display: none"] *)) [data-nav-brand] {
   display: inline-flex;
 }

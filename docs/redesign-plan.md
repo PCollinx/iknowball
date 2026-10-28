@@ -117,7 +117,8 @@ number, behind a date switch; then close #31. Must be merged by Sat 31 Oct.
 ### 14. Support iKnowBall
 Added 27 Oct 2026 (Collins). The page behind the footer's "Support iKnowBall" link (`SUPPORT_URL` in
 `src/lib/site.ts`, shown as "Soon" until set): what support pays for and how to give. Needs a decision on
-the payment route first (for example Paystack for Nigeria, Buy Me a Coffee or Ko-fi). Before launch.
+the payment route first (for example Paystack for Nigeria, Buy Me a Coffee or Ko-fi). Not at launch: we
+launch on Vercel Hobby, which allows no donations, so it waits for the switch to Pro (CLAUDE.md, Hosting).
 
 ## Also on the list
 
@@ -140,4 +141,4 @@ the payment route first (for example Paystack for Nigeria, Buy Me a Coffee or Ko
 - [x] 11. Privacy, 404 and errors (PR #51)
 - [ ] 12. The logo
 - [ ] 13. The waitlist (by 31 Oct)
-- [ ] 14. Support iKnowBall
+- [ ] 14. Support iKnowBall (after launch, with Vercel Pro)
