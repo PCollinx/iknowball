@@ -54,6 +54,7 @@ async function saveClub(admin: ReturnType<typeof createAdminClient>, club: Track
           full_name: s.name,
           known_as: s.name,
           date_of_birth: s.dateOfBirth,
+          sitelinks: s.sitelinks,
           updated_at: new Date().toISOString(),
         })),
         { onConflict: "wikidata_qid" },

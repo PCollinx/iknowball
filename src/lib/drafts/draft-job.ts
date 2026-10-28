@@ -2,7 +2,7 @@ import "server-only";
 import { normalizeName } from "@/lib/daily/match";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addDays, gameDate, matchweekBounds } from "@/lib/time";
-import { draftDay, pairKey, pickPair, type Club, type PickData, type SharedPlayer } from "./generate";
+import { draftDay, pairKey, pickPair, type Club, type PairRules, type PickData, type SharedPlayer } from "./generate";
 
 /** Days ahead the job keeps drafted, so there is about a week to review. */
 export const DRAFT_DAYS_AHEAD = 8;
@@ -33,7 +33,7 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
   if (!empty.length) return result;
 
   const [{ data: clubRows }, { data: candidates, error: pairError }] = await Promise.all([
-    admin.from("clubs").select("id, name"),
+    admin.from("clubs").select("id, name, top, in_premier_league"),
     admin.rpc("club_pair_overlaps"),
   ]);
   if (pairError) throw pairError;
@@ -42,7 +42,12 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
     b: c.club_b,
     players: c.players,
   }));
-  const clubs = new Map<number, Club>((clubRows ?? []).map((c) => [c.id, c]));
+  const clubs = new Map<number, Club>((clubRows ?? []).map((c) => [c.id, { id: c.id, name: c.name }]));
+  // Popular games only (Collins, 29 Oct 2026): the big six, and Europe's giants on UCL nights.
+  const rules: PairRules = {
+    bigSix: new Set((clubRows ?? []).filter((c) => c.top && c.in_premier_league).map((c) => c.id)),
+    europe: new Set((clubRows ?? []).filter((c) => c.top && !c.in_premier_league).map((c) => c.id)),
+  };
   const clubByName = new Map([...clubs.values()].map((c) => [c.name, c.id]));
 
   // Pairs already used recently or still to come, read from the titles ("A v B").
@@ -62,11 +67,12 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
 
   for (const date of empty) {
     const week = matchweekBounds(date);
-    const sameWeek = [...fixtures].filter(([d]) => d >= week.startsOn && d <= week.endsOn);
+    const sameWeek = fixtures.filter(([d, , c]) => c === "PL" && d >= week.startsOn && d <= week.endsOn);
     const preferred = [...sameWeek.filter(([d]) => d === date), ...sameWeek.filter(([d]) => d !== date)].map(([, pair]) => pair);
-    const pair = pickPair(date, pairs, preferred, used, restedNear(date));
+    const ucl = fixtures.filter(([d, , c]) => c === "UCL" && d === date).map(([, pair]) => pair);
+    const pair = pickPair(date, pairs, preferred, used, restedNear(date), rules, ucl);
     if (!pair) {
-      result.skipped.push({ date, reason: "No unused club pair with a good list. Import more clubs or wait for the cooldown." });
+      result.skipped.push({ date, reason: "No club pair with one of the big six and a good list. Import more clubs." });
       continue;
     }
     const [home, away] = pair.map((id) => clubs.get(id)!);
@@ -155,13 +161,13 @@ async function pickData(a: number, b: number, date: string): Promise<PickData> {
   };
 }
 
-/** Fixtures by game date (Lagos time), as [date, [home club, away club]]. */
-async function fixturePairs(from: string, to: string): Promise<[string, [number, number]][]> {
+/** Fixtures by game date (Lagos time), as [date, [home club, away club], competition]. */
+async function fixturePairs(from: string, to: string): Promise<[string, [number, number], string][]> {
   const { data } = await createAdminClient()
     .from("fixtures")
-    .select("kickoff_at, home_club_id, away_club_id")
+    .select("kickoff_at, home_club_id, away_club_id, competition")
     .gte("kickoff_at", `${from}T00:00:00Z`)
     .lte("kickoff_at", `${to}T23:59:59Z`)
     .order("kickoff_at");
-  return (data ?? []).map((f) => [gameDate(new Date(f.kickoff_at)), [f.home_club_id, f.away_club_id]]);
+  return (data ?? []).map((f) => [gameDate(new Date(f.kickoff_at)), [f.home_club_id, f.away_club_id], f.competition]);
 }

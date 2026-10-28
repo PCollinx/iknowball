@@ -1,25 +1,29 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { callsToday, DAILY_BUDGET, seasonMatches } from "./highlightly";
-import { clubKey, fixtureOf } from "./parse";
+import { callsToday, DAILY_BUDGET, seasonMatches, UCL_LEAGUE_ID } from "./highlightly";
+import { clubKey, fixtureOf, type Competition, type HighlightlyMatch } from "./parse";
 
 export type SyncResult = {
   calls: number;
   fixtures: number;
+  /** Champions League ties between clubs we track (UCL nights). */
+  ucl: number;
   finished: number;
-  /** Highlightly teams we have no club for: those matches are skipped. */
+  /** Premier League teams we have no club for: those matches are skipped. */
   unknownTeams: string[];
 };
 
-/** Pulls the season's Premier League fixtures and results into our tables. */
+/** Pulls the season's Premier League and Champions League fixtures and results into our tables. */
 export async function syncFixtures(): Promise<SyncResult | { skipped: string }> {
   const used = await callsToday();
-  // A full sync is about 4 calls (380 matches, 100 a page).
-  if (used + 4 > DAILY_BUDGET) return { skipped: `Highlightly budget used: ${used} of ${DAILY_BUDGET} calls in the last 24 hours.` };
+  // A full sync is about 7 calls: 380 Premier League matches and about 250 in
+  // the Champions League (qualifiers included), 100 a page.
+  if (used + 7 > DAILY_BUDGET) return { skipped: `Highlightly budget used: ${used} of ${DAILY_BUDGET} calls in the last 24 hours.` };
 
   const admin = createAdminClient();
-  const matches = await seasonMatches();
-  const calls = Math.max(1, Math.ceil(matches.length / 100));
+  const pl = await seasonMatches();
+  const ucl = await seasonMatches(UCL_LEAGUE_ID);
+  const calls = Math.max(1, Math.ceil(pl.length / 100)) + Math.max(1, Math.ceil(ucl.length / 100));
 
   // Our clubs by Highlightly team id, learning ids from names the first time.
   const { data: clubs, error } = await admin.from("clubs").select("id, name, highlightly_team_id");
@@ -31,19 +35,28 @@ export async function syncFixtures(): Promise<SyncResult | { skipped: string }> 
     byName.set(c.name.toLowerCase(), c.id);
   }
   const unknown = new Map<number, string>();
-  for (const team of matches.flatMap((m) => [m.homeTeam, m.awayTeam])) {
-    if (byTeam.has(team.id)) continue;
-    const id = byName.get(clubKey(team.name));
-    if (!id) {
-      unknown.set(team.id, team.name);
-      continue;
+  const learn = async (matches: HighlightlyMatch[], report: boolean) => {
+    for (const team of matches.flatMap((m) => [m.homeTeam, m.awayTeam])) {
+      if (byTeam.has(team.id)) continue;
+      const id = byName.get(clubKey(team.name));
+      if (!id) {
+        // Most Champions League clubs aren't tracked, and that's fine: only ties between ours are kept.
+        if (report) unknown.set(team.id, team.name);
+        continue;
+      }
+      const { error: linkError } = await admin.from("clubs").update({ highlightly_team_id: team.id }).eq("id", id);
+      if (linkError) throw linkError;
+      byTeam.set(team.id, id);
     }
-    const { error: linkError } = await admin.from("clubs").update({ highlightly_team_id: team.id }).eq("id", id);
-    if (linkError) throw linkError;
-    byTeam.set(team.id, id);
-  }
+  };
+  await learn(pl, true);
+  await learn(ucl, false);
 
-  const rows = matches.map(fixtureOf).filter((f) => byTeam.has(f.home_team) && byTeam.has(f.away_team));
+  const ours = (matches: HighlightlyMatch[], competition: Competition) =>
+    matches.map((m) => fixtureOf(m, competition)).filter((f) => byTeam.has(f.home_team) && byTeam.has(f.away_team));
+  const plRows = ours(pl, "PL");
+  const uclRows = ours(ucl, "UCL");
+  const rows = [...plRows, ...uclRows];
 
   // Matchweeks: one row per Monday the fixtures fall in.
   const weeks = [...new Map(rows.map((r) => [r.matchweek_starts_on, r.season])).entries()].map(([starts_on, season]) => ({ starts_on, season }));
@@ -58,6 +71,7 @@ export async function syncFixtures(): Promise<SyncResult | { skipped: string }> 
   const { error: fixtureError } = await admin.from("fixtures").upsert(
     rows.map((r) => ({
       highlightly_match_id: r.highlightly_match_id,
+      competition: r.competition,
       season: r.season,
       pl_round: r.pl_round,
       kickoff_at: r.kickoff_at,
@@ -73,5 +87,11 @@ export async function syncFixtures(): Promise<SyncResult | { skipped: string }> 
   );
   if (fixtureError) throw fixtureError;
 
-  return { calls, fixtures: rows.length, finished: rows.filter((r) => r.status === "finished").length, unknownTeams: [...unknown.values()] };
+  return {
+    calls,
+    fixtures: plRows.length,
+    ucl: uclRows.length,
+    finished: rows.filter((r) => r.status === "finished").length,
+    unknownTeams: [...unknown.values()],
+  };
 }

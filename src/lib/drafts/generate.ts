@@ -28,10 +28,18 @@ export function hash(text: string): number {
   return h >>> 0;
 }
 
+/** Which clubs make a popular Daily (Collins, 29 Oct 2026): the Premier
+ * League's big six, and Europe's giants for Champions League nights. */
+export type PairRules = { bigSix: Set<number>; europe: Set<number> };
+
 /**
- * The club pair for a day: the first of that day's fixtures that makes a good
- * list and hasn't been used lately, otherwise any good unused pair, picked by
- * the date so a rerun picks the same one.
+ * The club pair for a day, picked by the date so a rerun picks the same one.
+ * Without rules: the first of the fixtures that makes a good list and hasn't
+ * been used lately, otherwise any good unused pair. With rules, every Daily is
+ * a game people know: on a Champions League night a UCL tie with a top club
+ * (the big six's first); otherwise a fixture with one of the big six, then a
+ * pair of big six clubs, then one of them against another English club. If
+ * every such pair was used lately, one is reused rather than going obscure.
  */
 export function pickPair(
   date: string,
@@ -39,21 +47,38 @@ export function pickPair(
   fixtures: [number, number][],
   used: Set<string>,
   rested: Set<number> = new Set(),
+  rules?: PairRules,
+  ucl: [number, number][] = [],
 ): [number, number] | null {
   const good = new Map(
     candidates.filter((c) => c.players >= MIN_SHARED && c.players <= MAX_SHARED).map((c) => [pairKey(c.a, c.b), c]),
   );
-  for (const [home, away] of fixtures) {
-    const key = pairKey(home, away);
-    if (good.has(key) && !used.has(key)) return [home, away];
+  const free = (a: number, b: number) => good.has(pairKey(a, b)) && !used.has(pairKey(a, b));
+  const big = (id: number) => rules?.bigSix.has(id) ?? false;
+  const popular = (a: number, b: number) => !rules || ((big(a) || big(b)) && !rules.europe.has(a) && !rules.europe.has(b));
+
+  if (rules) {
+    const top = (id: number) => big(id) || rules.europe.has(id);
+    const ties = [...ucl.filter(([h, a]) => big(h) || big(a)), ...ucl.filter(([h, a]) => !big(h) && !big(a))];
+    for (const [home, away] of ties) if ((top(home) || top(away)) && free(home, away)) return [home, away];
   }
-  const unused = [...good.entries()].filter(([key]) => !used.has(key)).sort(([x], [y]) => (x < y ? -1 : 1));
-  // Off a fixture, keep clubs that featured on nearby days out when there's a choice.
-  const fresh = unused.filter(([, c]) => !rested.has(c.a) && !rested.has(c.b));
-  const open = fresh.length ? fresh : unused;
-  if (!open.length) return null;
-  const [, c] = open[hash(date) % open.length];
-  return [c.a, c.b];
+  for (const [home, away] of fixtures) if (popular(home, away) && free(home, away)) return [home, away];
+
+  const byKey = (x: [string, PairCandidate], y: [string, PairCandidate]) => (x[0] < y[0] ? -1 : 1);
+  const unused = [...good.entries()].filter(([key, c]) => !used.has(key) && popular(c.a, c.b)).sort(byKey);
+  // Two of the big six before one; off a fixture, clubs that featured on nearby
+  // days are kept out when there's a choice.
+  const tiers = rules ? [unused.filter(([, c]) => big(c.a) && big(c.b)), unused.filter(([, c]) => !(big(c.a) && big(c.b)))] : [unused];
+  const isFresh = ([, c]: [string, PairCandidate]) => !rested.has(c.a) && !rested.has(c.b);
+  const pick = (open: [string, PairCandidate][]): [number, number] => {
+    const [, c] = open[hash(date) % open.length];
+    return [c.a, c.b];
+  };
+  for (const tier of tiers) if (tier.some(isFresh)) return pick(tier.filter(isFresh));
+  for (const tier of tiers) if (tier.length) return pick(tier);
+  if (!rules) return null;
+  const again = [...good.entries()].filter(([, c]) => popular(c.a, c.b)).sort(byKey);
+  return again.length ? pick(again) : null;
 }
 
 /** Part 1's answer key, with any alias that would make a guess ambiguous taken out. */

@@ -39,6 +39,42 @@ describe("pickPair", () => {
   });
 });
 
+describe("pickPair with the popular-games rules", () => {
+  // 1 and 2 are big six, 3 is another English club, 4 and 5 are English minnows, 9 is a European giant.
+  const rules = { bigSix: new Set([1, 2]), europe: new Set([9]) };
+  const pairs = [
+    { a: 1, b: 2, players: 12 },
+    { a: 1, b: 3, players: 10 },
+    { a: 4, b: 5, players: 10 },
+    { a: 1, b: 9, players: 8 },
+    { a: 3, b: 9, players: 8 },
+  ];
+
+  it("never picks a fixture without one of the big six", () => {
+    expect(pickPair("2026-10-17", pairs, [[4, 5], [3, 1]], new Set(), new Set(), rules)).toEqual([3, 1]);
+  });
+
+  it("off a fixture, prefers two of the big six, then one, and never two minnows", () => {
+    expect(pickPair("2026-10-17", pairs, [], new Set(), new Set(), rules)).toEqual([1, 2]);
+    expect(pickPair("2026-10-17", pairs, [], new Set(["1-2"]), new Set(), rules)).toEqual([1, 3]);
+  });
+
+  it("keeps Europe's giants for Champions League nights", () => {
+    expect(pickPair("2026-10-17", pairs, [], new Set(["1-2", "1-3"]), new Set(), rules)).toEqual([1, 2]);
+    expect(pickPair("2026-10-17", pairs, [[1, 9]], new Set(["1-2"]), new Set(), rules)).toEqual([1, 3]);
+  });
+
+  it("on a UCL night picks a tie with a top club, the big six's first", () => {
+    expect(pickPair("2026-10-21", pairs, [[1, 2]], new Set(), new Set(), rules, [[3, 9], [9, 1]])).toEqual([9, 1]);
+    expect(pickPair("2026-10-21", pairs, [[1, 2]], new Set(["1-9"]), new Set(), rules, [[3, 9], [9, 1]])).toEqual([3, 9]);
+  });
+
+  it("reuses a popular pair rather than going obscure", () => {
+    expect(pickPair("2026-10-17", pairs, [], new Set(["1-2", "1-3"]), new Set(), rules)).not.toEqual([4, 5]);
+    expect(pickPair("2026-10-17", pairs, [], new Set(["1-2", "1-3"]), new Set(), rules)).not.toBeNull();
+  });
+});
+
 describe("recallAnswers", () => {
   it("drops aliases two answers would share and keeps the key clean", () => {
     const lines = recallAnswers([

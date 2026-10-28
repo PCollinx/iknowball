@@ -71,8 +71,10 @@ export async function settle(run: RunRow): Promise<RunRow> {
   return { ...run, submitted_at };
 }
 
-async function drawPool(stat: Exclude<Stat, "sample">): Promise<Item[]> {
-  const { data, error } = await createAdminClient().rpc("clash_pool", { p_stat: stat, p_min: STATS[stat].min, p_limit: SET_SIZE * 3 });
+/** Famous players (Collins, 29 Oct 2026): their spells at top clubs, or at
+ * any club when `top` is off (the fallback while top clubs are thin). */
+async function drawPool(stat: Exclude<Stat, "sample">, top: boolean): Promise<Item[]> {
+  const { data, error } = await createAdminClient().rpc("clash_pool", { p_stat: stat, p_min: STATS[stat].min, p_limit: SET_SIZE * 3, p_top: top });
   if (error) throw error;
   return ((data ?? []) as { player_name: string; club_id: number; value: number }[]).map((r) => ({ name: r.player_name, club_id: r.club_id, value: r.value }));
 }
@@ -83,12 +85,14 @@ export async function createSet(userId: string): Promise<SetRow> {
   const order: Exclude<Stat, "sample">[] = Math.random() < 0.5 ? ["goals", "apps"] : ["apps", "goals"];
   let stat: Stat | null = null;
   let items: Item[] = [];
-  for (const s of order) {
-    const chain = buildChain(await drawPool(s));
-    if (chain.length >= SET_SIZE) {
-      stat = s;
-      items = chain;
-      break;
+  draw: for (const top of [true, false]) {
+    for (const s of order) {
+      const chain = buildChain(await drawPool(s, top));
+      if (chain.length >= SET_SIZE) {
+        stat = s;
+        items = chain;
+        break draw;
+      }
     }
   }
   if (!stat && isTestSite()) {

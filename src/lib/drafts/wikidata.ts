@@ -12,7 +12,7 @@ export const ERA_START_YEAR = 1992;
 /** Every footballer with a "member of sports team" statement for one club in the PL era. */
 export function clubPlayersQuery(wikipediaTitle: string): string {
   const title = wikipediaTitle.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-  return `SELECT ?club ?player ?playerLabel ?playerAltLabel ?st ?start ?end ?dob ?apps ?goals WHERE {
+  return `SELECT ?club ?player ?playerLabel ?playerAltLabel ?st ?start ?end ?dob ?apps ?goals ?links WHERE {
   ?article schema:about ?club; schema:isPartOf <https://en.wikipedia.org/>; schema:name "${title}"@en.
   ?player p:P54 ?st. ?st ps:P54 ?club.
   ?player wdt:P106 wd:${ASSOCIATION_FOOTBALL_PLAYER}.
@@ -24,6 +24,8 @@ export function clubPlayersQuery(wikipediaTitle: string): string {
   # Without this, big clubs return every player since the 1880s (over 1 MB, cut off mid-answer).
   FILTER((BOUND(?end) && YEAR(?end) >= ${ERA_START_YEAR}) || (!BOUND(?end) && BOUND(?start) && YEAR(?start) >= ${ERA_START_YEAR - 7}))
   OPTIONAL { ?player wdt:P569 ?dob. }
+  # How famous: the number of Wikipedia editions with an article on them (Clash draws the best known).
+  OPTIONAL { ?player wikibase:sitelinks ?links. }
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }
 }`;
 }
@@ -40,6 +42,8 @@ export type Spell = {
   /** League appearances and goals in the spell; null when Wikidata doesn't say. */
   apps: number | null;
   goals: number | null;
+  /** Wikipedia editions with an article on the player: how well known they are. */
+  sitelinks: number | null;
 };
 
 type Binding = Record<string, { value: string } | undefined>;
@@ -74,6 +78,7 @@ export function parseClubPlayers(json: { results: { bindings: Binding[] } }): Sp
       dateOfBirth: day(b.dob?.value),
       apps: count(b.apps?.value),
       goals: count(b.goals?.value),
+      sitelinks: count(b.links?.value),
     });
   }
   // A statement can repeat when a player has two birth dates on record.
