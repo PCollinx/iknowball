@@ -17,7 +17,7 @@ export function ShareCard(d: ShareCardData) {
       <div className="sc-inner">
         <div className="sc-mast">
           <span className={`${d900} sc-logo`}>
-            <b>i</b>KnowBall
+            iKnow<b>Ball</b>
           </span>
           <span className="sc-right-mast">
             <span className="sc-meta">

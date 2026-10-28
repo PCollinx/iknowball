@@ -14,9 +14,9 @@ export function SiteFooter() {
       <div className="mx-auto flex max-w-[1184px] flex-col gap-5 px-4 py-6 xl:flex-row xl:items-center xl:justify-between xl:gap-8">
         <div className="flex flex-col gap-2 xl:max-w-[300px]">
           <Link href="/" aria-label="iKnowBall home" className="flex shrink-0 items-center gap-2">
-            <Logo className="h-8 w-8" />
-            <span className="font-display text-[28px] leading-none uppercase">
-              iKnow<span className="text-royal">Ball</span>
+            <Logo className="h-[33px]" />
+            <span className="font-display text-[28px] leading-none">
+              iKnow<span className="text-teal">Ball</span>
             </span>
           </Link>
           <p className="text-sm leading-snug text-navy/80">

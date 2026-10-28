@@ -4,7 +4,8 @@ Started 21 Oct 2026. Goal: every screen gets the navbar and footer, then each is
 home page ("Matchday ticket") and its layout improved. We take one screen per step, and each step ends
 merged before the next starts.
 
-Launch is Fri 27 Nov (beta from 16 Nov), so the screens players touch most come first.
+Launch is Fri 20 Nov (beta and the waitlist from Sun 1 Nov; replanned 27 Oct 2026), so the screens players
+touch most come first.
 
 ## What "match the home page" means
 
@@ -51,7 +52,7 @@ One step, before any redesign, so every later screen starts inside the same fram
   a full navbar and footer invite a mis-tap that throws away a timed attempt, so the navbar shrinks to the
   logo (not a link) and a "Live" tag, the round keeps its own clock, and the footer hides, until full time.
 - **Add a 404 page** in the same frame (there isn't one yet), and put the Daily's error screen inside it.
-- **Out of scope:** the maker (`/maker/*`) keeps its own admin bar.
+- **Out of scope:** the maker (`/maker/*`) keeps its own admin bar and look; its redesign was dropped (Collins, 27 Oct 2026).
 
 Screens covered: `/clash`, `/clash/[code]`, `/daily`, `/daily/table`, `/league`, `/league/[code]`,
 `/league/everyone`, `/league/fans`, `/profile`, `/privacy`, home, 404, errors.
@@ -101,12 +102,23 @@ rule), name, email or Google save, sign out. Fix the missing "Saved" after picki
 Final privacy copy once Collins has reviewed it (drop the "Draft" tag, add the contact address), and the
 404 and error screens in the new style.
 
-### 12. The maker (optional, admin only)
-`/maker`, `/maker/day`, `/maker/teaser`, `/maker/login`. Only if time allows before launch.
+### 12. The logo
+Added 27 Oct 2026 (Collins). The mark used everywhere: navbar, footer, favicon and app icon, share cards
+and image code (`src/lib/og/`), and the 1 Nov name reveal on X. Today it's a small royal shirt with "10" and
+the IKNOW/BALL wordmark. Mocks of a few directions (shirt-back, ball, badge-free wordmark; never a crest),
+shown at every size it's used, from 16 px favicon to the X header. Before the waitlist, which shows it.
 
-### 13. The waitlist (last)
-PR #31, held until 1 Nov: rebase it onto the new home and frame, then redesign it in the same style. The last
-redesign we take on (Collins, 21 Oct 2026).
+### 13. The waitlist
+Goes public on 1 Nov (beta starts the same day; launch Fri 20 Nov). Option A (Collins, 27 Oct 2026): until
+launch the public sees the waitlist at playiknowball.com instead of the games, and beta testers get in by
+invite. Built fresh in the new frame and style, reusing PR #31's sign-up action, checks, honeypot and queue
+number, behind a date switch; then close #31. Must be merged by Sat 31 Oct.
+
+### 14. Support iKnowBall
+Added 27 Oct 2026 (Collins). The page behind the footer's "Support iKnowBall" link (`SUPPORT_URL` in
+`src/lib/site.ts`, shown as "Soon" until set): what support pays for and how to give. Needs a decision on
+the payment route first (for example Paystack for Nigeria, Buy Me a Coffee or Ko-fi). Not at launch: we
+launch on Vercel Hobby, which allows no donations, so it waits for the switch to Pro (CLAUDE.md, Hosting).
 
 ## Also on the list
 
@@ -127,5 +139,6 @@ redesign we take on (Collins, 21 Oct 2026).
 - [x] 9. Everyone and fans (PR #49)
 - [x] 10. Your shirt (PR #50)
 - [x] 11. Privacy, 404 and errors (PR #51)
-- [ ] 12. The maker (optional)
-- [ ] 13. The waitlist
+- [ ] 12. The logo
+- [ ] 13. The waitlist (by 31 Oct)
+- [ ] 14. Support iKnowBall (after launch, with Vercel Pro)
