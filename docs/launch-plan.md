@@ -151,6 +151,23 @@ The demo video goes out Thu 19 Nov and is pinned on the waitlist page for its la
 under the team sheet (a link to the post on X, or the video itself), switched on by a date or a setting.
 By Wed 18 Nov.
 
+### 19. Popular games only
+Added 29 Oct 2026 (Collins: live Dailies paired bottom-of-the-table clubs nobody knew). Decided: the big
+six (ARS, CHE, LIV, MCI, MUN, TOT) in every Daily, at least one of them; Europe's giants on UCL nights
+(before launch); Clash draws famous players at top clubs. **Built, committed on `claude/popular-games`
+(c3aa478), not pushed; migration `20261029000000_popular_games` is on dev only.** Rules in CLAUDE.md
+("Popular games only"). To finish, in order:
+1. Check the dev import of the nine European clubs and the big six (log in the session scratchpad, or rerun
+   `/api/jobs/import-wikidata?club=…`): clubs have players, `players.sitelinks` is filled.
+2. Check Clash on dev: `select count(*) from clash_pool('apps', 40, 1000, true)` and the same for goals
+   (each needs 40+ for a set); play a sprint and see that the names are famous.
+3. Run the drafts job on dev and review in the maker: every day has a big six club; 3 Nov should be a UCL
+   tie (Barcelona v Aston Villa or Atlético v Bayern) if its list is good.
+4. Push and open the PR; Collins merges.
+5. Live: `npx supabase link --project-ref edggdeqvfmezibxmttsz`, `migration list`, `db push`; the daily
+   Wikidata job picks up the new clubs (or run them by hand), the fixture sync adds UCL that night.
+6. Delete the live drafts already made for the coming days in the maker, so they redraft under the rules.
+
 ## Dates and Collins's to-dos
 
 - [ ] **Before Sun 1 Nov:** set `BETA_CODE` (8+ characters) in Vercel Production and redeploy.
@@ -192,3 +209,4 @@ After launch: step 14 (Support, with Vercel Pro), Rate mode (18 Dec), whether to
 - [ ] 16. The launch email (by 19 Nov)
 - [ ] 17. Waitlist leagues on day one (decide by 8 Nov, build by 18 Nov)
 - [ ] 18. The demo video on the waitlist (by 18 Nov)
+- [ ] 19. Popular games only (built, to check and merge first thing, 30 Oct)
