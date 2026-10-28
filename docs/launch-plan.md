@@ -157,8 +157,8 @@ six (ARS, CHE, LIV, MCI, MUN, TOT) in every Daily, at least one of them; Europe'
 (before launch); Clash draws famous players at top clubs. **Built, committed on `claude/popular-games`
 (c3aa478), not pushed; migration `20261029000000_popular_games` is on dev only.** Rules in CLAUDE.md
 ("Popular games only"). To finish, in order:
-1. Check the dev import of the nine European clubs and the big six (log in the session scratchpad, or rerun
-   `/api/jobs/import-wikidata?club=…`): clubs have players, `players.sitelinks` is filled.
+1. ~~Dev import~~ done 29 Oct: all nine European clubs, the big six and Aston Villa imported on dev
+   (about 300 to 550 players each, no failures).
 2. Check Clash on dev: `select count(*) from clash_pool('apps', 40, 1000, true)` and the same for goals
    (each needs 40+ for a set); play a sprint and see that the names are famous.
 3. Run the drafts job on dev and review in the maker: every day has a big six club; 3 Nov should be a UCL
