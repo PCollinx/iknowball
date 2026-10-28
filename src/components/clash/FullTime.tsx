@@ -80,7 +80,7 @@ export function ClashFullTime({ code, statLabel, setSize, right, kicks, bestRun,
           )}
 
           <Stickers outcome={outcome} bestRun={bestRun} weekBest={weekBest} rating={rating} />
-          <p className="mt-3.5 font-display text-xl leading-none uppercase lg:mt-4 lg:text-2xl">
+          <p className="mt-3.5 font-display text-base leading-tight uppercase lg:mt-4 lg:text-2xl lg:leading-none">
             <span className="text-red-card">“</span>
             {banter(right, setter, mine)}
             <span className="text-red-card">”</span>

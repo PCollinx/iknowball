@@ -264,6 +264,15 @@ body {
   margin-block: -0.12em;
 }
 
+/* Clash's scoreboard (option D, 28 Oct 2026): the light-teal end of the split,
+ * cut on a straight slant, and the red impact burst on the line. */
+@utility clash-end {
+  clip-path: polygon(0 0, 60% 0, 44% 100%, 0 100%);
+}
+@utility burst {
+  clip-path: polygon(50% 0, 61% 22%, 85% 10%, 77% 36%, 100% 46%, 77% 58%, 88% 84%, 62% 74%, 50% 100%, 39% 74%, 12% 86%, 23% 58%, 0 48%, 23% 37%, 14% 11%, 39% 23%);
+}
+
 /* Small uppercase label used in mastheads, tables and the share card. */
 @utility label {
   font-size: 12px;

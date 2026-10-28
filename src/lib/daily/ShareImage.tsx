@@ -80,8 +80,8 @@ export function ShareImage({ d }: { d: ShareCardData }) {
           }}
         >
           <div style={{ display: "flex", fontFamily: DISPLAY, fontSize: 7 * u, lineHeight: 0.9 }}>
-            <span style={{ color: C.royal }}>i</span>
-            <span>KNOWBALL</span>
+            <span>iKnow</span>
+            <span style={{ color: C.teal }}>Ball</span>
           </div>
           <div style={{ display: "flex", alignItems: "flex-end" }}>
             <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", fontSize: 2.4 * u, lineHeight: 1.35, ...label }}>
