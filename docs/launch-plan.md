@@ -1,11 +1,12 @@
-# Redesign plan: one screen at a time
+# Launch plan
 
-Started 21 Oct 2026. Goal: every screen gets the navbar and footer, then each is redesigned to match the
-home page ("Matchday ticket") and its layout improved. We take one screen per step, and each step ends
-merged before the next starts.
+Everything left between now and launch on **Fri 20 Nov 2026** (fallback Fri 27 Nov), in one place. Renamed
+from the redesign plan on 29 Oct 2026 (Collins): steps 0 to 14 are the redesign, one screen at a time
+(started 21 Oct 2026); steps 15 to 18 are what's left to build for launch; then the dates and Collins's own
+to-dos. Each step ends merged before the next starts.
 
 Launch is Fri 20 Nov (beta and the waitlist from Sun 1 Nov; replanned 27 Oct 2026), so the screens players
-touch most come first.
+touch most came first.
 
 ## What "match the home page" means
 
@@ -113,7 +114,7 @@ Goes public on 1 Nov (beta starts the same day; launch Fri 20 Nov). Option A (Co
 launch the public sees the waitlist at playiknowball.com instead of the games, and beta testers get in by
 invite. Built fresh in the new frame and style, reusing PR #31's sign-up action, checks, honeypot and queue
 number, behind a date switch; then close #31. Must be merged by Sat 31 Oct.
-Built 28 Oct 2026 (option A with C's game stickers). Before 1 Nov: set `BETA_CODE` (8+ characters) in
+Built 28 Oct 2026 (option A with C's game stickers, PR #56; #31 closed). Before 1 Nov: set `BETA_CODE` (8+ characters) in
 Vercel > Settings > Environment Variables for Production and redeploy, or nobody gets past the waitlist.
 The invite link is then `playiknowball.com/beta/{BETA_CODE}`.
 
@@ -122,6 +123,48 @@ Added 27 Oct 2026 (Collins). The page behind the footer's "Support iKnowBall" li
 `src/lib/site.ts`, shown as "Soon" until set): what support pays for and how to give. Needs a decision on
 the payment route first (for example Paystack for Nigeria, Buy Me a Coffee or Ko-fi). Not at launch: we
 launch on Vercel Hobby, which allows no donations, so it waits for the switch to Pro (CLAUDE.md, Hosting).
+
+## To build for launch
+
+### 15. The installable app (PWA)
+Added 29 Oct 2026 (Collins: built before launch, no longer on hold). Add to home screen on Android and
+iPhone, opening full screen like an app: a web manifest (name, the light-teal app icon from
+`src/lib/og/logo.tsx` at 192 and 512 px plus a maskable one, navy text on white, `display: standalone`),
+the iPhone meta tags, and a small offline screen in the house style ("No signal", like the VAR monitor).
+No offline play: answers are checked on the server. Mock the install prompt and the offline screen first.
+Keep it off the first-load budget (about 200 KB). By Sun 8 Nov, so beta testers install it.
+
+### 16. The launch email
+The waitlist promises "We'll email you on Fri 20 Nov when the gates open". One email to everyone on the
+sheet, through Resend (already set up for sign-in): their shirt and number, the link, the first Daily. A
+job or admin button that sends in batches, records who was sent to (so a rerun skips them) and has an
+unsubscribe line. Mock the email first. Test on dev, send on the morning of 20 Nov.
+
+### 17. Waitlist leagues on day one
+The sheet says "Bring your league and your league starts on day one", but the league name it saves isn't
+connected to anything yet. Decide with Collins: make those leagues at launch (the person who named it
+becomes captain once they sign in with the same email, and gets the invite code), or soften the line on
+the page. Decide by Sun 8 Nov, build by 18 Nov.
+
+### 18. The demo video on the waitlist
+The demo video goes out Thu 19 Nov and is pinned on the waitlist page for its last day. Add a slot for it
+under the team sheet (a link to the post on X, or the video itself), switched on by a date or a setting.
+By Wed 18 Nov.
+
+## Dates and Collins's to-dos
+
+- [ ] **Before Sun 1 Nov:** set `BETA_CODE` (8+ characters) in Vercel Production and redeploy.
+- [ ] **By Sat 31 Oct:** last teaser quizzes on X (no app name on them until 1 Nov).
+- [ ] **Sun 1 Nov:** the waitlist goes up at midnight WAT by itself; reveal the name and the waitlist on X;
+  send the first beta invite links to the most engaged followers.
+- [ ] **Sun 8 Nov checkpoint:** Collins and three friends trade Clash challenge links.
+- [ ] **9 to 15 Nov checkpoint** (international break): a real league plays a full week of Dailies and the
+  table is right.
+- [ ] **During the beta:** tune the tier cut-offs on real ratings; record the demo video.
+- [ ] **Thu 19 Nov:** publish the demo video on X and WhatsApp.
+- [ ] **Fri 20 Nov:** the waitlist comes down at midnight WAT by itself; send the launch email (step 16).
+
+After launch: step 14 (Support, with Vercel Pro), Rate mode (18 Dec), whether to buy iknowball.com.
 
 ## Also on the list
 
@@ -143,6 +186,9 @@ launch on Vercel Hobby, which allows no donations, so it waits for the switch to
 - [x] 10. Your shirt (PR #50)
 - [x] 11. Privacy, 404 and errors (PR #51)
 - [x] 12. The logo (PR #55)
-- [ ] Set `BETA_CODE` in Vercel Production and redeploy (before 1 Nov, for the waitlist's beta invite)
-- [ ] 13. The waitlist (by 31 Oct)
+- [x] 13. The waitlist (PR #56)
 - [ ] 14. Support iKnowBall (after launch, with Vercel Pro)
+- [ ] 15. The installable app (by 8 Nov)
+- [ ] 16. The launch email (by 19 Nov)
+- [ ] 17. Waitlist leagues on day one (decide by 8 Nov, build by 18 Nov)
+- [ ] 18. The demo video on the waitlist (by 18 Nov)

@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { KeepyUppy } from "@/components/loading/KeepyUppy";
 import { clock } from "./clock";
 
-// Pieces shared by the Daily's rounds in play (step 2 of docs/redesign-plan.md,
+// Pieces shared by the Daily's rounds in play (step 2 of docs/launch-plan.md,
 // Collins's mix of 21 Oct 2026): the clock box, the progress boxes and the pitch.
 
 /** The clock: a teal box with a hard shadow, red near the end. */

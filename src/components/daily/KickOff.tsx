@@ -11,7 +11,7 @@ import { RecallGrid } from "./RecallGrid";
 import type { Kit } from "./ShirtBack";
 import { SubmitButton } from "./SubmitButton";
 
-// The Daily's kick-off (step 1 of docs/redesign-plan.md, picked 21 Oct 2026):
+// The Daily's kick-off (step 1 of docs/launch-plan.md, picked 21 Oct 2026):
 // before Part 1, the home page's Daily sticker with the gaffer's instructions
 // and a teal Kick off; between parts, the half-time block and your shirts with
 // the team talk for the 2nd half. Desktop puts the two side by side.
