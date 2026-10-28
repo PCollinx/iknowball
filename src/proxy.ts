@@ -1,8 +1,21 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { BETA_COOKIE, betaPass, gated, waitlistUp } from "@/lib/waitlist";
 
-// Keeps the Supabase session cookie fresh on every page request.
+// Keeps the Supabase session cookie fresh on every page request. While the
+// waitlist is up (src/lib/waitlist.ts), the live site shows it in place of the
+// games, except to browsers holding the beta invite's cookie. Test sites never
+// switch: there the waitlist is at /waitlist.
 export async function proxy(request: NextRequest) {
+  if (
+    process.env.VERCEL_ENV === "production" &&
+    waitlistUp() &&
+    gated(request.nextUrl.pathname) &&
+    !betaPass(request.cookies.get(BETA_COOKIE)?.value, process.env.BETA_CODE)
+  ) {
+    return NextResponse.rewrite(new URL("/waitlist", request.url));
+  }
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   let response = NextResponse.next({ request });
