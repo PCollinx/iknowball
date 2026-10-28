@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { ShirtBack, shirtName, type Kit } from "@/components/daily/ShirtBack";
 import { PENALTY_SECONDS, SPRINT_SECONDS } from "@/lib/clash/rules";
 
-// Clash's pieces from option E (picked 23 Oct 2026, docs/redesign-plan.md step 5):
+// Clash's pieces from option E (picked 23 Oct 2026, docs/launch-plan.md step 5):
 // the head-to-head as two shirt stickers on an album page, the referee's notes
 // as tilted stickers. The heading is the scoreboard in Board.tsx.
 

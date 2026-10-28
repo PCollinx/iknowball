@@ -12,7 +12,7 @@ import { clubChoices } from "@/lib/profile/data";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { GATES_OPEN_LABEL, waitlistUp } from "@/lib/waitlist";
 
-// The waitlist (step 13 of docs/redesign-plan.md, option A "Team sheet"). On
+// The waitlist (step 13 of docs/launch-plan.md, option A "Team sheet"). On
 // the live site the proxy shows it in place of the games from 1 Nov until the
 // gates open (src/lib/waitlist.ts); test sites keep it here at /waitlist. It
 // sits outside the (site) group: the navbar's sections lead to games that

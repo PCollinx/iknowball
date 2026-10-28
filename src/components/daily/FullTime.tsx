@@ -19,7 +19,7 @@ import { FORMAT_NAME, ordinal } from "./formats";
 import { shareCardData } from "./share";
 import { ShirtBack, shirtName, type Kit } from "./ShirtBack";
 
-// Full time (step 3 of docs/redesign-plan.md, Collins's mix of 22 Oct 2026):
+// Full time (step 3 of docs/launch-plan.md, Collins's mix of 22 Oct 2026):
 // the match report's headline, score, line and ratings; the scoreboard's 1st
 // half squad on the pitch; the album's 2nd half stickers, today's table and
 // the club question; the share card; then Clash, your shirt and the next

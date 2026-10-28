@@ -1,7 +1,7 @@
 import { longDate } from "@/components/daily/share";
 import type { Result } from "@/lib/clash/data";
 
-// Clash full time, option D (picked 25 Oct 2026, docs/redesign-plan.md step 6):
+// Clash full time, option D (picked 25 Oct 2026, docs/launch-plan.md step 6):
 // what the screen and the result image both say. Kept pure so it can be tested.
 
 export type Outcome = { kind: "won" | "level" | "lost"; by: number };

@@ -10,7 +10,7 @@ import { Kick } from "./KickRow";
 import { ClashMasthead } from "./Masthead";
 import { banter, calledLine, outcomeLabel, outcomeOf, slots, toBeat, verdictLine, type Outcome, type Side } from "./result";
 
-// Full time, option D (picked 25 Oct 2026, docs/redesign-plan.md step 6): the
+// Full time, option D (picked 25 Oct 2026, docs/launch-plan.md step 6): the
 // sprint as a finished album page, a slot per player with a kick in every one
 // you called, the score stuck on it; on someone's challenge, your page beside
 // theirs. Then the stickers, the challenge's table and the ticket to send it
