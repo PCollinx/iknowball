@@ -58,7 +58,7 @@ export function SiteFooter() {
             </li>
             <li>
               <FooterLink href={SOCIAL.x.url} icon={<XMark />} external>
-                /{SOCIAL.x.handle}
+                / {SOCIAL.x.handle}
               </FooterLink>
             </li>
             <li>
