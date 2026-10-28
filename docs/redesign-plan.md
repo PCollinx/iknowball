@@ -113,6 +113,9 @@ Goes public on 1 Nov (beta starts the same day; launch Fri 20 Nov). Option A (Co
 launch the public sees the waitlist at playiknowball.com instead of the games, and beta testers get in by
 invite. Built fresh in the new frame and style, reusing PR #31's sign-up action, checks, honeypot and queue
 number, behind a date switch; then close #31. Must be merged by Sat 31 Oct.
+Built 28 Oct 2026 (option A with C's game stickers). Before 1 Nov: set `BETA_CODE` (8+ characters) in
+Vercel > Settings > Environment Variables for Production and redeploy, or nobody gets past the waitlist.
+The invite link is then `playiknowball.com/beta/{BETA_CODE}`.
 
 ### 14. Support iKnowBall
 Added 27 Oct 2026 (Collins). The page behind the footer's "Support iKnowBall" link (`SUPPORT_URL` in
@@ -139,6 +142,7 @@ launch on Vercel Hobby, which allows no donations, so it waits for the switch to
 - [x] 9. Everyone and fans (PR #49)
 - [x] 10. Your shirt (PR #50)
 - [x] 11. Privacy, 404 and errors (PR #51)
-- [ ] 12. The logo
+- [x] 12. The logo (PR #55)
+- [ ] Set `BETA_CODE` in Vercel Production and redeploy (before 1 Nov, for the waitlist's beta invite)
 - [ ] 13. The waitlist (by 31 Oct)
 - [ ] 14. Support iKnowBall (after launch, with Vercel Pro)
