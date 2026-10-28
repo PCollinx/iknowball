@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { RatingBadge } from "@/components/profile/RatingBadge";
 import { currentUserId } from "@/lib/daily/data";
+import { LOGO_SRC } from "@/lib/og/logo";
 import { getRating } from "@/lib/profile/data";
 import { NavLinks, SectionLinks } from "./NavLinks";
 
@@ -75,27 +76,15 @@ function Brand() {
   return (
     <>
       <Logo />
-      <span className="font-display text-[26px] leading-none uppercase lg:text-[32px]">
-        iKnow<span className="text-royal">Ball</span>
+      <span className="font-display text-[26px] leading-none lg:text-[32px]">
+        iKnow<span className="text-teal">Ball</span>
       </span>
     </>
   );
 }
 
-/** A royal shirt with a 10 on it: the app's mark. */
-export function Logo({ className = "h-[30px] w-[30px] lg:h-9 lg:w-9" }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 100 100" aria-hidden="true" className={className}>
-      <path
-        d="M50 9 Q45 9 41 5 L29 9 L7 23 L15 41 L25 36 L25 95 L75 95 L75 36 L85 41 L93 23 L71 9 L59 5 Q55 9 50 9 Z"
-        fill="var(--color-royal)"
-        stroke="var(--color-navy)"
-        strokeWidth="5"
-        strokeLinejoin="round"
-      />
-      <text x="50" y="72" textAnchor="middle" className="font-display" fontWeight="900" fontSize="40" fill="var(--color-teal-light)">
-        10
-      </text>
-    </svg>
-  );
+/** The No. 10 shirt with its nameplate: the app's mark (src/lib/og/logo.tsx). Pass a height; the width follows. */
+export function Logo({ className = "h-[31px] lg:h-[37px]" }: { className?: string }) {
+  // eslint-disable-next-line @next/next/no-img-element -- a small inline data URI, nothing for next/image to optimise
+  return <img src={LOGO_SRC} alt="" className={`aspect-[104/108] w-auto shrink-0 ${className}`} />;
 }

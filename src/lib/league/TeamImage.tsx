@@ -1,6 +1,7 @@
 import { shirtName, type Kit } from "@/components/daily/ShirtBack";
 import type { TableLine } from "@/lib/league/data";
 import { BODY, C, DISPLAY } from "@/lib/og/fonts";
+import { LOGO_RATIO, LOGO_SRC } from "@/lib/og/logo";
 import { Shirt } from "@/lib/og/Shirt";
 import { emptyShirtSvg, shirtSvg } from "@/lib/og/shirt-svg";
 import { kitOf } from "@/lib/profile/club";
@@ -24,7 +25,6 @@ const SPOTS = [
   [50, 76],
 ] as const;
 const EMPTY_KIT: Kit = { shirt: C.mist, number: C.track };
-const LOGO_KIT: Kit = { shirt: C.royal, number: C.tealLight, trim: C.tealLight };
 
 export type TeamCardData = {
   xi: (TableLine | null)[];
@@ -77,10 +77,11 @@ function Masthead({ d }: { d: TeamCardData }) {
     <div style={{ display: "flex", flexDirection: "column", padding: `28px ${PAD}px 0` }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingBottom: 14 }}>
         <div style={{ display: "flex", alignItems: "center" }}>
-          <Shirt src={shirtSvg(LOGO_KIT)} size={50} big="10" kit={LOGO_KIT} />
-          <div style={{ display: "flex", ...display, fontSize: 44, marginLeft: 12 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element -- Satori draws <img>, not next/image */}
+          <img src={LOGO_SRC} width={Math.round(54 * LOGO_RATIO)} height={54} alt="" />
+          <div style={{ display: "flex", ...display, textTransform: "none", fontSize: 44, marginLeft: 12 }}>
             <span>iKnow</span>
-            <span style={{ color: C.royal }}>Ball</span>
+            <span style={{ color: C.teal }}>Ball</span>
           </div>
         </div>
         <span style={{ ...label, fontSize: 20 }}>{`${d.weekLabel} · ${d.players.toLocaleString("en-GB")} played`}</span>

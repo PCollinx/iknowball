@@ -47,9 +47,9 @@ function Masthead({ d }: { d: ResultCardData }) {
   const rate = ratingColours(d.rating);
   return (
     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `${px(2)}px solid ${C.navy}`, paddingBottom: px(8) }}>
-      <div style={{ display: "flex", ...display, fontSize: px(34), lineHeight: 0.9 }}>
-        <span style={{ color: C.royal }}>I</span>
-        <span>KNOWBALL</span>
+      <div style={{ display: "flex", ...display, textTransform: "none", fontSize: px(34), lineHeight: 0.9 }}>
+        <span>iKnow</span>
+        <span style={{ color: C.teal }}>Ball</span>
       </div>
       <div style={{ display: "flex", alignItems: "center" }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", fontSize: px(11), lineHeight: 1.4, ...label }}>
