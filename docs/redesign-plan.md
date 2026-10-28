@@ -139,6 +139,6 @@ launch on Vercel Hobby, which allows no donations, so it waits for the switch to
 - [x] 9. Everyone and fans (PR #49)
 - [x] 10. Your shirt (PR #50)
 - [x] 11. Privacy, 404 and errors (PR #51)
-- [ ] 12. The logo
+- [x] 12. The logo (PR #55)
 - [ ] 13. The waitlist (by 31 Oct)
 - [ ] 14. Support iKnowBall (after launch, with Vercel Pro)
