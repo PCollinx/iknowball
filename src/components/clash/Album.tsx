@@ -4,7 +4,7 @@ import { PENALTY_SECONDS, SPRINT_SECONDS } from "@/lib/clash/rules";
 
 // Clash's pieces from option E (picked 23 Oct 2026, docs/redesign-plan.md step 5):
 // the head-to-head as two shirt stickers on an album page, the referee's notes
-// as tilted stickers, and the "Higher or lower" heading as the call itself.
+// as tilted stickers. The heading is the scoreboard in Board.tsx.
 
 /** A mist album page with the stat as a tilted label sticker across its top edge. */
 export function AlbumPage({ label, children, className = "" }: { label: string; children: ReactNode; className?: string }) {
@@ -107,33 +107,3 @@ export function RefereesNotes() {
   );
 }
 
-function Arrow({ up }: { up: boolean }) {
-  return (
-    <span
-      aria-hidden="true"
-      className={`grid size-[0.62em] shrink-0 place-items-center border-[2.5px] border-navy ${up ? "-rotate-6 bg-teal-light shadow-[4px_4px_0_var(--color-navy)]" : "rotate-[5deg] bg-navy shadow-[4px_4px_0_var(--color-sky)]"}`}
-    >
-      <svg viewBox="0 0 24 24" className="size-[0.36em]">
-        <path d={up ? "M12 3 L22 19 H2 Z" : "M12 21 L2 5 H22 Z"} fill={up ? "var(--color-navy)" : "var(--color-sky)"} />
-      </svg>
-    </span>
-  );
-}
-
-/** "Higher or lower" as the call itself: Higher with an up sticker, a round
- * "or", Lower in royal with a down sticker (Collins's redesign, 23 Oct 2026). */
-export function HigherOrLower({ className = "" }: { className?: string }) {
-  return (
-    <h1 className={`grid gap-1 font-display leading-[0.82] uppercase ${className}`}>
-      <span className="flex items-center gap-[0.18em]">
-        Higher <Arrow up />
-      </span>
-      <span className="flex items-center gap-[0.18em] pl-[0.64em]">
-        <span className="grid size-[0.52em] shrink-0 -rotate-6 place-items-center rounded-full border-2 border-white bg-navy text-white shadow-[3px_3px_0_var(--color-sky)]">
-          <span className="text-[0.22em] leading-none">or</span>
-        </span>
-        <span className="text-royal">Lower</span> <Arrow up={false} />
-      </span>
-    </h1>
-  );
-}
