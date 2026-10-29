@@ -14,10 +14,26 @@ export const MIN_PICKS = 5;
 /** Era picks: questions in a round, and the fewest worth playing. */
 export const ERA_SIZE = 5;
 export const MIN_ERAS = 4;
+/** Famous players in the Daily too (Collins, 29 Oct 2026): In Order and Era
+ * picks choose from a club's best known this many, and Rapid picks' wrong
+ * options come from them, so the names are ones people know. */
+export const KNOWN_POOL = 20;
+/** Rapid picks' right answers need this many Wikipedia editions on them, when enough do. */
+export const MIN_FAME = 12;
 
 export type Club = { id: number; name: string };
 export type PairCandidate = { a: number; b: number; players: number };
-export type SharedPlayer = { id: number; name: string; aliases: string[]; joinedA: string | null; joinedB: string | null };
+/** `fame` is how well known a player is (Wikipedia editions with an article on them); unknown counts as 0. */
+export type SharedPlayer = { id: number; name: string; aliases: string[]; joinedA: string | null; joinedB: string | null; fame?: number };
+
+const fameOf = (p: { fame?: number }) => p.fame ?? 0;
+
+/** The n best known, in the order they came. */
+function bestKnown<T extends { fame?: number }>(items: T[], n: number): T[] {
+  if (items.length <= n) return items;
+  const keep = new Set([...items].sort((a, b) => fameOf(b) - fameOf(a)).slice(0, n));
+  return items.filter((x) => keep.has(x));
+}
 
 export const pairKey = (a: number, b: number) => (a < b ? `${a}-${b}` : `${b}-${a}`);
 
@@ -114,15 +130,19 @@ export function recallAnswers(players: SharedPlayer[]): RecallLine[] {
 
 /**
  * Part 2: players who joined one club in different years, spread across the
- * era, earliest first. Players used in recent Dailies are picked last.
+ * era, earliest first. The best known go in, widening only until there are
+ * enough years; players used in recent Dailies are picked last.
  */
 export function orderAnswers(players: SharedPlayer[], joined: "joinedA" | "joinedB", recent: Set<string>, seed: number): OrderLine[] {
-  const byYear = new Map<string, SharedPlayer[]>();
-  for (const p of players) {
-    const d = p[joined];
-    if (!d || d < "1992-08-15") continue;
-    const y = d.slice(0, 4);
-    byYear.set(y, [...(byYear.get(y) ?? []), p]);
+  const dated = players.filter((p) => (p[joined] ?? "") >= "1992-08-15");
+  let byYear = new Map<string, SharedPlayer[]>();
+  for (let n = KNOWN_POOL; ; n *= 2) {
+    byYear = new Map();
+    for (const p of bestKnown(dated, n)) {
+      const y = p[joined]!.slice(0, 4);
+      byYear.set(y, [...(byYear.get(y) ?? []), p]);
+    }
+    if (byYear.size >= ORDER_SIZE || n >= dated.length) break;
   }
   const years = [...byYear.keys()].sort();
   if (years.length < ORDER_SIZE) return [];
@@ -147,9 +167,9 @@ export function recallSeconds(answers: number): number {
 // ---------------------------------------------------------------------------
 
 /** A player who played for only one of the two clubs: a wrong option. */
-export type Decoy = { id: number; name: string; club: number };
+export type Decoy = { id: number; name: string; club: number; fame?: number };
 /** A dated spell at one club: an Era picks question. */
-export type DatedSpell = { id: number; name: string; joined: string; left: string };
+export type DatedSpell = { id: number; name: string; joined: string; left: string; fame?: number };
 
 /** Rotates a list by a seed, so a rerun picks the same items. */
 function rotate<T>(items: T[], seed: number): T[] {
@@ -161,18 +181,25 @@ function rotate<T>(items: T[], seed: number): T[] {
 /**
  * Part 1 as Rapid picks: each question has one player who played for both
  * clubs and three who played for just one of them, so nobody wins on club
- * alone. Players used lately are picked last; no option repeats in a round.
+ * alone. Right answers are well known when enough are, best known first,
+ * players used lately last; wrong ones are among each club's best known. No
+ * option repeats in a round.
  */
 export function rapidPicks(shared: SharedPlayer[], decoys: Decoy[], home: Club, away: Club, recent: Set<string>, seed: number): PickLine[] {
   const sharedNames = new Set(shared.map((p) => normalizeName(p.name)));
-  const right = rotate(shared, seed).sort((p, q) => Number(recent.has(normalizeName(p.name))) - Number(recent.has(normalizeName(q.name))));
+  const known = shared.filter((p) => fameOf(p) >= MIN_FAME);
+  const isRecent = (p: SharedPlayer) => Number(recent.has(normalizeName(p.name)));
+  const right = rotate(known.length >= MIN_PICKS ? known : shared, seed).sort((p, q) => isRecent(p) - isRecent(q) || fameOf(q) - fameOf(p));
   const seen = new Set<string>();
   const pool = (club: number) =>
     rotate(
-      decoys.filter((d) => {
-        const k = normalizeName(d.name);
-        return d.club === club && k && !sharedNames.has(k);
-      }),
+      bestKnown(
+        decoys.filter((d) => {
+          const k = normalizeName(d.name);
+          return d.club === club && k && !sharedNames.has(k);
+        }),
+        KNOWN_POOL,
+      ),
       seed,
     );
   const sides = [pool(home.id), pool(away.id)];
@@ -217,22 +244,22 @@ export function eraDecoys(from: number, to: number, seed: number, nowYear: numbe
 }
 
 /**
- * Part 2 as Era picks: players at one club with both dates known, spread
- * across the era, each asked when they were there.
+ * Part 2 as Era picks: the club's best known players with both dates known,
+ * spread across the era, each asked when they were there.
  */
 export function eraPicks(spells: DatedSpell[], club: Club, recent: Set<string>, seed: number, nowYear: number): PickLine[] {
   // One spell a player (the longest), at least a year long, in the Premier League era.
-  const byPlayer = new Map<number, { name: string; from: number; to: number }>();
+  const byPlayer = new Map<number, { name: string; from: number; to: number; fame?: number }>();
   for (const s of spells) {
     const from = Number(s.joined.slice(0, 4));
     const to = Number(s.left.slice(0, 4));
     if (from < 1992 || to <= from || to > nowYear) continue;
     const had = byPlayer.get(s.id);
-    if (!had || to - from > had.to - had.from) byPlayer.set(s.id, { name: s.name, from, to });
+    if (!had || to - from > had.to - had.from) byPlayer.set(s.id, { name: s.name, from, to, fame: s.fame });
   }
   const fresh = (n: string) => !recent.has(normalizeName(n));
   const all = [...byPlayer.values()].sort((a, b) => a.from - b.from || a.name.localeCompare(b.name));
-  const pool = all.filter((p) => fresh(p.name)).length >= ERA_SIZE ? all.filter((p) => fresh(p.name)) : all;
+  const pool = bestKnown(all.filter((p) => fresh(p.name)).length >= ERA_SIZE ? all.filter((p) => fresh(p.name)) : all, KNOWN_POOL);
   if (pool.length < MIN_ERAS) return [];
 
   // Evenly spread through the years, like In Order.

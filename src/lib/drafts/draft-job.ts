@@ -116,13 +116,13 @@ async function sharedPlayers(a: number, b: number): Promise<SharedPlayer[]> {
   const admin = createAdminClient();
   const { data, error } = await admin.rpc("club_pair_players", { p_a: a, p_b: b });
   if (error) throw error;
-  const rows = (data ?? []) as { player_id: number; known_as: string; joined_a: string | null; joined_b: string | null }[];
+  const rows = (data ?? []) as { player_id: number; known_as: string; joined_a: string | null; joined_b: string | null; sitelinks: number | null }[];
   const { data: aliasRows } = rows.length
     ? await admin.from("player_aliases").select("player_id, alias").in("player_id", rows.map((r) => r.player_id))
     : { data: [] };
   const aliases = new Map<number, string[]>();
   for (const r of aliasRows ?? []) aliases.set(r.player_id, [...(aliases.get(r.player_id) ?? []), r.alias]);
-  return rows.map((r) => ({ id: r.player_id, name: r.known_as, aliases: aliases.get(r.player_id) ?? [], joinedA: r.joined_a, joinedB: r.joined_b }));
+  return rows.map((r) => ({ id: r.player_id, name: r.known_as, aliases: aliases.get(r.player_id) ?? [], joinedA: r.joined_a, joinedB: r.joined_b, fame: r.sitelinks ?? 0 }));
 }
 
 /** The player an answer is about: the answer, or for Era picks the name in the question. */
@@ -148,10 +148,15 @@ async function pickData(a: number, b: number, date: string): Promise<PickData> {
     admin.rpc("club_dated_spells", { p_club: b }),
   ]);
   for (const r of [decoys, spellsA, spellsB]) if (r.error) throw r.error;
-  type SpellRow = { player_id: number; known_as: string; joined_on: string; left_on: string };
-  const spells = (rows: SpellRow[]) => rows.map((r) => ({ id: r.player_id, name: r.known_as, joined: r.joined_on, left: r.left_on }));
+  type SpellRow = { player_id: number; known_as: string; joined_on: string; left_on: string; sitelinks: number | null };
+  const spells = (rows: SpellRow[]) => rows.map((r) => ({ id: r.player_id, name: r.known_as, joined: r.joined_on, left: r.left_on, fame: r.sitelinks ?? 0 }));
   return {
-    decoys: ((decoys.data ?? []) as { player_id: number; known_as: string; club_id: number }[]).map((d) => ({ id: d.player_id, name: d.known_as, club: d.club_id })),
+    decoys: ((decoys.data ?? []) as { player_id: number; known_as: string; club_id: number; sitelinks: number | null }[]).map((d) => ({
+      id: d.player_id,
+      name: d.known_as,
+      club: d.club_id,
+      fame: d.sitelinks ?? 0,
+    })),
     spells: new Map([
       [a, spells((spellsA.data ?? []) as SpellRow[])],
       [b, spells((spellsB.data ?? []) as SpellRow[])],
