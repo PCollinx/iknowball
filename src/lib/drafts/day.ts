@@ -88,7 +88,10 @@ export const TEMPLATES = {
   // Three-club chain (Free Recall #14) was tried and dropped on 29 Oct 2026: no
   // pair had more than 5 players at both clubs and a third top club.
   free_recall: ["played-for-both", "dressing-room", "nation-at-club", "managers"],
-  pick: ["played-for-both-picks", "straight-swap", "career-path-picks", "nation-picks", "manager-picks"],
+  // Manager picks (Rapid #6) is out of the rotation until we have a fuller
+  // list of managers: Wikidata gives Aston Villa 4 since 1992, so a wrong
+  // option could be someone who managed there (Steve Bruce, 29 Oct 2026).
+  pick: ["played-for-both-picks", "straight-swap", "career-path-picks", "nation-picks"],
   in_order: ["joined-first", "oldest-first", "career-path", "most-clubs", "managers-in-order", "tallest-first", "biggest-ground"],
   era: ["era-years", "year-of-move", "all-there-together", "manager-reign"],
 } as const;
