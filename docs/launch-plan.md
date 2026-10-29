@@ -2,7 +2,7 @@
 
 Everything left between now and launch on **Fri 20 Nov 2026** (fallback Fri 27 Nov), in one place. Renamed
 from the redesign plan on 29 Oct 2026 (Collins): steps 0 to 14 are the redesign, one screen at a time
-(started 21 Oct 2026); steps 15 to 18 are what's left to build for launch; then the dates and Collins's own
+(started 21 Oct 2026); steps 15 to 19 are what's left to build for launch; then the dates and Collins's own
 to-dos. Each step ends merged before the next starts.
 
 Launch is Fri 20 Nov (beta and the waitlist from Sun 1 Nov; replanned 27 Oct 2026), so the screens players
@@ -126,7 +126,26 @@ launch on Vercel Hobby, which allows no donations, so it waits for the switch to
 
 ## To build for launch
 
-### 15. The installable app (PWA)
+### 15. Popular games only
+Added 29 Oct 2026 (Collins: live Dailies paired bottom-of-the-table clubs nobody knew). Decided: the big
+six (ARS, CHE, LIV, MCI, MUN, TOT) in every Daily, at least one of them; Europe's giants on UCL nights
+(before launch); Clash draws famous players at top clubs. **Built, committed on `claude/popular-games`
+(c3aa478), not pushed; migration `20261029000000_popular_games` is on dev only.** Rules in CLAUDE.md
+("Popular games only"). To finish, in order:
+1. ~~Dev import~~ done 29 Oct: all nine European clubs, the big six and Aston Villa imported on dev
+   (about 300 to 550 players each, no failures).
+2. ~~Check Clash on dev~~ done 30 Oct: both pools full (250, the cap), names famous (Kane, Ronaldo, Haaland).
+3. ~~Drafts on dev~~ done 30 Oct: every day has a big six club, 3 Nov is Barcelona v Aston Villa. The first
+   drafts' second halves were obscure (Brian McGlinchey, Greg Lincoln), so In Order, Era and Rapid picks
+   now favour famous players (migration `20261030000000_famous_dailies`, on dev), and In Order is 45 s.
+   The big six had been imported before fame was stored: every tracked club was re-imported on dev.
+4. Push and open the PR; Collins merges.
+5. Live: `npx supabase link --project-ref edggdeqvfmezibxmttsz`, `migration list`, `db push` (both
+   migrations); then re-import every tracked club by name (`?club=`), since the plain job skips clubs
+   imported in the last 6 days and those have no fame numbers, the fixture sync adds UCL that night.
+6. Delete the live drafts already made for the coming days in the maker, so they redraft under the rules.
+
+### 16. The installable app (PWA)
 Added 29 Oct 2026 (Collins: built before launch, no longer on hold). Add to home screen on Android and
 iPhone, opening full screen like an app: a web manifest (name, the light-teal app icon from
 `src/lib/og/logo.tsx` at 192 and 512 px plus a maskable one, navy text on white, `display: standalone`),
@@ -134,19 +153,19 @@ the iPhone meta tags, and a small offline screen in the house style ("No signal"
 No offline play: answers are checked on the server. Mock the install prompt and the offline screen first.
 Keep it off the first-load budget (about 200 KB). By Sun 8 Nov, so beta testers install it.
 
-### 16. The launch email
+### 17. The launch email
 The waitlist promises "We'll email you on Fri 20 Nov when the gates open". One email to everyone on the
 sheet, through Resend (already set up for sign-in): their shirt and number, the link, the first Daily. A
 job or admin button that sends in batches, records who was sent to (so a rerun skips them) and has an
 unsubscribe line. Mock the email first. Test on dev, send on the morning of 20 Nov.
 
-### 17. Waitlist leagues on day one
+### 18. Waitlist leagues on day one
 The sheet says "Bring your league and your league starts on day one", but the league name it saves isn't
 connected to anything yet. Decide with Collins: make those leagues at launch (the person who named it
 becomes captain once they sign in with the same email, and gets the invite code), or soften the line on
 the page. Decide by Sun 8 Nov, build by 18 Nov.
 
-### 18. The demo video on the waitlist
+### 19. The demo video on the waitlist
 The demo video goes out Thu 19 Nov and is pinned on the waitlist page for its last day. Add a slot for it
 under the team sheet (a link to the post on X, or the video itself), switched on by a date or a setting.
 By Wed 18 Nov.
@@ -162,7 +181,7 @@ By Wed 18 Nov.
   table is right.
 - [ ] **During the beta:** tune the tier cut-offs on real ratings; record the demo video.
 - [ ] **Thu 19 Nov:** publish the demo video on X and WhatsApp.
-- [ ] **Fri 20 Nov:** the waitlist comes down at midnight WAT by itself; send the launch email (step 16).
+- [ ] **Fri 20 Nov:** the waitlist comes down at midnight WAT by itself; send the launch email (step 17).
 
 After launch: step 14 (Support, with Vercel Pro), Rate mode (18 Dec), whether to buy iknowball.com.
 
@@ -188,7 +207,8 @@ After launch: step 14 (Support, with Vercel Pro), Rate mode (18 Dec), whether to
 - [x] 12. The logo (PR #55)
 - [x] 13. The waitlist (PR #56)
 - [ ] 14. Support iKnowBall (after launch, with Vercel Pro)
-- [ ] 15. The installable app (by 8 Nov)
-- [ ] 16. The launch email (by 19 Nov)
-- [ ] 17. Waitlist leagues on day one (decide by 8 Nov, build by 18 Nov)
-- [ ] 18. The demo video on the waitlist (by 18 Nov)
+- [ ] 15. Popular games only (built, to check and merge first thing, 30 Oct)
+- [ ] 16. The installable app (by 8 Nov)
+- [ ] 17. The launch email (by 19 Nov)
+- [ ] 18. Waitlist leagues on day one (decide by 8 Nov, build by 18 Nov)
+- [ ] 19. The demo video on the waitlist (by 18 Nov)
