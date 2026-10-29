@@ -4,6 +4,7 @@ import { CLASH_MAX, COUNTED_SPRINTS } from "@/lib/league/week";
 import { addDays, gameDate, gameDateClosesAt, matchweekBounds, seasonOf } from "@/lib/time";
 import { splitFixture } from "@/components/daily/fixture";
 import type { Kit } from "@/components/daily/ShirtBack";
+import type { PathClub } from "@/components/daily/KitTrail";
 import { fixtureKit, kitOf, type Club } from "./club";
 import { overallRating } from "./rating";
 import { bestFive, dayScores, PLACEMENT_DAYS, streak, tierFor, type PlayedPart, type TierName } from "./stats";
@@ -152,6 +153,18 @@ export async function clubsNamed(names: string[]): Promise<Map<string, Club>> {
   const { data, error } = await createAdminClient().from("clubs").select(CLUB_COLUMNS).in("name", names);
   if (error) throw error;
   return new Map(((data ?? []) as Club[]).map((c) => [c.name.toLowerCase(), c]));
+}
+
+/** Kits and short names for clubs named in a career path, by the names given. */
+export async function pathClubs(names: string[]): Promise<Record<string, PathClub>> {
+  const unique = [...new Set(names)];
+  const clubs = await clubsNamed(unique);
+  const out: Record<string, PathClub> = {};
+  for (const name of unique) {
+    const club = clubs.get(name.toLowerCase());
+    if (club) out[name] = { kit: kitOf(club), short: club.short_name };
+  }
+  return out;
 }
 
 /** A fixture's kit ("Chelsea v Arsenal"): its clubs half and half. */

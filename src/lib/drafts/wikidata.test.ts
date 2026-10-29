@@ -35,8 +35,16 @@ describe("parseClubPlayers", () => {
         apps: 109,
         goals: 15,
         sitelinks: 84,
+        onLoan: false,
       },
     ]);
+  });
+
+  it("marks a loan, even when it's on only one of a statement's rows", () => {
+    const loan = `${E}Q2914547`;
+    const [s] = parseClubPlayers({ results: { bindings: [row({ how: `${E}Q1811518` }), row({ how: loan })] } });
+    expect(s.onLoan).toBe(true);
+    expect(parseClubPlayers({ results: { bindings: [row({ how: `${E}Q1811518` })] } })[0].onLoan).toBe(false);
   });
 
   it("skips players without an English label and repeated statements", () => {

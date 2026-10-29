@@ -36,6 +36,9 @@ type Page<T> = { data: T[]; pagination: { totalCount: number; offset: number; li
 
 /** Highlightly's league id for the UEFA Champions League (found 29 Oct 2026 through /leagues). */
 export const UCL_LEAGUE_ID = 2486;
+/** England's FA Cup and League Cup (found 29 Oct 2026 the same way). */
+export const FA_CUP_LEAGUE_ID = 39079;
+export const LEAGUE_CUP_LEAGUE_ID = 41632;
 
 /** Every match of the season in a league (the Premier League unless told), newest first, 100 a call. */
 export async function seasonMatches(leagueId?: number): Promise<HighlightlyMatch[]> {

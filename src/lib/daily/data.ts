@@ -29,6 +29,8 @@ export type DailyRow = {
   prompt: string;
   time_limit_seconds: number;
   answer_count: number;
+  /** The draft template that made it ("career-path", …); null when written in the maker. */
+  template: string | null;
 };
 
 export type AttemptRow = {
@@ -57,7 +59,7 @@ export type AnswerRow = {
   choices: string[];
 };
 
-const DAILY_COLUMNS = "id, play_date, part, format, title, prompt, time_limit_seconds, answer_count";
+const DAILY_COLUMNS = "id, play_date, part, format, title, prompt, time_limit_seconds, answer_count, template";
 
 /** The signed-in player or guest, checked with Supabase once per request. */
 export const currentUser = cache(async (): Promise<User | null> => {

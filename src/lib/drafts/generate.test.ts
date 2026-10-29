@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { recallIssues } from "@/lib/maker/parse";
-import { draftDay, eraDecoys, eraPicks, KNOWN_POOL, orderAnswers, pairingFor, pickPair, rapidPicks, recallAnswers, recallSeconds, type SharedPlayer } from "./generate";
+import { draftDay, pairingFor } from "./day";
+import { eraDecoys, eraPicks, KNOWN_POOL, orderAnswers, pickPair, rapidPicks, recallAnswers, recallSeconds, type SharedPlayer } from "./generate";
 
 const player = (id: number, name: string, aliases: string[] = [], joinedA: string | null = null, joinedB: string | null = null): SharedPlayer => ({
   id,

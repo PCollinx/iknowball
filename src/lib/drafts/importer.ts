@@ -1,7 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { TrackedClub } from "./clubs";
-import { fetchClubPlayers, fetchPositions, type Position, type Spell } from "./wikidata";
+import { fetchClubExtras, fetchClubPlayers, fetchPlayerFacts, fetchPositions, type PlayerFacts, type Position, type Spell } from "./wikidata";
 
 const BATCH = 500;
 
@@ -9,7 +9,7 @@ function chunks<T>(rows: T[]): T[][] {
   return Array.from({ length: Math.ceil(rows.length / BATCH) }, (_, i) => rows.slice(i * BATCH, (i + 1) * BATCH));
 }
 
-export type ImportResult = { club: string; players: number; spells: number; positions: number } | { club: string; error: string };
+export type ImportResult = { club: string; players: number; spells: number; positions: number; facts: number; managers: number } | { club: string; error: string };
 
 /** Fetches one club's player histories from Wikidata and upserts them. */
 export async function importClub(club: TrackedClub): Promise<ImportResult> {
@@ -75,6 +75,51 @@ async function saveClub(admin: ReturnType<typeof createAdminClient>, club: Track
     }
   }
 
+  // Nationality, height and career clubs (template build B). Like positions, a
+  // Wikidata hiccup leaves what we had.
+  const facts = await fetchPlayerFacts([...byPlayer.keys()]).catch(() => new Map<string, PlayerFacts>());
+  const factRows = [...facts].flatMap(([q, f]) => {
+    const s = byPlayer.get(q);
+    return s ? [{ wikidata_qid: q, full_name: s.name, known_as: s.name, nationality: f.nationality, height_cm: f.heightCm, career_clubs: f.careerClubs }] : [];
+  });
+  for (const batch of chunks(factRows)) {
+    const { error } = await admin.from("players").upsert(batch, { onConflict: "wikidata_qid" });
+    if (error) throw error;
+  }
+
+  // The club's managers in the Premier League era and its ground.
+  const extras = await fetchClubExtras(spells[0].clubQid).catch(() => null);
+  if (extras) {
+    if (extras.ground) {
+      const { error } = await admin.from("clubs").update({ ground: extras.ground.name, ground_capacity: extras.ground.capacity }).eq("id", clubRow.id);
+      if (error) throw error;
+    }
+    if (extras.managers.length) {
+      const { error } = await admin.from("club_managers").upsert(
+        extras.managers.map((m) => ({
+          club_id: clubRow.id,
+          wikidata_qid: m.qid,
+          name: m.name,
+          started_on: m.startedOn,
+          ended_on: m.endedOn,
+          source_ref: m.statement,
+          updated_at: new Date().toISOString(),
+        })),
+        { onConflict: "source_ref" },
+      );
+      if (error) throw error;
+    }
+    // Managers Wikidata no longer lists for the club (a vacancy, a correction) go.
+    const keep = new Set(extras.managers.map((m) => m.statement));
+    const { data: had, error: hadError } = await admin.from("club_managers").select("id, source_ref").eq("club_id", clubRow.id);
+    if (hadError) throw hadError;
+    const gone = (had ?? []).filter((m) => !keep.has(m.source_ref)).map((m) => m.id);
+    if (gone.length) {
+      const { error } = await admin.from("club_managers").delete().in("id", gone);
+      if (error) throw error;
+    }
+  }
+
   const aliases = [...byPlayer.values()].flatMap((s) => s.aliases.map((alias) => ({ player_id: ids.get(s.playerQid)!, alias })));
   for (const batch of chunks(aliases)) {
     const { error } = await admin.from("player_aliases").upsert(batch, { onConflict: "player_id,alias_normalized", ignoreDuplicates: true });
@@ -90,6 +135,7 @@ async function saveClub(admin: ReturnType<typeof createAdminClient>, club: Track
         left_on: s.leftOn,
         apps: s.apps,
         goals: s.goals,
+        on_loan: s.onLoan,
         source_ref: s.statement,
         updated_at: new Date().toISOString(),
       })),
@@ -97,5 +143,19 @@ async function saveClub(admin: ReturnType<typeof createAdminClient>, club: Track
     );
     if (error) throw error;
   }
-  return { club: club.name, players: byPlayer.size, spells: spells.length, positions: positions.size };
+  // Spells Wikidata no longer gives for this club go (removed or corrected
+  // there, or a women's team player from before the import left them out).
+  const fresh = new Set(spells.map((s) => s.statement));
+  const { data: held, error: heldError } = await admin.from("player_spells").select("id, source_ref").eq("club_id", clubRow.id);
+  if (heldError) throw heldError;
+  const stale = (held ?? []).filter((h) => !fresh.has(h.source_ref)).map((h) => h.id);
+  // A short answer from Wikidata must never empty a club: more than a quarter
+  // going at once is left for a person to look at.
+  if (stale.length > (held ?? []).length / 4) throw new Error(`${stale.length} of ${held?.length} spells would go. Check Wikidata before importing again.`);
+  for (const batch of chunks(stale)) {
+    const { error } = await admin.from("player_spells").delete().in("id", batch);
+    if (error) throw error;
+  }
+
+  return { club: club.name, players: byPlayer.size, spells: spells.length, positions: positions.size, facts: facts.size, managers: extras?.managers.length ?? 0 };
 }
