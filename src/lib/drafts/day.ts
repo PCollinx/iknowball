@@ -13,7 +13,7 @@ import {
   type Decoy,
   type SharedPlayer,
 } from "./generate";
-import { allThereTogether, dressingRoom, oldestFirst, straightSwap, templateSeed, yearOfMove, type CareerSpell, type ClubSpell } from "./templates";
+import { allThereTogether, careerPathOrder, careerPathPicks, dressingRoom, oldestFirst, straightSwap, templateSeed, yearOfMove, type CareerSpell, type ClubSpell } from "./templates";
 
 // A whole day: which template each part uses, and the part it makes. Each
 // round type has a few templates; they take turns by date, one used in the
@@ -59,8 +59,8 @@ export const TEMPLATES = {
   // Three-club chain (Free Recall #14) was tried and dropped on 29 Oct 2026: no
   // pair had more than 5 players at both clubs and a third top club.
   free_recall: ["played-for-both", "dressing-room"],
-  pick: ["played-for-both-picks", "straight-swap"],
-  in_order: ["joined-first", "oldest-first"],
+  pick: ["played-for-both-picks", "straight-swap", "career-path-picks"],
+  in_order: ["joined-first", "oldest-first", "career-path"],
   era: ["era-years", "year-of-move", "all-there-together"],
 } as const;
 export type Template = (typeof TEMPLATES)[keyof typeof TEMPLATES][number];
@@ -156,6 +156,15 @@ export function draftDay(
         : null;
     },
 
+    "career-path-picks": () => {
+      if (!picks || !more) return null;
+      const at = [...(more.spellsAt.get(home.id) ?? []), ...(more.spellsAt.get(away.id) ?? [])];
+      const lines = careerPathPicks(at, more.careers, more.clubs, [home, away], recent, templateSeed(date, "career-path-picks"));
+      return lines.length
+        ? { format: "pick", template: "career-path-picks", title, prompt: "Whose clubs are these, in the order he joined them? Tap the player.", time: pickSeconds(lines.length), answers: pickAnswers(lines) }
+        : null;
+    },
+
     "joined-first": () => {
       // Whichever club gives a spread of signing years, the date picking which to try first.
       const seed = hash(date);
@@ -190,6 +199,23 @@ export function draftDay(
           };
       }
       return null;
+    },
+
+    "career-path": () => {
+      if (!more) return null;
+      const at = [...(more.spellsAt.get(home.id) ?? []), ...(more.spellsAt.get(away.id) ?? [])];
+      const path = careerPathOrder(at, more.careers, more.clubs, [home, away], recent, templateSeed(date, "career-path"));
+      return path
+        ? {
+            format: "in_order",
+            template: "career-path",
+            title: "In order",
+            // "These clubs": we import only the clubs we track, and loans are left out.
+            prompt: `Put these clubs of ${path.player}'s in the order he joined them. First at the top.`,
+            time: ORDER_SECONDS,
+            answers: path.lines.map((a, i) => ({ answer_text: a.text, extra_aliases: [], position: i + 1, reveal_note: a.note })),
+          }
+        : null;
     },
 
     "era-years": () => {

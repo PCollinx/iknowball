@@ -10,7 +10,8 @@ import { KickOff } from "@/components/daily/KickOff";
 import { Masthead, shortDate } from "@/components/daily/Masthead";
 import { currentUserId, getDailyView } from "@/lib/daily/data";
 import { clubInTitle, kitOf, type Club } from "@/lib/profile/club";
-import { clubChoices, getRating, getSupporter, kitForFixture, kitsForFixture } from "@/lib/profile/data";
+import { clubChoices, getRating, getSupporter, kitForFixture, kitsForFixture, pathClubs } from "@/lib/profile/data";
+import { pathOf } from "@/components/daily/KitTrail";
 import { publicEnv } from "@/lib/env";
 import { isTestSite } from "@/lib/daily/sample";
 import { gameDate, gameDateClosesAt } from "@/lib/time";
@@ -40,10 +41,11 @@ async function DailyScreen() {
   await connection();
   const [view, userId] = await Promise.all([getDailyView(), currentUserId()]);
   const dateLabel = shortDate(gameDate());
-  const [supporter, kit, kits] = await Promise.all([
+  const [supporter, kit, kits, pathKits] = await Promise.all([
     userId && (view.kind === "kickoff" || view.kind === "fulltime") ? getSupporter(userId) : null,
     kitForFixture(fixtureTitle(view)),
     view.kind === "kickoff" && !view.before ? kitsForFixture(view.daily.title) : ([undefined, undefined] as const),
+    pathClubs(careerClubNames(view)),
   ]);
 
   switch (view.kind) {
@@ -121,6 +123,7 @@ async function DailyScreen() {
             questions={view.questions}
             answered={view.answered}
             kit={kit}
+            pathKits={pathKits}
           />
         </>
       );
@@ -167,6 +170,7 @@ async function DailyScreen() {
           featuredClubs={choices ? featuredClubs(choices, title) : []}
           kit={kit}
           myKit={kitOf(supporter?.club ?? null)}
+          orderKits={pathKits}
           rating={rating}
           fanOf={clubInTitle(supporter?.club ?? null, title) ? supporter!.club!.name : null}
           testSite={isTestSite()}
@@ -184,6 +188,13 @@ function featuredClubs(clubs: Club[], title: string): Club[] {
   const today = clubs.filter((c) => clubInTitle(c, title));
   const big = FEATURED.map((s) => clubs.find((c) => c.short_name === s)).filter((c): c is Club => Boolean(c));
   return [...new Set([...today, ...big])].slice(0, 4);
+}
+
+/** Clubs a career path names, to dress in their kits: Rapid picks' paths, or a career path In Order's answers at full time. */
+function careerClubNames(view: Awaited<ReturnType<typeof getDailyView>>): string[] {
+  if (view.kind === "pick" && view.daily.format === "pick") return view.questions.flatMap((q) => pathOf(q.question) ?? []);
+  if (view.kind === "fulltime" && view.order?.daily.template === "career-path") return view.order.slots.map((s) => s.correct);
+  return [];
 }
 
 /** The fixture the day is themed on ("Chelsea v Arsenal"), from Part 1. */

@@ -5,6 +5,7 @@ import { beginPart, endPart, submitPick } from "@/app/(site)/daily/actions";
 import type { PickAnswered, PickQuestion } from "@/lib/daily/data";
 import { FixtureTitle } from "./FixtureTitle";
 import { GiveUp, Pitch, RoundHead, Steps, type Step, WhistleCover, type Whistle } from "./InPlay";
+import { KitTrail, pathOf, type PathClub } from "./KitTrail";
 import { ShirtBack, type Kit } from "./ShirtBack";
 import { useRoundClock } from "./useRoundClock";
 
@@ -31,6 +32,8 @@ type Props = {
   answered: PickAnswered[];
   /** The fixture's kit for Rapid picks shirts. */
   kit: Kit | null;
+  /** Kits of the clubs in career path questions, by club name. */
+  pathKits?: Record<string, PathClub>;
 };
 
 /** Rapid picks (tap the player) and Era picks (tap the period): one tap a question, against the clock. */
@@ -129,7 +132,11 @@ export function PickRound(props: Props) {
       <section className="pt-3 pb-4 [grid-area:squad] lg:pt-6 lg:pb-10">
         {/* One line for the player: the next name replaces this one in place. */}
         {current && era && <EraQuestion question={current.question} />}
-        <div className={era ? "mt-3 lg:mt-5" : ""}>{progress}</div>
+        {/* A career path: the player's clubs as a trail of kits, the next path replacing this one in place. */}
+        {current && !era && pathOf(current.question) && (
+          <KitTrail key={`path-${current.id}`} clubs={pathOf(current.question)!} kits={props.pathKits ?? {}} className="animate-deal-in" />
+        )}
+        <div className={era || pathOf(current?.question ?? null) ? "mt-3 lg:mt-5" : ""}>{progress}</div>
 
         {current && !era && (
           // Rapid picks: four shirts on the pitch, pick your man. The pitch

@@ -1,3 +1,4 @@
+import { PATH_ARROW } from "@/components/daily/formats";
 import { normalizeName } from "@/lib/daily/match";
 import { pickIssues, type OrderLine, type PickLine } from "@/lib/maker/parse";
 import { eraDecoys, hash, KNOWN_POOL, MAX_SHARED, MIN_ERAS, MIN_PICKS, MIN_SHARED, ORDER_SIZE, ERA_SIZE, PICK_SIZE, type Club, type SharedPlayer } from "./generate";
@@ -262,3 +263,93 @@ export function allThereTogether(spells: ClubSpell[], club: Club, recent: Set<st
 
 /** A seed for a template on a day, so each template varies its picks on its own. */
 export const templateSeed = (date: string, template: string) => hash(`${date}:${template}`);
+
+// ---------------------------------------------------------------------------
+// Career paths (Collins, 29 Oct 2026: B, a trail of kits, and D, kit stickers)
+// ---------------------------------------------------------------------------
+
+
+/** The clubs we track a player joined for good, in order; a club rejoined later counts again, one straight after itself doesn't. */
+export function careerClubs(career: CareerSpell[]): { club: number; year: number }[] {
+  const out: { club: number; year: number }[] = [];
+  for (const s of permanentSpells(career)) if (out.at(-1)?.club !== s.club) out.push({ club: s.club, year: year(s.joined)! });
+  return out;
+}
+
+/** True when `path` appears in `clubs` in the same order, with other clubs allowed between. */
+function followsPath(clubs: number[], path: number[]): boolean {
+  let i = 0;
+  for (const c of clubs) if (c === path[i]) i++;
+  return i === path.length;
+}
+
+/**
+ * Part 1 Rapid #9: the path of clubs a well-known player took (three to five,
+ * one of them the day's), and four players to pick from. A wrong option never
+ * followed the same path, even with stops between.
+ */
+export function careerPathPicks(
+  players: { id: number; name: string; fame?: number }[],
+  careers: Map<number, CareerSpell[]>,
+  clubs: Map<number, Club>,
+  dayClubs: Club[],
+  recent: Set<string>,
+  seed: number,
+): PickLine[] {
+  const ours = new Set(dayClubs.map((c) => c.id));
+  const known = [...new Map(players.map((p) => [p.id, p])).values()].sort(byFame).slice(0, KNOWN_POOL * 2);
+  const pathOf = new Map(known.map((p) => [p.id, careerClubs(careers.get(p.id) ?? []).map((c) => c.club)]));
+  const asked = rotate(
+    known.filter((p) => {
+      const path = pathOf.get(p.id)!;
+      return path.length >= 3 && path.length <= 5 && path.some((c) => ours.has(c)) && path.every((c) => clubs.has(c)) && !recent.has(normalizeName(p.name));
+    }),
+    seed,
+  );
+
+  const lines: PickLine[] = [];
+  const seen = new Set<string>();
+  for (const [i, p] of asked.entries()) {
+    if (lines.length === PICK_SIZE) break;
+    if (seen.has(normalizeName(p.name))) continue;
+    const path = pathOf.get(p.id)!;
+    const wrong = rotate(known, seed + i)
+      .filter((o) => o.id !== p.id && !seen.has(normalizeName(o.name)) && normalizeName(o.name) !== normalizeName(p.name) && !followsPath(pathOf.get(o.id)!, path))
+      .slice(0, 3);
+    if (wrong.length < 3) continue;
+    for (const n of [p, ...wrong]) seen.add(normalizeName(n.name));
+    lines.push({ question: path.map((c) => clubs.get(c)!.name).join(PATH_ARROW), answer: p.name, wrong: wrong.map((o) => o.name) });
+  }
+  return lines.length >= MIN_PICKS && !pickIssues(lines, "pick").errors.length ? lines : [];
+}
+
+/**
+ * Part 2 In Order #14: a well-known player's clubs (four or five of them, one
+ * the day's) in the order he joined them, each joined in a different year.
+ */
+export function careerPathOrder(
+  players: { id: number; name: string; fame?: number }[],
+  careers: Map<number, CareerSpell[]>,
+  clubs: Map<number, Club>,
+  dayClubs: Club[],
+  recent: Set<string>,
+  seed: number,
+): { player: string; lines: OrderLine[] } | null {
+  const ours = new Set(dayClubs.map((c) => c.id));
+  const options = [...new Map(players.map((p) => [p.id, p])).values()]
+    .sort(byFame)
+    .slice(0, KNOWN_POOL * 2)
+    .filter((p) => !recent.has(normalizeName(p.name)))
+    .flatMap((p) => {
+      // Each club once, at its first joining, so no name is in the list twice.
+      const firsts = new Map<number, number>();
+      for (const c of careerClubs(careers.get(p.id) ?? [])) if (!firsts.has(c.club) && clubs.has(c.club)) firsts.set(c.club, c.year);
+      const path = [...firsts].map(([club, y]) => ({ club, year: y }));
+      if (new Set(path.map((c) => c.year)).size !== path.length || path.length < 4 || !path.some((c) => ours.has(c.club))) return [];
+      // Five at most, spread through the career, always keeping the day's club.
+      const keep = path.length <= ORDER_SIZE ? path : Array.from({ length: ORDER_SIZE }, (_, i) => path[Math.round((i * (path.length - 1)) / (ORDER_SIZE - 1))]);
+      if (!keep.some((c) => ours.has(c.club))) return [];
+      return [{ player: p.name, lines: keep.map((c) => ({ text: clubs.get(c.club)!.name, note: String(c.year) })) }];
+    });
+  return options.length ? options[seed % options.length] : null;
+}

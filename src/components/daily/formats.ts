@@ -25,3 +25,6 @@ export function ordinal(n: number): string {
   const suffix = teen ? "th" : (["th", "st", "nd", "rd"][n % 10] ?? "th");
   return `${n}${suffix}`;
 }
+
+/** How a Rapid picks career path is written in its question: club names joined by arrows. */
+export const PATH_ARROW = " → ";

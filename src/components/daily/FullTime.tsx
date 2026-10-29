@@ -16,6 +16,7 @@ import { fullTimeLineup } from "./lineup";
 import { ShareButtons } from "./ShareButtons";
 import { ShareCard } from "./ShareCard";
 import { FORMAT_NAME, ordinal } from "./formats";
+import type { PathClub } from "./KitTrail";
 import { shareCardData } from "./share";
 import { ShirtBack, shirtName, type Kit } from "./ShirtBack";
 
@@ -50,6 +51,8 @@ type Props = {
   kit: Kit | null;
   /** Your own shirt: your club's kit, or the neutral one. */
   myKit: Kit;
+  /** Kits of the clubs in a career path In Order, by club name. */
+  orderKits?: Record<string, PathClub>;
   /** Your overall rating out of 10, today included. */
   rating: number | null;
   /** Previews and local runs, where today's Daily can be replayed. */
@@ -150,7 +153,7 @@ export function FullTime(props: Props) {
           </section>
 
           {recall && <Squad recall={recall} kit={kit} />}
-          {order && <SecondHalf order={order} />}
+          {order && <SecondHalf order={order} kits={props.orderKits} />}
 
           {props.clubChoices && (
             <section className="order-4 mt-6 border-y-4 border-double border-navy py-3.5 lg:mt-7 lg:py-4">
@@ -359,8 +362,10 @@ function stickerName(name: string): string {
 }
 
 /** Part 2's right answer as a row of stickers, wrong ones in red. */
-function SecondHalf({ order }: { order: OrderReveal }) {
+function SecondHalf({ order, kits }: { order: OrderReveal; kits?: Record<string, PathClub> }) {
   const era = order.daily.format === "era";
+  // A career path's answers are clubs: each as its shirt under the year joined.
+  const career = order.daily.template === "career-path";
   const club = era ? eraParts(order.slots[0]?.note ?? null).club : null;
   return (
     <section className="order-6 mt-6">
@@ -382,7 +387,11 @@ function SecondHalf({ order }: { order: OrderReveal }) {
             <span className={`block font-display leading-[0.9] ${s.right ? "text-royal" : "text-red-card"} ${era ? "text-lg lg:text-xl" : "text-xl lg:text-[28px]"}`}>
               {era ? s.correct : (s.note ?? i + 1)}
             </span>
-            <span className="mt-1 block truncate font-display text-xs uppercase lg:text-base">{era ? stickerName(eraParts(s.note).player) : shirtName(s.correct)}</span>
+            {career ? (
+              <ShirtBack kit={kits?.[s.correct]?.kit} name={kits?.[s.correct]?.short ?? s.correct.slice(0, 3)} lettering="tag" className="mx-auto mt-1 w-[88%]" />
+            ) : (
+              <span className="mt-1 block truncate font-display text-xs uppercase lg:text-base">{era ? stickerName(eraParts(s.note).player) : shirtName(s.correct)}</span>
+            )}
           </li>
         ))}
       </ol>
@@ -394,14 +403,16 @@ function SecondHalf({ order }: { order: OrderReveal }) {
 /** What went wrong in Part 2, in a line. */
 function SecondHalfNote({ order }: { order: OrderReveal }) {
   const wrong = order.slots.filter((s) => !s.right);
+  // Clubs keep their whole names ("Man City", not "City").
+  const nameOf = order.daily.template === "career-path" ? (name: string) => name : shirtName;
   if (!wrong.length) return <p className="mt-2.5 text-[13px] font-semibold text-royal">Every one in its place.</p>;
   let line: string;
   if (order.daily.format === "era") {
     line = wrong.map((s) => `${stickerName(eraParts(s.note).player)}: you said ${s.placed || "nothing"}`).join(" · ");
   } else if (wrong.length === 2 && wrong[0].placed === wrong[1].correct && wrong[1].placed === wrong[0].correct) {
-    line = `You swapped ${shirtName(wrong[0].correct)} and ${shirtName(wrong[1].correct)}.`;
+    line = `You swapped ${nameOf(wrong[0].correct)} and ${nameOf(wrong[1].correct)}.`;
   } else {
-    line = wrong.map((s) => `${s.placed ? shirtName(s.placed) : "Nobody"} where ${shirtName(s.correct)} goes`).join(" · ");
+    line = wrong.map((s) => `${s.placed ? nameOf(s.placed) : "Nobody"} where ${nameOf(s.correct)} goes`).join(" · ");
   }
   return <p className="mt-2.5 text-[13px] font-semibold text-red-card">{line}</p>;
 }

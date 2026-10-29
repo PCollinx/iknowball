@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { draftDay, templateOrder, TEMPLATES, type TemplateData } from "./day";
 import type { SharedPlayer } from "./generate";
-import { allThereTogether, dressingRoom, isLoan, moves, oldestFirst, straightSwap, yearOfMove, type CareerSpell, type ClubSpell } from "./templates";
+import { allThereTogether, careerClubs, careerPathOrder, careerPathPicks, dressingRoom, isLoan, moves, oldestFirst, straightSwap, yearOfMove, type CareerSpell, type ClubSpell } from "./templates";
 
 const ARS = { id: 1, name: "Arsenal" };
 const CHE = { id: 2, name: "Chelsea" };
@@ -105,6 +105,59 @@ describe("allThereTogether", () => {
       const [from, to] = l.answer.split("–").map(Number);
       expect(to - from).toBeGreaterThanOrEqual(2);
     }
+  });
+});
+
+describe("career paths", () => {
+  const BAR = { id: 5, name: "Barcelona" };
+  const RMA = { id: 6, name: "Real Madrid" };
+  const WBA = { id: 7, name: "West Brom" };
+  const all = new Map([ARS, CHE, TOT, MCI, BAR, RMA, WBA].map((c) => [c.id, c]));
+
+  it("lists a career's clubs once per stay, loans left out", () => {
+    const career = [spell(ARS.id, 2003, 2011), spell(BAR.id, 2011, 2014), spell(CHE.id, 2014, 2019), spell(TOT.id, 2015, 2016)];
+    expect(careerClubs(career)).toEqual([
+      { club: ARS.id, year: 2003 },
+      { club: BAR.id, year: 2011 },
+      { club: CHE.id, year: 2014 },
+    ]);
+  });
+
+  it("asks whose path it is, never with a wrong option who took the same path", () => {
+    const paths: number[][] = [
+      [ARS.id, BAR.id, CHE.id],
+      [ARS.id, TOT.id, MCI.id],
+      [CHE.id, RMA.id, WBA.id],
+      [BAR.id, ARS.id, TOT.id],
+      [MCI.id, CHE.id, ARS.id],
+      [ARS.id, RMA.id, MCI.id],
+      [CHE.id, BAR.id, TOT.id],
+      [ARS.id, MCI.id, BAR.id, CHE.id],
+    ];
+    // Every question needs four different names, so a round of five needs a squad of 20 or more.
+    const clubIds = [TOT.id, MCI.id, BAR.id, RMA.id, WBA.id];
+    for (let i = 0; paths.length < 28; i++) paths.push([i % 2 ? ARS.id : CHE.id, clubIds[i % 5], clubIds[(i + 2) % 5]]);
+    const players = paths.map((_, i) => ({ id: i + 1, name: `Player ${i + 1}`, fame: 50 - i }));
+    const careers = new Map(paths.map((p, i) => [i + 1, p.map((club, k) => spell(club, 2000 + 3 * k, 2003 + 3 * k))]));
+    const lines = careerPathPicks(players, careers, all, [ARS, CHE], new Set(), 0);
+    expect(lines.length).toBeGreaterThanOrEqual(5);
+    const one = lines.find((l) => l.answer === "Player 1");
+    // Player 8 went Arsenal, Man City, Barcelona, Chelsea: the same path with a stop, so never a wrong option for Player 1.
+    if (one) expect(one.wrong).not.toContain("Player 8");
+    for (const l of lines) expect(l.question).toMatch(/^[A-Za-z ]+( → [A-Za-z ]+){2,4}$/);
+  });
+
+  it("orders a player's clubs by the year he joined, keeping the day's club", () => {
+    const career = [ARS.id, RMA.id, MCI.id, CHE.id, WBA.id].map((club, k) => spell(club, [1997, 1999, 2002, 2008, 2013][k], [1999, 2002, 2005, 2012, 2014][k]));
+    const path = careerPathOrder([{ id: 1, name: "Nicolas Anelka", fame: 80 }], new Map([[1, career]]), all, [ARS, CHE], new Set(), 0);
+    expect(path?.player).toBe("Nicolas Anelka");
+    expect(path?.lines).toEqual([
+      { text: "Arsenal", note: "1997" },
+      { text: "Real Madrid", note: "1999" },
+      { text: "Man City", note: "2002" },
+      { text: "Chelsea", note: "2008" },
+      { text: "West Brom", note: "2013" },
+    ]);
   });
 });
 

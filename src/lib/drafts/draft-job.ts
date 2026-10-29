@@ -153,9 +153,9 @@ async function sharedPlayers(a: number, b: number): Promise<SharedPlayer[]> {
   return rows.map((r) => ({ id: r.player_id, name: r.known_as, aliases: aliases.get(r.player_id) ?? [], joinedA: r.joined_a, joinedB: r.joined_b, fame: r.sitelinks ?? 0 }));
 }
 
-/** The player an answer is about: the answer, or for Era picks the name in the question. */
+/** The player an answer is about: for Era picks the name in the question ("Henry at Arsenal"), else the answer. */
 function playerIn(a: { answer_text: string; question?: string | null }): string {
-  return a.question ? a.question.split(" at ")[0] : a.answer_text;
+  return a.question?.includes(" at ") ? a.question.split(" at ")[0] : a.answer_text;
 }
 
 async function recentAnswerNames(from: string, to: string): Promise<Set<string>> {
