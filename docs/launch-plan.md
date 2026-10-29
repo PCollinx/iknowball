@@ -143,7 +143,7 @@ six (ARS, CHE, LIV, MCI, MUN, TOT) in every Daily, at least one of them; Europe'
 5. ~~Live~~ done 29 Oct (both migrations, all 41 clubs re-imported; `CRON_SECRET` rotated): `npx supabase link --project-ref edggdeqvfmezibxmttsz`, `migration list`, `db push` (both
    migrations); then re-import every tracked club by name (`?club=`), since the plain job skips clubs
    imported in the last 6 days and those have no fame numbers, the fixture sync adds UCL that night.
-6. Delete the live drafts for the coming days (the maker can't: SQL editor, see CLAUDE.md "Popular games
+6. ~~Redraft live~~ done 29 Oct (30 Oct to 6 Nov; 3 Nov is Barcelona v Aston Villa after a fixture sync). Delete the live drafts for the coming days (the maker can't: SQL editor, see CLAUDE.md "Popular games
    only"), then run `/api/jobs/drafts` and review them in the maker.
 
 ### 16. The installable app (PWA)
@@ -208,7 +208,7 @@ After launch: step 14 (Support, with Vercel Pro), Rate mode (18 Dec), whether to
 - [x] 12. The logo (PR #55)
 - [x] 13. The waitlist (PR #56)
 - [ ] 14. Support iKnowBall (after launch, with Vercel Pro)
-- [ ] 15. Popular games only (built, to check and merge first thing, 30 Oct)
+- [x] 15. Popular games only (PR #58)
 - [ ] 16. The installable app (by 8 Nov)
 - [ ] 17. The launch email (by 19 Nov)
 - [ ] 18. Waitlist leagues on day one (decide by 8 Nov, build by 18 Nov)
