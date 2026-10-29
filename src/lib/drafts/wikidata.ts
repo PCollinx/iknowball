@@ -12,7 +12,7 @@ export const ERA_START_YEAR = 1992;
 /** Every footballer with a "member of sports team" statement for one club in the PL era. */
 export function clubPlayersQuery(wikipediaTitle: string): string {
   const title = wikipediaTitle.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-  return `SELECT ?club ?player ?playerLabel ?playerAltLabel ?st ?start ?end ?dob ?apps ?goals ?links WHERE {
+  return `SELECT ?club ?player ?playerLabel ?playerAltLabel ?st ?start ?end ?dob ?apps ?goals ?links ?how WHERE {
   ?article schema:about ?club; schema:isPartOf <https://en.wikipedia.org/>; schema:name "${title}"@en.
   ?player p:P54 ?st. ?st ps:P54 ?club.
   ?player wdt:P106 wd:${ASSOCIATION_FOOTBALL_PLAYER}.
@@ -21,6 +21,8 @@ export function clubPlayersQuery(wikipediaTitle: string): string {
   # League appearances and goals for the spell, where Wikidata has them (Clash facts).
   OPTIONAL { ?st pq:P1350 ?apps. }
   OPTIONAL { ?st pq:P1351 ?goals. }
+  # How the player came: a loan spell is marked "acquisition transaction: loan".
+  OPTIONAL { ?st pq:P1642 ?how. }
   # Without this, big clubs return every player since the 1880s (over 1 MB, cut off mid-answer).
   FILTER((BOUND(?end) && YEAR(?end) >= ${ERA_START_YEAR}) || (!BOUND(?end) && BOUND(?start) && YEAR(?start) >= ${ERA_START_YEAR - 7}))
   OPTIONAL { ?player wdt:P569 ?dob. }
@@ -44,7 +46,12 @@ export type Spell = {
   goals: number | null;
   /** Wikipedia editions with an article on the player: how well known they are. */
   sitelinks: number | null;
+  /** Wikidata says the spell was a loan. Many loans aren't marked, so the drafts check dates too. */
+  onLoan: boolean;
 };
+
+/** Wikidata's item for a loan, as an "acquisition transaction" (P1642). */
+const LOAN = "Q2914547";
 
 type Binding = Record<string, { value: string } | undefined>;
 
@@ -79,11 +86,18 @@ export function parseClubPlayers(json: { results: { bindings: Binding[] } }): Sp
       apps: count(b.apps?.value),
       goals: count(b.goals?.value),
       sitelinks: count(b.links?.value),
+      onLoan: b.how ? qid(b.how.value) === LOAN : false,
     });
   }
-  // A statement can repeat when a player has two birth dates on record.
-  const seen = new Set<string>();
-  return spells.filter((s) => !seen.has(s.statement) && seen.add(s.statement));
+  // A statement repeats when a player has two birth dates or two transaction
+  // qualifiers on record; a loan on any of its rows marks it.
+  const byStatement = new Map<string, Spell>();
+  for (const s of spells) {
+    const had = byStatement.get(s.statement);
+    if (!had) byStatement.set(s.statement, s);
+    else had.onLoan ||= s.onLoan;
+  }
+  return [...byStatement.values()];
 }
 
 export async function fetchClubPlayers(wikipediaTitle: string): Promise<Spell[]> {

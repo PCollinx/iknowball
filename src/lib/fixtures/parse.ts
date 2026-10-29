@@ -68,8 +68,9 @@ export function clubKey(name: string): string {
   return ALIASES[key] ?? key;
 }
 
-/** The competitions we sync: the Premier League, and the Champions League for UCL nights. */
-export type Competition = "PL" | "UCL";
+/** The competitions we sync: the Premier League, the Champions League for UCL
+ * nights, and the FA Cup and League Cup for cup nights. */
+export type Competition = "PL" | "UCL" | "FAC" | "EFL";
 
 export type FixtureRow = {
   highlightly_match_id: number;
@@ -94,7 +95,7 @@ export function fixtureOf(m: HighlightlyMatch, competition: Competition = "PL"):
     highlightly_match_id: m.id,
     competition,
     season: seasonOf(day),
-    // UCL rounds ("League Stage - 3") aren't Premier League rounds.
+    // Other competitions' rounds ("League Stage - 3", "Round of 16") aren't Premier League rounds.
     pl_round: competition === "PL" ? plRound(m.round) : null,
     kickoff_at: kickoff.toISOString(),
     matchweek_starts_on: matchweekBounds(day).startsOn,

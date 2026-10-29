@@ -1,6 +1,6 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { callsToday, DAILY_BUDGET, seasonMatches, UCL_LEAGUE_ID } from "./highlightly";
+import { callsToday, DAILY_BUDGET, FA_CUP_LEAGUE_ID, LEAGUE_CUP_LEAGUE_ID, seasonMatches, UCL_LEAGUE_ID } from "./highlightly";
 import { clubKey, fixtureOf, type Competition, type HighlightlyMatch } from "./parse";
 
 export type SyncResult = {
@@ -8,22 +8,27 @@ export type SyncResult = {
   fixtures: number;
   /** Champions League ties between clubs we track (UCL nights). */
   ucl: number;
+  /** FA Cup and League Cup ties between clubs we track (cup nights). */
+  cups: number;
   finished: number;
   /** Premier League teams we have no club for: those matches are skipped. */
   unknownTeams: string[];
 };
 
-/** Pulls the season's Premier League and Champions League fixtures and results into our tables. */
+/** Pulls the season's Premier League, Champions League and English cup fixtures and results into our tables. */
 export async function syncFixtures(): Promise<SyncResult | { skipped: string }> {
   const used = await callsToday();
-  // A full sync is about 7 calls: 380 Premier League matches and about 250 in
-  // the Champions League (qualifiers included), 100 a page.
-  if (used + 7 > DAILY_BUDGET) return { skipped: `Highlightly budget used: ${used} of ${DAILY_BUDGET} calls in the last 24 hours.` };
+  // A full sync is about 12 calls, 100 matches a page: 380 Premier League, about
+  // 250 Champions League (qualifiers included), about 370 FA Cup (from the
+  // non-league rounds) and about 90 League Cup.
+  if (used + 12 > DAILY_BUDGET) return { skipped: `Highlightly budget used: ${used} of ${DAILY_BUDGET} calls in the last 24 hours.` };
 
   const admin = createAdminClient();
   const pl = await seasonMatches();
   const ucl = await seasonMatches(UCL_LEAGUE_ID);
-  const calls = Math.max(1, Math.ceil(pl.length / 100)) + Math.max(1, Math.ceil(ucl.length / 100));
+  const faCup = await seasonMatches(FA_CUP_LEAGUE_ID);
+  const leagueCup = await seasonMatches(LEAGUE_CUP_LEAGUE_ID);
+  const calls = [pl, ucl, faCup, leagueCup].reduce((n, m) => n + Math.max(1, Math.ceil(m.length / 100)), 0);
 
   // Our clubs by Highlightly team id, learning ids from names the first time.
   const { data: clubs, error } = await admin.from("clubs").select("id, name, highlightly_team_id");
@@ -51,12 +56,15 @@ export async function syncFixtures(): Promise<SyncResult | { skipped: string }> 
   };
   await learn(pl, true);
   await learn(ucl, false);
+  await learn(faCup, false);
+  await learn(leagueCup, false);
 
   const ours = (matches: HighlightlyMatch[], competition: Competition) =>
     matches.map((m) => fixtureOf(m, competition)).filter((f) => byTeam.has(f.home_team) && byTeam.has(f.away_team));
   const plRows = ours(pl, "PL");
   const uclRows = ours(ucl, "UCL");
-  const rows = [...plRows, ...uclRows];
+  const cupRows = [...ours(faCup, "FAC"), ...ours(leagueCup, "EFL")];
+  const rows = [...plRows, ...uclRows, ...cupRows];
 
   // Matchweeks: one row per Monday the fixtures fall in.
   const weeks = [...new Map(rows.map((r) => [r.matchweek_starts_on, r.season])).entries()].map(([starts_on, season]) => ({ starts_on, season }));
@@ -91,6 +99,7 @@ export async function syncFixtures(): Promise<SyncResult | { skipped: string }> 
     calls,
     fixtures: plRows.length,
     ucl: uclRows.length,
+    cups: cupRows.length,
     finished: rows.filter((r) => r.status === "finished").length,
     unknownTeams: [...unknown.values()],
   };

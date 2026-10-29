@@ -350,8 +350,10 @@ function eraParts(question: string | null): { player: string; club: string | nul
   return at > 0 ? { player: q.slice(0, at), club: q.slice(at + 4) } : { player: q, club: null };
 }
 
-/** The name on a sticker: all but the first name ("Van Persie"), or the one name. */
+/** The name on a sticker: all but the first name ("Van Persie"), or the one name.
+ * A list of surnames ("Henry, Bergkamp and Vieira") is already short. */
 function stickerName(name: string): string {
+  if (name.includes(",")) return name;
   const words = name.trim().split(/\s+/);
   return words.length > 1 ? words.slice(1).join(" ") : name;
 }
