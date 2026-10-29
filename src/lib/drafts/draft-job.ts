@@ -2,7 +2,7 @@ import "server-only";
 import { normalizeName } from "@/lib/daily/match";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addDays, gameDate, matchweekBounds } from "@/lib/time";
-import { draftDay, pairKey, pickPair, type Club, type PickData, type SharedPlayer } from "./generate";
+import { draftDay, pairKey, pickPair, type Club, type PairRules, type PickData, type SharedPlayer } from "./generate";
 
 /** Days ahead the job keeps drafted, so there is about a week to review. */
 export const DRAFT_DAYS_AHEAD = 8;
@@ -33,7 +33,7 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
   if (!empty.length) return result;
 
   const [{ data: clubRows }, { data: candidates, error: pairError }] = await Promise.all([
-    admin.from("clubs").select("id, name"),
+    admin.from("clubs").select("id, name, top, in_premier_league"),
     admin.rpc("club_pair_overlaps"),
   ]);
   if (pairError) throw pairError;
@@ -42,7 +42,12 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
     b: c.club_b,
     players: c.players,
   }));
-  const clubs = new Map<number, Club>((clubRows ?? []).map((c) => [c.id, c]));
+  const clubs = new Map<number, Club>((clubRows ?? []).map((c) => [c.id, { id: c.id, name: c.name }]));
+  // Popular games only (Collins, 29 Oct 2026): the big six, and Europe's giants on UCL nights.
+  const rules: PairRules = {
+    bigSix: new Set((clubRows ?? []).filter((c) => c.top && c.in_premier_league).map((c) => c.id)),
+    europe: new Set((clubRows ?? []).filter((c) => c.top && !c.in_premier_league).map((c) => c.id)),
+  };
   const clubByName = new Map([...clubs.values()].map((c) => [c.name, c.id]));
 
   // Pairs already used recently or still to come, read from the titles ("A v B").
@@ -62,11 +67,12 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
 
   for (const date of empty) {
     const week = matchweekBounds(date);
-    const sameWeek = [...fixtures].filter(([d]) => d >= week.startsOn && d <= week.endsOn);
+    const sameWeek = fixtures.filter(([d, , c]) => c === "PL" && d >= week.startsOn && d <= week.endsOn);
     const preferred = [...sameWeek.filter(([d]) => d === date), ...sameWeek.filter(([d]) => d !== date)].map(([, pair]) => pair);
-    const pair = pickPair(date, pairs, preferred, used, restedNear(date));
+    const ucl = fixtures.filter(([d, , c]) => c === "UCL" && d === date).map(([, pair]) => pair);
+    const pair = pickPair(date, pairs, preferred, used, restedNear(date), rules, ucl);
     if (!pair) {
-      result.skipped.push({ date, reason: "No unused club pair with a good list. Import more clubs or wait for the cooldown." });
+      result.skipped.push({ date, reason: "No club pair with one of the big six and a good list. Import more clubs." });
       continue;
     }
     const [home, away] = pair.map((id) => clubs.get(id)!);
@@ -110,13 +116,13 @@ async function sharedPlayers(a: number, b: number): Promise<SharedPlayer[]> {
   const admin = createAdminClient();
   const { data, error } = await admin.rpc("club_pair_players", { p_a: a, p_b: b });
   if (error) throw error;
-  const rows = (data ?? []) as { player_id: number; known_as: string; joined_a: string | null; joined_b: string | null }[];
+  const rows = (data ?? []) as { player_id: number; known_as: string; joined_a: string | null; joined_b: string | null; sitelinks: number | null }[];
   const { data: aliasRows } = rows.length
     ? await admin.from("player_aliases").select("player_id, alias").in("player_id", rows.map((r) => r.player_id))
     : { data: [] };
   const aliases = new Map<number, string[]>();
   for (const r of aliasRows ?? []) aliases.set(r.player_id, [...(aliases.get(r.player_id) ?? []), r.alias]);
-  return rows.map((r) => ({ id: r.player_id, name: r.known_as, aliases: aliases.get(r.player_id) ?? [], joinedA: r.joined_a, joinedB: r.joined_b }));
+  return rows.map((r) => ({ id: r.player_id, name: r.known_as, aliases: aliases.get(r.player_id) ?? [], joinedA: r.joined_a, joinedB: r.joined_b, fame: r.sitelinks ?? 0 }));
 }
 
 /** The player an answer is about: the answer, or for Era picks the name in the question. */
@@ -142,10 +148,15 @@ async function pickData(a: number, b: number, date: string): Promise<PickData> {
     admin.rpc("club_dated_spells", { p_club: b }),
   ]);
   for (const r of [decoys, spellsA, spellsB]) if (r.error) throw r.error;
-  type SpellRow = { player_id: number; known_as: string; joined_on: string; left_on: string };
-  const spells = (rows: SpellRow[]) => rows.map((r) => ({ id: r.player_id, name: r.known_as, joined: r.joined_on, left: r.left_on }));
+  type SpellRow = { player_id: number; known_as: string; joined_on: string; left_on: string; sitelinks: number | null };
+  const spells = (rows: SpellRow[]) => rows.map((r) => ({ id: r.player_id, name: r.known_as, joined: r.joined_on, left: r.left_on, fame: r.sitelinks ?? 0 }));
   return {
-    decoys: ((decoys.data ?? []) as { player_id: number; known_as: string; club_id: number }[]).map((d) => ({ id: d.player_id, name: d.known_as, club: d.club_id })),
+    decoys: ((decoys.data ?? []) as { player_id: number; known_as: string; club_id: number; sitelinks: number | null }[]).map((d) => ({
+      id: d.player_id,
+      name: d.known_as,
+      club: d.club_id,
+      fame: d.sitelinks ?? 0,
+    })),
     spells: new Map([
       [a, spells((spellsA.data ?? []) as SpellRow[])],
       [b, spells((spellsB.data ?? []) as SpellRow[])],
@@ -155,13 +166,13 @@ async function pickData(a: number, b: number, date: string): Promise<PickData> {
   };
 }
 
-/** Fixtures by game date (Lagos time), as [date, [home club, away club]]. */
-async function fixturePairs(from: string, to: string): Promise<[string, [number, number]][]> {
+/** Fixtures by game date (Lagos time), as [date, [home club, away club], competition]. */
+async function fixturePairs(from: string, to: string): Promise<[string, [number, number], string][]> {
   const { data } = await createAdminClient()
     .from("fixtures")
-    .select("kickoff_at, home_club_id, away_club_id")
+    .select("kickoff_at, home_club_id, away_club_id, competition")
     .gte("kickoff_at", `${from}T00:00:00Z`)
     .lte("kickoff_at", `${to}T23:59:59Z`)
     .order("kickoff_at");
-  return (data ?? []).map((f) => [gameDate(new Date(f.kickoff_at)), [f.home_club_id, f.away_club_id]]);
+  return (data ?? []).map((f) => [gameDate(new Date(f.kickoff_at)), [f.home_club_id, f.away_club_id], f.competition]);
 }

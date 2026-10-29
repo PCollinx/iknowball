@@ -14,6 +14,7 @@ const row = (over: Record<string, string | undefined> = {}) => {
     dob: "1987-05-04T00:00:00Z",
     apps: "109",
     goals: "15",
+    links: "84",
     ...over,
   };
   return Object.fromEntries(Object.entries(base).filter(([, v]) => v !== undefined).map(([k, v]) => [k, { value: v! }]));
@@ -33,6 +34,7 @@ describe("parseClubPlayers", () => {
         dateOfBirth: "1987-05-04",
         apps: 109,
         goals: 15,
+        sitelinks: 84,
       },
     ]);
   });

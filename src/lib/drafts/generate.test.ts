@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { recallIssues } from "@/lib/maker/parse";
-import { draftDay, eraDecoys, eraPicks, orderAnswers, pairingFor, pickPair, rapidPicks, recallAnswers, recallSeconds, type SharedPlayer } from "./generate";
+import { draftDay, eraDecoys, eraPicks, KNOWN_POOL, orderAnswers, pairingFor, pickPair, rapidPicks, recallAnswers, recallSeconds, type SharedPlayer } from "./generate";
 
 const player = (id: number, name: string, aliases: string[] = [], joinedA: string | null = null, joinedB: string | null = null): SharedPlayer => ({
   id,
@@ -36,6 +36,42 @@ describe("pickPair", () => {
     expect(pickPair("2026-10-18", candidates, [], new Set(), new Set([1]))).toEqual([5, 6]);
     expect(pickPair("2026-10-18", candidates, [], new Set(["5-6"]), new Set([1]))).toEqual([1, 2]);
     expect(pickPair("2026-10-18", candidates, [[1, 2]], new Set(), new Set([1]))).toEqual([1, 2]);
+  });
+});
+
+describe("pickPair with the popular-games rules", () => {
+  // 1 and 2 are big six, 3 is another English club, 4 and 5 are English minnows, 9 is a European giant.
+  const rules = { bigSix: new Set([1, 2]), europe: new Set([9]) };
+  const pairs = [
+    { a: 1, b: 2, players: 12 },
+    { a: 1, b: 3, players: 10 },
+    { a: 4, b: 5, players: 10 },
+    { a: 1, b: 9, players: 8 },
+    { a: 3, b: 9, players: 8 },
+  ];
+
+  it("never picks a fixture without one of the big six", () => {
+    expect(pickPair("2026-10-17", pairs, [[4, 5], [3, 1]], new Set(), new Set(), rules)).toEqual([3, 1]);
+  });
+
+  it("off a fixture, prefers two of the big six, then one, and never two minnows", () => {
+    expect(pickPair("2026-10-17", pairs, [], new Set(), new Set(), rules)).toEqual([1, 2]);
+    expect(pickPair("2026-10-17", pairs, [], new Set(["1-2"]), new Set(), rules)).toEqual([1, 3]);
+  });
+
+  it("keeps Europe's giants for Champions League nights", () => {
+    expect(pickPair("2026-10-17", pairs, [], new Set(["1-2", "1-3"]), new Set(), rules)).toEqual([1, 2]);
+    expect(pickPair("2026-10-17", pairs, [[1, 9]], new Set(["1-2"]), new Set(), rules)).toEqual([1, 3]);
+  });
+
+  it("on a UCL night picks a tie with a top club, the big six's first", () => {
+    expect(pickPair("2026-10-21", pairs, [[1, 2]], new Set(), new Set(), rules, [[3, 9], [9, 1]])).toEqual([9, 1]);
+    expect(pickPair("2026-10-21", pairs, [[1, 2]], new Set(["1-9"]), new Set(), rules, [[3, 9], [9, 1]])).toEqual([3, 9]);
+  });
+
+  it("reuses a popular pair rather than going obscure", () => {
+    expect(pickPair("2026-10-17", pairs, [], new Set(["1-2", "1-3"]), new Set(), rules)).not.toEqual([4, 5]);
+    expect(pickPair("2026-10-17", pairs, [], new Set(["1-2", "1-3"]), new Set(), rules)).not.toBeNull();
   });
 });
 
@@ -78,6 +114,18 @@ describe("orderAnswers", () => {
     const twins = [...squad, player(99, "Fresh Face", [], "1993-01-01")];
     const order = orderAnswers(twins, "joinedA", new Set(["player 1"]), 0);
     expect(order[0].text).toBe("Fresh Face");
+  });
+
+  it("orders the best known players", () => {
+    const deep = Array.from({ length: 2 * KNOWN_POOL }, (_, i) => ({ ...player(i + 1, `Player ${i + 1}`, [], `${1993 + (i % 30)}-07-01`), fame: i % 2 ? 60 : 2 }));
+    const order = orderAnswers(deep, "joinedA", new Set(), 0);
+    expect(order).toHaveLength(5);
+    for (const o of order) expect(Number(o.text.split(" ")[1]) % 2).toBe(0);
+  });
+
+  it("widens past the best known when they joined in too few years", () => {
+    const deep = Array.from({ length: 30 }, (_, i) => ({ ...player(i + 1, `Player ${i + 1}`, [], `${i < KNOWN_POOL ? 2010 : 1993 + i}-07-01`), fame: i < KNOWN_POOL ? 60 : 2 }));
+    expect(orderAnswers(deep, "joinedA", new Set(), 0)).toHaveLength(5);
   });
 });
 
@@ -125,6 +173,15 @@ describe("rapidPicks", () => {
     expect(rapidPicks(shared.slice(0, 4), decoys, home, away, new Set(), 0)).toEqual([]);
     expect(rapidPicks(shared, decoys.slice(0, 10), home, away, new Set(), 0)).toEqual([]);
   });
+
+  it("leaves out unknown right answers when enough are known, and draws wrong ones from the best known", () => {
+    const mixed = shared.map((p, i) => ({ ...p, fame: i < 6 ? 40 : 3 }));
+    const famed = decoys.map((d, i) => ({ ...d, fame: i < 30 ? 50 : 1 }));
+    const lines = rapidPicks(mixed, famed, home, away, new Set(), 0);
+    expect(lines.map((l) => l.answer).sort()).toEqual(["Both 1", "Both 2", "Both 3", "Both 4", "Both 5", "Both 6"]);
+    const wrongIds = lines.flatMap((l) => l.wrong).map((w) => Number(w.split(" ")[1]));
+    expect(wrongIds.every((n) => n <= 30)).toBe(true);
+  });
 });
 
 describe("eraDecoys", () => {
@@ -167,6 +224,13 @@ describe("eraPicks", () => {
     expect(lines.find((l) => l.question === "Henry at Arsenal")?.answer).toBe("1999–2007");
     expect(lines.map((l) => l.question)).not.toContain("Ancient at Arsenal");
     expect(lines.map((l) => l.question)).not.toContain("Loanee at Arsenal");
+  });
+
+  it("asks about the club's best known players", () => {
+    const squad = Array.from({ length: 40 }, (_, i) => ({ id: i + 1, name: `Player ${i + 1}`, joined: `${1993 + (i % 25)}-07-01`, left: `${1995 + (i % 25)}-06-30`, fame: i % 2 ? 70 : 4 }));
+    const lines = eraPicks(squad, club, new Set(), 0, 2026);
+    expect(lines.length).toBeGreaterThanOrEqual(4);
+    for (const l of lines) expect(Number(l.question!.split(" ")[1]) % 2).toBe(0);
   });
 });
 

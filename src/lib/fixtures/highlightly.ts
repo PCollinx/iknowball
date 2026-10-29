@@ -34,13 +34,16 @@ async function get<T>(path: string, params: Record<string, string | number>): Pr
 
 type Page<T> = { data: T[]; pagination: { totalCount: number; offset: number; limit: number } };
 
-/** Every Premier League match of the season, newest first, 100 a call. */
-export async function seasonMatches(): Promise<HighlightlyMatch[]> {
+/** Highlightly's league id for the UEFA Champions League (found 29 Oct 2026 through /leagues). */
+export const UCL_LEAGUE_ID = 2486;
+
+/** Every match of the season in a league (the Premier League unless told), newest first, 100 a call. */
+export async function seasonMatches(leagueId?: number): Promise<HighlightlyMatch[]> {
   const env = serverEnv();
   const matches: HighlightlyMatch[] = [];
   for (let offset = 0; ; offset += 100) {
     const page = await get<Page<HighlightlyMatch>>("/matches", {
-      leagueId: env.HIGHLIGHTLY_PL_LEAGUE_ID,
+      leagueId: leagueId ?? env.HIGHLIGHTLY_PL_LEAGUE_ID,
       season: env.HIGHLIGHTLY_SEASON,
       limit: 100,
       offset,

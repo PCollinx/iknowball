@@ -1,6 +1,8 @@
 // Clubs whose player histories are imported from Wikidata. Each is found by its
 // English Wikipedia article, which is steadier than remembering Wikidata ids.
-// Recent and long-serving Premier League clubs; add a line to track another.
+// Recent and long-serving Premier League clubs, then Europe's giants for
+// Champions League nights; add a line to track another. `name` must match
+// clubs.name, which the fixture sync matches Highlightly's teams against.
 export type TrackedClub = { wikipedia: string; name: string; short: string };
 
 export const TRACKED_CLUBS: TrackedClub[] = [
@@ -36,4 +38,13 @@ export const TRACKED_CLUBS: TrackedClub[] = [
   { wikipedia: "Watford F.C.", name: "Watford", short: "WAT" },
   { wikipedia: "West Bromwich Albion F.C.", name: "West Brom", short: "WBA" },
   { wikipedia: "Norwich City F.C.", name: "Norwich", short: "NOR" },
+  { wikipedia: "Real Madrid CF", name: "Real Madrid", short: "RMA" },
+  { wikipedia: "FC Barcelona", name: "Barcelona", short: "BAR" },
+  { wikipedia: "FC Bayern Munich", name: "Bayern Munich", short: "BAY" },
+  { wikipedia: "Paris Saint-Germain FC", name: "PSG", short: "PSG" },
+  { wikipedia: "Inter Milan", name: "Inter", short: "INT" },
+  { wikipedia: "AC Milan", name: "AC Milan", short: "MIL" },
+  { wikipedia: "Juventus FC", name: "Juventus", short: "JUV" },
+  { wikipedia: "Atlético Madrid", name: "Atlético Madrid", short: "ATM" },
+  { wikipedia: "Borussia Dortmund", name: "Dortmund", short: "BVB" },
 ];

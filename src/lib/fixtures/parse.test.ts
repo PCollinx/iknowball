@@ -33,9 +33,17 @@ describe("Highlightly fixtures", () => {
     expect(statusOf("Not started", false)).toBe("scheduled");
   });
 
+  it("keeps Champions League rounds out of pl_round", () => {
+    const f = fixtureOf({ ...(sample[1] as HighlightlyMatch), round: "League Stage - 4" }, "UCL");
+    expect(f).toMatchObject({ competition: "UCL", pl_round: null });
+    expect(fixtureOf(sample[1] as HighlightlyMatch).competition).toBe("PL");
+  });
+
   it("maps Highlightly's team names onto ours", () => {
     expect(clubKey("Manchester United")).toBe("man united");
     expect(clubKey("Tottenham")).toBe("spurs");
     expect(clubKey("Arsenal")).toBe("arsenal");
+    expect(clubKey("Paris Saint Germain")).toBe("psg");
+    expect(clubKey("Borussia Dortmund")).toBe("dortmund");
   });
 });

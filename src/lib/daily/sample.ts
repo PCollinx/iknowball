@@ -97,7 +97,7 @@ const PARTS: Record<SampleKind, object[]> = {
       format: "in_order",
       title: "In order",
       prompt: "They all played for Arsenal. Earliest to join at the top.",
-      time_limit_seconds: 60,
+      time_limit_seconds: 45,
       source_note: SOURCE,
       // ERAS is already in the order they joined.
       answers: ERAS.map(([name, from], i) => ({ answer_text: name, extra_aliases: [], position: i + 1, reveal_note: `Joined ${from}`, question: null, choices: [] })),

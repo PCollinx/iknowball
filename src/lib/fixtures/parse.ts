@@ -52,6 +52,14 @@ const ALIASES: Record<string, string> = {
   "west ham united": "west ham",
   "afc bournemouth": "bournemouth",
   "nottm forest": "nottingham forest",
+  "paris saint germain": "psg",
+  "paris saint-germain": "psg",
+  "inter milan": "inter",
+  "borussia dortmund": "dortmund",
+  "atletico madrid": "atlético madrid",
+  "fc barcelona": "barcelona",
+  "bayern münchen": "bayern munich",
+  "milan": "ac milan",
 };
 
 /** Our club name for one of Highlightly's, lower-cased. */
@@ -60,8 +68,12 @@ export function clubKey(name: string): string {
   return ALIASES[key] ?? key;
 }
 
+/** The competitions we sync: the Premier League, and the Champions League for UCL nights. */
+export type Competition = "PL" | "UCL";
+
 export type FixtureRow = {
   highlightly_match_id: number;
+  competition: Competition;
   season: number;
   pl_round: number | null;
   kickoff_at: string;
@@ -73,15 +85,17 @@ export type FixtureRow = {
   away_score: number | null;
 };
 
-export function fixtureOf(m: HighlightlyMatch): FixtureRow {
+export function fixtureOf(m: HighlightlyMatch, competition: Competition = "PL"): FixtureRow {
   const score = parseScore(m.state?.score?.current);
   const status = statusOf(m.state?.description, Boolean(score));
   const kickoff = new Date(m.date);
   const day = gameDate(kickoff);
   return {
     highlightly_match_id: m.id,
+    competition,
     season: seasonOf(day),
-    pl_round: plRound(m.round),
+    // UCL rounds ("League Stage - 3") aren't Premier League rounds.
+    pl_round: competition === "PL" ? plRound(m.round) : null,
     kickoff_at: kickoff.toISOString(),
     matchweek_starts_on: matchweekBounds(day).startsOn,
     home_team: m.homeTeam.id,
