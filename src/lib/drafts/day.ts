@@ -13,7 +13,30 @@ import {
   type Decoy,
   type SharedPlayer,
 } from "./generate";
-import { allThereTogether, careerPathOrder, careerPathPicks, dressingRoom, oldestFirst, straightSwap, templateSeed, yearOfMove, type CareerSpell, type ClubSpell } from "./templates";
+import {
+  allThereTogether,
+  biggestGround,
+  careerPathOrder,
+  careerPathPicks,
+  dressingRoom,
+  managerPicks,
+  managerReigns,
+  managersInOrder,
+  managersOf,
+  mostClubs,
+  nationAtClub,
+  nationPicks,
+  oldestFirst,
+  straightSwap,
+  tallestFirst,
+  templateSeed,
+  yearOfMove,
+  type CareerSpell,
+  type ClubSpell,
+  type FamousPlayer,
+  type Ground,
+  type ManagerStay,
+} from "./templates";
 
 // A whole day: which template each part uses, and the part it makes. Each
 // round type has a few templates; they take turns by date, one used in the
@@ -52,16 +75,22 @@ export type TemplateData = {
   careers: Map<number, CareerSpell[]>;
   /** Templates used in the last 7 days, which go to the back of the queue. */
   recentTemplates: Set<string>;
+  /** Head coaches of every club we track (build B). */
+  managers: ManagerStay[];
+  /** The best known players anywhere, for wrong options (build B). */
+  famous: FamousPlayer[];
+  /** Grounds of the clubs we track, with capacities (build B). */
+  grounds: Ground[];
 };
 
 /** The template kinds, by round type. The first of each is the original. */
 export const TEMPLATES = {
   // Three-club chain (Free Recall #14) was tried and dropped on 29 Oct 2026: no
   // pair had more than 5 players at both clubs and a third top club.
-  free_recall: ["played-for-both", "dressing-room"],
-  pick: ["played-for-both-picks", "straight-swap", "career-path-picks"],
-  in_order: ["joined-first", "oldest-first", "career-path"],
-  era: ["era-years", "year-of-move", "all-there-together"],
+  free_recall: ["played-for-both", "dressing-room", "nation-at-club", "managers"],
+  pick: ["played-for-both-picks", "straight-swap", "career-path-picks", "nation-picks", "manager-picks"],
+  in_order: ["joined-first", "oldest-first", "career-path", "most-clubs", "managers-in-order", "tallest-first", "biggest-ground"],
+  era: ["era-years", "year-of-move", "all-there-together", "manager-reign"],
 } as const;
 export type Template = (typeof TEMPLATES)[keyof typeof TEMPLATES][number];
 
@@ -90,6 +119,17 @@ export function pairingFor(date: string): (typeof PAIRINGS)[number] {
 
 const pickAnswers = (lines: PickLine[]): DraftAnswer[] =>
   lines.map((l, i) => ({ answer_text: l.answer, extra_aliases: [], position: i + 1, reveal_note: null, question: l.question, choices: shownChoices(l) }));
+
+function orderPart(template: string, prompt: string, lines: { text: string; note: string | null }[]): DraftPart {
+  return {
+    format: "in_order",
+    template,
+    title: "In order",
+    prompt,
+    time: ORDER_SECONDS,
+    answers: lines.map((a, i) => ({ answer_text: a.text, extra_aliases: [], position: i + 1, reveal_note: a.note })),
+  };
+}
 
 function recallPart(template: string, title: string, prompt: (n: number) => string, players: SharedPlayer[]): DraftPart {
   const answers = recallAnswers(players);
@@ -142,6 +182,23 @@ export function draftDay(
       return null;
     },
 
+    "nation-at-club": () => {
+      for (const club of sides("nation-at-club")) {
+        const found = more && nationAtClub(more.spellsAt.get(club.id) ?? [], templateSeed(date, "nation-at-club"));
+        if (found)
+          return recallPart("nation-at-club", title, (n) => `Name the ${n} players from ${found.nation} who've played for ${club.name} since 1992.`, found.players);
+      }
+      return null;
+    },
+
+    managers: () => {
+      for (const club of sides("managers")) {
+        const list = more && managersOf(more.managers, club.id, date);
+        if (list) return recallPart("managers", title, (n) => `Name the ${n} permanent managers of ${club.name} since 1992.`, list);
+      }
+      return null;
+    },
+
     "played-for-both-picks": () => {
       const lines = picks ? rapidPicks(players, picks.decoys, home, away, recent, hash(date)) : [];
       return lines.length
@@ -162,6 +219,30 @@ export function draftDay(
       const lines = careerPathPicks(at, more.careers, more.clubs, [home, away], recent, templateSeed(date, "career-path-picks"));
       return lines.length
         ? { format: "pick", template: "career-path-picks", title, prompt: "Whose clubs are these, in the order he joined them? Tap the player.", time: pickSeconds(lines.length), answers: pickAnswers(lines) }
+        : null;
+    },
+
+    "nation-picks": () => {
+      if (!picks || !more) return null;
+      const at = [...(more.spellsAt.get(home.id) ?? []), ...(more.spellsAt.get(away.id) ?? [])];
+      const found = nationPicks(at, more.famous, recent, templateSeed(date, "nation-picks"));
+      return found
+        ? {
+            format: "pick",
+            template: "nation-picks",
+            title,
+            prompt: `They're all from ${found.nation}. Tap the one who's played for ${home.name} or ${away.name}.`,
+            time: pickSeconds(found.lines.length),
+            answers: pickAnswers(found.lines),
+          }
+        : null;
+    },
+
+    "manager-picks": () => {
+      if (!picks || !more) return null;
+      const lines = managerPicks(more.managers, [home, away], templateSeed(date, "manager-picks"), date);
+      return lines.length
+        ? { format: "pick", template: "manager-picks", title, prompt: `Tap the one who's managed ${home.name} or ${away.name} since 1992.`, time: pickSeconds(lines.length), answers: pickAnswers(lines) }
         : null;
     },
 
@@ -215,6 +296,42 @@ export function draftDay(
             time: ORDER_SECONDS,
             answers: path.lines.map((a, i) => ({ answer_text: a.text, extra_aliases: [], position: i + 1, reveal_note: a.note })),
           }
+        : null;
+    },
+
+    "most-clubs": () => {
+      for (const club of sides("most-clubs")) {
+        const lines = more ? mostClubs(more.spellsAt.get(club.id) ?? [], more.careers, recent, templateSeed(date, "most-clubs")) : [];
+        if (lines.length) return orderPart("most-clubs", `They all played for ${club.name}. Who's played for the most clubs? Most at the top.`, lines);
+      }
+      return null;
+    },
+
+    "managers-in-order": () => {
+      for (const club of sides("managers-in-order")) {
+        const lines = more ? managersInOrder(more.managers, club.id, templateSeed(date, "managers-in-order"), date) : [];
+        if (lines.length) return orderPart("managers-in-order", `Put these ${club.name} managers in the order they were appointed. First at the top.`, lines);
+      }
+      return null;
+    },
+
+    "tallest-first": () => {
+      for (const club of sides("tallest-first")) {
+        const lines = more ? tallestFirst(more.spellsAt.get(club.id) ?? [], recent, templateSeed(date, "tallest-first")) : [];
+        if (lines.length) return orderPart("tallest-first", `They all played for ${club.name}. Who's the tallest? Tallest at the top.`, lines);
+      }
+      return null;
+    },
+
+    "biggest-ground": () => {
+      const lines = more ? biggestGround(more.grounds, [home, away], templateSeed(date, "biggest-ground")) : [];
+      return lines.length ? orderPart("biggest-ground", "Order these grounds by how many they hold. Biggest at the top.", lines) : null;
+    },
+
+    "manager-reign": () => {
+      const lines = picks && more ? managerReigns(more.managers, [home, away], templateSeed(date, "manager-reign"), picks.nowYear, date) : [];
+      return lines.length
+        ? { format: "era", template: "manager-reign", title: "Era picks", prompt: "When were they in charge? Tap the right years.", time: pickSeconds(lines.length, true), answers: pickAnswers(lines) }
         : null;
     },
 

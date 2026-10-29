@@ -4,7 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { addDays, gameDate, matchweekBounds } from "@/lib/time";
 import { draftDay, type PickData, type TemplateData } from "./day";
 import { pairKey, pickPair, type Club, type PairRules, type SharedPlayer } from "./generate";
-import type { CareerSpell, ClubSpell } from "./templates";
+import type { CareerSpell, ClubSpell, FamousPlayer, Ground, ManagerStay } from "./templates";
 
 /** Days ahead the job keeps drafted, so there is about a week to review. */
 export const DRAFT_DAYS_AHEAD = 8;
@@ -38,10 +38,13 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
   const empty = Array.from({ length: DRAFT_DAYS_AHEAD + 1 }, (_, i) => addDays(today, i)).filter((d) => !filled.has(d));
   if (!empty.length) return result;
 
-  const [{ data: clubRows }, { data: candidates, error: pairError }] = await Promise.all([
-    admin.from("clubs").select("id, name, top, in_premier_league"),
+  const [{ data: clubRows }, { data: candidates, error: pairError }, managers, famous] = await Promise.all([
+    admin.from("clubs").select("id, name, top, in_premier_league, ground, ground_capacity"),
     admin.rpc("club_pair_overlaps"),
+    allManagers(),
+    famousPlayers(),
   ]);
+  const grounds: Ground[] = (clubRows ?? []).flatMap((c) => (c.ground && c.ground_capacity ? [{ club: c.id, name: c.ground, capacity: c.ground_capacity }] : []));
   if (pairError) throw pairError;
   const pairs = ((candidates ?? []) as { club_a: number; club_b: number; players: number }[]).map((c) => ({
     a: c.club_a,
@@ -103,6 +106,9 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
       ]),
       careers: await careersOf([...players.map((p) => p.id), ...spellsAt.flatMap(bestKnownIds)]),
       recentTemplates: templatesNear(date),
+      managers,
+      famous,
+      grounds,
     };
     const day = draftDay(date, home, away, players, recent, picks, more);
 
@@ -197,7 +203,19 @@ async function pickData(a: number, b: number, date: string): Promise<PickData> {
 /** Every Premier League era spell at a club, page by page. */
 async function clubSpells(club: number): Promise<ClubSpell[]> {
   const admin = createAdminClient();
-  type Row = { player_id: number; known_as: string; sitelinks: number | null; date_of_birth: string | null; joined_on: string | null; left_on: string | null; on_loan: boolean; aliases: string[] | null };
+  type Row = {
+    player_id: number;
+    known_as: string;
+    sitelinks: number | null;
+    date_of_birth: string | null;
+    joined_on: string | null;
+    left_on: string | null;
+    on_loan: boolean;
+    aliases: string[] | null;
+    nationality: string | null;
+    height_cm: number | null;
+    career_clubs: number | null;
+  };
   const rows: Row[] = [];
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await admin.rpc("club_spells", { p_club: club }).range(from, from + PAGE - 1);
@@ -214,7 +232,30 @@ async function clubSpells(club: number): Promise<ClubSpell[]> {
     joined: r.joined_on,
     left: r.left_on,
     loan: r.on_loan,
+    nationality: r.nationality,
+    heightCm: r.height_cm,
+    careerClubs: r.career_clubs,
   }));
+}
+
+/** Every club's head coaches in the Premier League era. */
+async function allManagers(): Promise<ManagerStay[]> {
+  const { data, error } = await createAdminClient().from("club_managers").select("club_id, wikidata_qid, name, started_on, ended_on").limit(PAGE);
+  if (error) throw error;
+  return (data ?? []).map((m) => ({ club: m.club_id, qid: m.wikidata_qid, name: m.name, started: m.started_on, ended: m.ended_on }));
+}
+
+/** The best known thousand players with a nationality, for wrong options. */
+async function famousPlayers(): Promise<FamousPlayer[]> {
+  const { data, error } = await createAdminClient()
+    .from("players")
+    .select("id, known_as, sitelinks, nationality")
+    .not("nationality", "is", null)
+    .not("sitelinks", "is", null)
+    .order("sitelinks", { ascending: false })
+    .limit(PAGE);
+  if (error) throw error;
+  return (data ?? []).map((p) => ({ id: p.id, name: p.known_as, fame: p.sitelinks ?? 0, nationality: p.nationality }));
 }
 
 /** The best known players at a club, whose careers the moves need. */

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { draftDay, templateOrder, TEMPLATES, type TemplateData } from "./day";
 import type { SharedPlayer } from "./generate";
-import { allThereTogether, careerClubs, careerPathOrder, careerPathPicks, dressingRoom, isLoan, moves, oldestFirst, straightSwap, yearOfMove, type CareerSpell, type ClubSpell } from "./templates";
+import { allThereTogether, biggestGround, managerPicks, managerReigns, managersInOrder, managersOf, mostClubs, nationAtClub, nationPicks, permanentManagers, tallestFirst, careerClubs, careerPathOrder, careerPathPicks, dressingRoom, isLoan, moves, oldestFirst, straightSwap, yearOfMove, type CareerSpell, type ClubSpell } from "./templates";
 
 const ARS = { id: 1, name: "Arsenal" };
 const CHE = { id: 2, name: "Chelsea" };
@@ -161,6 +161,83 @@ describe("career paths", () => {
   });
 });
 
+describe("build B", () => {
+  const stay = (club: number, name: string, from: string, to: string | null) => ({ club, qid: name, name, started: from, ended: to });
+  const today = "2026-10-30";
+
+  it("picks Nigeria first when its list is a fair length", () => {
+    const squad = [
+      ...Array.from({ length: 7 }, (_, i) => at(i + 1, `Naija ${i}`, 2000 + i, 2002 + i, { nationality: "Nigeria" })),
+      ...Array.from({ length: 8 }, (_, i) => at(20 + i, `French ${i}`, 2000 + i, 2002 + i, { nationality: "France" })),
+    ];
+    expect(nationAtClub(squad, 3)?.nation).toBe("Nigeria");
+    expect(nationAtClub(squad.slice(5), 3)?.nation).toBe("France");
+  });
+
+  it("leaves caretakers out of a club's managers", () => {
+    const stays = [stay(1, "Graham", "1986-05-14", "1995-02-21"), stay(1, "Houston", "1995-02-22", "1995-06-08"), stay(1, "Rioch", "1995-06-08", "1996-08-12"), stay(1, "Wenger", "1996-10-01", "2018-05-21")];
+    expect(permanentManagers(stays, 1, today).map((m) => m.name)).toEqual(["Graham", "Rioch", "Wenger"]);
+    expect(managersOf(stays, 1, today)).toBeNull();
+  });
+
+  it("orders managers by appointment and asks their reigns", () => {
+    const stays = ["A", "B", "C", "D", "E", "F"].map((n, i) => stay(ARS.id, `Boss ${n}`, `${1994 + 4 * i}-07-01`, `${1997 + 4 * i}-06-30`));
+    const lines = managersInOrder(stays, ARS.id, 0, today);
+    expect(lines.map((l) => l.note)).toEqual(["1994", "1998", "2002", "2006", "2010"]);
+    const reigns = managerReigns(stays, [ARS], 0, 2026, today);
+    expect(reigns.length).toBeGreaterThanOrEqual(4);
+    expect(reigns.find((r) => r.question === "Boss A at Arsenal")?.answer).toBe("1994–1997");
+  });
+
+  it("asks who managed the day's clubs, with managers of other clubs as wrong options", () => {
+    const ours = Array.from({ length: 6 }, (_, i) => stay(i % 2 ? ARS.id : CHE.id, `Ours ${i}`, `${1995 + 3 * i}-07-01`, `${1997 + 3 * i}-06-30`));
+    const others = Array.from({ length: 20 }, (_, i) => stay(TOT.id, `Theirs ${i}`, `${1995 + i}-07-01`, `${1996 + i}-06-30`));
+    const lines = managerPicks([...ours, ...others], [ARS, CHE], 0, today);
+    expect(lines.length).toBe(6);
+    for (const l of lines) {
+      expect(l.answer).toMatch(/^Ours/);
+      expect(l.wrong.every((w) => w.startsWith("Theirs"))).toBe(true);
+    }
+  });
+
+  it("asks which player from a country played for the day's clubs", () => {
+    const squad = Array.from({ length: 6 }, (_, i) => at(i + 1, `Here ${i}`, 2000, 2003, { nationality: "France" }));
+    const famous = Array.from({ length: 20 }, (_, i) => ({ id: 100 + i, name: `Away ${i}`, fame: 50, nationality: "France" }));
+    const found = nationPicks(squad, famous, new Set(), 0);
+    expect(found?.nation).toBe("France");
+    for (const l of found!.lines) expect(l.wrong.every((w) => w.startsWith("Away"))).toBe(true);
+  });
+
+  it("orders by clubs played for and by height, with clear gaps", () => {
+    const squad = Array.from({ length: 10 }, (_, i) => at(i + 1, `P ${i}`, 2000, 2003, { careerClubs: 2 + i, heightCm: 170 + 2 * i, fame: 90 - i }));
+    const clubs = mostClubs(squad, new Map(), new Set(), 0);
+    expect(clubs).toHaveLength(5);
+    const counts = clubs.map((l) => parseInt(l.note!));
+    expect([...counts].sort((a, b) => b - a)).toEqual(counts);
+    for (let i = 1; i < counts.length; i++) expect(counts[i - 1] - counts[i]).toBeGreaterThanOrEqual(2);
+    const tall = tallestFirst(squad, new Set(), 0);
+    expect(tall).toHaveLength(5);
+    expect(tall[0].note).toMatch(/ cm$/);
+  });
+
+  it("orders grounds by capacity and always includes the day's two", () => {
+    const grounds = [
+      { club: ARS.id, name: "Emirates Stadium", capacity: 60338 },
+      { club: CHE.id, name: "Stamford Bridge", capacity: 41875 },
+      { club: 10, name: "Old Trafford", capacity: 74310 },
+      { club: 11, name: "Anfield", capacity: 61276 },
+      { club: 12, name: "Villa Park", capacity: 42640 },
+      { club: 13, name: "Selhurst Park", capacity: 25486 },
+      { club: 14, name: "Molineux", capacity: 31750 },
+    ];
+    const lines = biggestGround(grounds, [ARS, CHE], 0);
+    expect(lines).toHaveLength(5);
+    expect(lines.map((l) => l.text)).toContain("Emirates Stadium");
+    expect(lines.map((l) => l.text)).toContain("Stamford Bridge");
+    expect(lines.map((l) => l.text)).not.toContain("Anfield");
+  });
+});
+
 describe("templateOrder", () => {
   it("turns by date and puts recently used templates last", () => {
     const a = templateOrder(TEMPLATES.era, "2026-11-02", new Set());
@@ -173,7 +250,7 @@ describe("templateOrder", () => {
 describe("draftDay with templates", () => {
   it("records the template and falls back to played-for-both", () => {
     const players = Array.from({ length: 8 }, (_, i) => ({ ...shared(i + 1, `Both ${i + 1}`), joinedA: `${1995 + i}-07-01`, joinedB: `${1996 + i}-07-01` }));
-    const more: TemplateData = { clubs, spellsAt: new Map(), careers: new Map(), recentTemplates: new Set() };
+    const more: TemplateData = { clubs, spellsAt: new Map(), careers: new Map(), recentTemplates: new Set(), managers: [], famous: [], grounds: [] };
     // 2026-10-25 pairs Free Recall with In Order.
     const day = draftDay("2026-10-25", ARS, CHE, players, new Set(), { decoys: [], spells: new Map(), nowYear: 2026 }, more);
     expect(day.part1.template).toBe("played-for-both");

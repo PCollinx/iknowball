@@ -1,7 +1,7 @@
 import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { TrackedClub } from "./clubs";
-import { fetchClubPlayers, fetchPositions, type Position, type Spell } from "./wikidata";
+import { fetchClubExtras, fetchClubPlayers, fetchPlayerFacts, fetchPositions, type PlayerFacts, type Position, type Spell } from "./wikidata";
 
 const BATCH = 500;
 
@@ -9,7 +9,7 @@ function chunks<T>(rows: T[]): T[][] {
   return Array.from({ length: Math.ceil(rows.length / BATCH) }, (_, i) => rows.slice(i * BATCH, (i + 1) * BATCH));
 }
 
-export type ImportResult = { club: string; players: number; spells: number; positions: number } | { club: string; error: string };
+export type ImportResult = { club: string; players: number; spells: number; positions: number; facts: number; managers: number } | { club: string; error: string };
 
 /** Fetches one club's player histories from Wikidata and upserts them. */
 export async function importClub(club: TrackedClub): Promise<ImportResult> {
@@ -75,6 +75,42 @@ async function saveClub(admin: ReturnType<typeof createAdminClient>, club: Track
     }
   }
 
+  // Nationality, height and career clubs (template build B). Like positions, a
+  // Wikidata hiccup leaves what we had.
+  const facts = await fetchPlayerFacts([...byPlayer.keys()]).catch(() => new Map<string, PlayerFacts>());
+  const factRows = [...facts].flatMap(([q, f]) => {
+    const s = byPlayer.get(q);
+    return s ? [{ wikidata_qid: q, full_name: s.name, known_as: s.name, nationality: f.nationality, height_cm: f.heightCm, career_clubs: f.careerClubs }] : [];
+  });
+  for (const batch of chunks(factRows)) {
+    const { error } = await admin.from("players").upsert(batch, { onConflict: "wikidata_qid" });
+    if (error) throw error;
+  }
+
+  // The club's managers in the Premier League era and its ground.
+  const extras = await fetchClubExtras(spells[0].clubQid).catch(() => null);
+  if (extras) {
+    if (extras.ground) {
+      const { error } = await admin.from("clubs").update({ ground: extras.ground.name, ground_capacity: extras.ground.capacity }).eq("id", clubRow.id);
+      if (error) throw error;
+    }
+    if (extras.managers.length) {
+      const { error } = await admin.from("club_managers").upsert(
+        extras.managers.map((m) => ({
+          club_id: clubRow.id,
+          wikidata_qid: m.qid,
+          name: m.name,
+          started_on: m.startedOn,
+          ended_on: m.endedOn,
+          source_ref: m.statement,
+          updated_at: new Date().toISOString(),
+        })),
+        { onConflict: "source_ref" },
+      );
+      if (error) throw error;
+    }
+  }
+
   const aliases = [...byPlayer.values()].flatMap((s) => s.aliases.map((alias) => ({ player_id: ids.get(s.playerQid)!, alias })));
   for (const batch of chunks(aliases)) {
     const { error } = await admin.from("player_aliases").upsert(batch, { onConflict: "player_id,alias_normalized", ignoreDuplicates: true });
@@ -98,5 +134,5 @@ async function saveClub(admin: ReturnType<typeof createAdminClient>, club: Track
     );
     if (error) throw error;
   }
-  return { club: club.name, players: byPlayer.size, spells: spells.length, positions: positions.size };
+  return { club: club.name, players: byPlayer.size, spells: spells.length, positions: positions.size, facts: facts.size, managers: extras?.managers.length ?? 0 };
 }

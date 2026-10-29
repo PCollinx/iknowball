@@ -18,6 +18,10 @@ export type ClubSpell = {
   joined: string | null;
   left: string | null;
   loan: boolean;
+  /** Build B's facts, from Wikidata; missing when unknown. */
+  nationality?: string | null;
+  heightCm?: number | null;
+  careerClubs?: number | null;
 };
 /** One spell in a player's career, at any club we track. */
 export type CareerSpell = { club: number; joined: string | null; left: string | null; loan: boolean };
@@ -352,4 +356,185 @@ export function careerPathOrder(
       return [{ player: p.name, lines: keep.map((c) => ({ text: clubs.get(c.club)!.name, note: String(c.year) })) }];
     });
   return options.length ? options[seed % options.length] : null;
+}
+
+// ---------------------------------------------------------------------------
+// Build B: nationality, height, career clubs, managers and grounds
+// ---------------------------------------------------------------------------
+
+/** A head coach's stay at a club. */
+export type ManagerStay = { club: number; qid: string; name: string; started: string | null; ended: string | null };
+/** A well-known player anywhere, for wrong options. */
+export type FamousPlayer = { id: number; name: string; fame: number; nationality: string | null };
+/** A club's ground now. */
+export type Ground = { club: number; name: string; capacity: number };
+
+/** Nigeria first when it fits (Nigeria-first, Collins), then the rest by the seed. */
+const NIGERIA = "Nigeria";
+function nationsFirst(nations: string[], seed: number): string[] {
+  const rest = rotate(nations.filter((n) => n !== NIGERIA).sort(), seed);
+  return nations.includes(NIGERIA) ? [NIGERIA, ...rest] : rest;
+}
+
+/** Each player once, with what we know of them. */
+const uniquePlayers = (spells: ClubSpell[]) => [...new Map(spells.map((s) => [s.id, s])).values()];
+
+/** Part 1 #2: the players from one country who've played for the club since 1992, a list of fair length. */
+export function nationAtClub(spells: ClubSpell[], seed: number): { nation: string; players: SharedPlayer[] } | null {
+  const byNation = new Map<string, ClubSpell[]>();
+  for (const p of uniquePlayers(spells.filter((s) => (s.left ?? "9999") >= "1992-08-15")))
+    if (p.nationality) byNation.set(p.nationality, [...(byNation.get(p.nationality) ?? []), p]);
+  const fits = [...byNation].filter(([, ps]) => ps.length >= MIN_SHARED && ps.length <= MAX_SHARED).map(([n]) => n);
+  const nation = nationsFirst(fits, seed)[0];
+  if (!nation) return null;
+  return { nation, players: byNation.get(nation)!.map((p) => ({ id: p.id, name: p.name, aliases: p.aliases, joinedA: p.joined, joinedB: null, fame: p.fame })) };
+}
+
+/** Permanent stays since 1992: 120 days or more, so caretakers are left out. */
+export function permanentManagers(stays: ManagerStay[], club: number, today: string): ManagerStay[] {
+  return stays
+    .filter((m) => m.club === club && m.started && (m.ended ?? today) >= "1992-08-15")
+    .filter((m) => (Date.parse(m.ended ?? today) - Date.parse(m.started!)) / 86_400_000 >= 120)
+    .sort((a, b) => (a.started! < b.started! ? -1 : 1));
+}
+
+/** Part 1 #5: every permanent manager of the club since 1992. */
+export function managersOf(stays: ManagerStay[], club: number, today: string): SharedPlayer[] | null {
+  const names = [...new Map(permanentManagers(stays, club, today).map((m) => [m.qid, m])).values()];
+  return names.length >= MIN_SHARED && names.length <= MAX_SHARED
+    ? names.map((m, i) => ({ id: -(i + 1), name: m.name, aliases: [], joinedA: m.started, joinedB: null }))
+    : null;
+}
+
+/** Wrong options for a round: names not taken yet, best known first. */
+function picker(names: string[]) {
+  const seen = new Set<string>();
+  return {
+    seen,
+    take(n: number): string[] {
+      const out: string[] = [];
+      for (const name of names) {
+        if (out.length === n) break;
+        const k = normalizeName(name);
+        if (k && !seen.has(k)) {
+          seen.add(k);
+          out.push(name);
+        }
+      }
+      return out;
+    },
+  };
+}
+
+/** Builds a Rapid round from right answers and a pool of wrong ones. */
+function rapidRound(right: string[], wrong: string[]): PickLine[] {
+  const pool = picker(wrong);
+  const lines: PickLine[] = [];
+  for (const answer of right) {
+    if (lines.length === PICK_SIZE) break;
+    const k = normalizeName(answer);
+    if (!k || pool.seen.has(k)) continue;
+    pool.seen.add(k);
+    const w = pool.take(3);
+    if (w.length < 3) break;
+    lines.push({ question: null, answer, wrong: w });
+  }
+  return lines.length >= MIN_PICKS && !pickIssues(lines, "pick").errors.length ? lines : [];
+}
+
+/**
+ * Part 1 Rapid #2: one player from a country who's played for either club,
+ * three from the same country who never did.
+ */
+export function nationPicks(spells: ClubSpell[], famous: FamousPlayer[], recent: Set<string>, seed: number): { nation: string; lines: PickLine[] } | null {
+  const here = new Set(spells.map((s) => s.id));
+  const players = uniquePlayers(spells.filter((s) => (s.left ?? "9999") >= "1992-08-15" && s.nationality)).sort(byFame);
+  const nations = nationsFirst([...new Set(players.map((p) => p.nationality!))], seed);
+  for (const nation of nations) {
+    const right = players.filter((p) => p.nationality === nation && !recent.has(normalizeName(p.name))).slice(0, KNOWN_POOL).map((p) => p.name);
+    const wrong = famous.filter((f) => f.nationality === nation && !here.has(f.id)).sort(byFame).slice(0, KNOWN_POOL * 2).map((f) => f.name);
+    const lines = rapidRound(rotate(right, seed), rotate(wrong, seed));
+    if (lines.length) return { nation, lines };
+  }
+  return null;
+}
+
+/** Part 1 Rapid #6: one manager of either club since 1992, three who managed other clubs we track but never these. */
+export function managerPicks(stays: ManagerStay[], dayClubs: Club[], seed: number, today: string): PickLine[] {
+  const ours = new Set(dayClubs.map((c) => c.id));
+  const theirs = new Set(stays.filter((m) => ours.has(m.club)).map((m) => m.qid));
+  const right = [...new Set(dayClubs.flatMap((c) => permanentManagers(stays, c.id, today)).map((m) => m.name))];
+  const others = [...new Set(stays.filter((m) => !theirs.has(m.qid) && (m.ended ?? today) >= "1992-08-15").map((m) => m.name))];
+  return rapidRound(rotate(right, seed), rotate(others, seed));
+}
+
+/** Five values spread apart by at least `gap`, best known first; null if there aren't five. */
+function spreadFive<T>(items: T[], value: (x: T) => number | null | undefined, gap: number): T[] | null {
+  const out: T[] = [];
+  for (const x of items) {
+    const v = value(x);
+    if (v === null || v === undefined) continue;
+    if (out.every((o) => Math.abs(value(o)! - v) >= gap)) out.push(x);
+    if (out.length === ORDER_SIZE) break;
+  }
+  return out.length === ORDER_SIZE ? out : null;
+}
+
+/** Part 2 #3: five of the club's best known by how many clubs they've played for, most first, two or more apart. */
+export function mostClubs(spells: ClubSpell[], careers: Map<number, CareerSpell[]>, recent: Set<string>, seed: number): OrderLine[] {
+  // Wikidata misses clubs now and then: never fewer than the clubs we track him at.
+  const clubsOf = (p: ClubSpell) => Math.max(p.careerClubs ?? 0, new Set((careers.get(p.id) ?? []).map((s) => s.club)).size) || null;
+  const pool = rotate(uniquePlayers(spells).filter((p) => !recent.has(normalizeName(p.name))).sort(byFame).slice(0, KNOWN_POOL * 2), seed);
+  const five = spreadFive(pool, clubsOf, 2);
+  return five ? five.sort((a, b) => clubsOf(b)! - clubsOf(a)!).map((p) => ({ text: p.name, note: `${clubsOf(p)} clubs` })) : [];
+}
+
+/** Part 2 #6: five of the club's best known by height, tallest first, three centimetres or more apart. */
+export function tallestFirst(spells: ClubSpell[], recent: Set<string>, seed: number): OrderLine[] {
+  const pool = rotate(uniquePlayers(spells).filter((p) => !recent.has(normalizeName(p.name))).sort(byFame).slice(0, KNOWN_POOL * 2), seed);
+  const five = spreadFive(pool, (p) => p.heightCm, 3);
+  return five ? five.sort((a, b) => b.heightCm! - a.heightCm!).map((p) => ({ text: p.name, note: `${p.heightCm} cm` })) : [];
+}
+
+/** Part 2 #5: five of the club's permanent managers since 1992, in the order they were appointed. */
+export function managersInOrder(stays: ManagerStay[], club: number, seed: number, today: string): OrderLine[] {
+  const firsts = [...new Map(permanentManagers(stays, club, today).map((m) => [m.qid, m])).values()];
+  const byYear = new Map<number, ManagerStay>();
+  for (const m of firsts) if (!byYear.has(year(m.started)!)) byYear.set(year(m.started)!, m);
+  const all = [...byYear.values()];
+  if (all.length < ORDER_SIZE) return [];
+  // A window of five in a row, so the order is about this club's history, moved along by the seed.
+  const start = seed % (all.length - ORDER_SIZE + 1);
+  return all.slice(start, start + ORDER_SIZE).map((m) => ({ text: m.name, note: String(year(m.started)) }));
+}
+
+/** Part 2 #11: the grounds of the day's clubs and three more we track, by capacity, biggest first, 2,000 or more apart. */
+export function biggestGround(grounds: Ground[], dayClubs: Club[], seed: number): OrderLine[] {
+  const ours = new Set(dayClubs.map((c) => c.id));
+  const theirs = grounds.filter((g) => ours.has(g.club));
+  const pool = [...theirs, ...rotate(grounds.filter((g) => !ours.has(g.club)), seed)];
+  const five = spreadFive(pool, (g) => g.capacity, 2000);
+  if (!five || theirs.some((g) => !five.includes(g))) return [];
+  return five.sort((a, b) => b.capacity - a.capacity).map((g) => ({ text: g.name, note: g.capacity.toLocaleString("en-GB") }));
+}
+
+/** Part 2 Era #2: a manager's reign at the day's clubs, "Arsène Wenger at Arsenal". */
+export function managerReigns(stays: ManagerStay[], dayClubs: Club[], seed: number, nowYear: number, today: string): PickLine[] {
+  const reigns = dayClubs.flatMap((club) =>
+    permanentManagers(stays, club.id, today)
+      .filter((m) => m.ended)
+      .map((m) => ({ club, name: m.name, from: Math.max(1992, year(m.started)!), to: year(m.ended)! }))
+      .filter((r) => r.to > r.from && r.to <= nowYear),
+  );
+  const lines: PickLine[] = [];
+  const seen = new Set<string>();
+  for (const [i, r] of rotate(reigns, seed).entries()) {
+    if (lines.length === ERA_SIZE) break;
+    if (seen.has(r.name)) continue;
+    const wrong = eraDecoys(r.from, r.to, seed + i, nowYear);
+    if (!wrong) continue;
+    seen.add(r.name);
+    lines.push({ question: `${r.name} at ${r.club.name}`, answer: `${r.from}–${r.to}`, wrong });
+  }
+  return lines.length >= MIN_ERAS && !pickIssues(lines, "era").errors.length ? lines : [];
 }
