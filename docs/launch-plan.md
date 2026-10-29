@@ -134,13 +134,15 @@ six (ARS, CHE, LIV, MCI, MUN, TOT) in every Daily, at least one of them; Europe'
 ("Popular games only"). To finish, in order:
 1. ~~Dev import~~ done 29 Oct: all nine European clubs, the big six and Aston Villa imported on dev
    (about 300 to 550 players each, no failures).
-2. Check Clash on dev: `select count(*) from clash_pool('apps', 40, 1000, true)` and the same for goals
-   (each needs 40+ for a set); play a sprint and see that the names are famous.
-3. Run the drafts job on dev and review in the maker: every day has a big six club; 3 Nov should be a UCL
-   tie (Barcelona v Aston Villa or Atlético v Bayern) if its list is good.
+2. ~~Check Clash on dev~~ done 30 Oct: both pools full (250, the cap), names famous (Kane, Ronaldo, Haaland).
+3. ~~Drafts on dev~~ done 30 Oct: every day has a big six club, 3 Nov is Barcelona v Aston Villa. The first
+   drafts' second halves were obscure (Brian McGlinchey, Greg Lincoln), so In Order, Era and Rapid picks
+   now favour famous players (migration `20261030000000_famous_dailies`, on dev), and In Order is 45 s.
+   The big six had been imported before fame was stored: every tracked club was re-imported on dev.
 4. Push and open the PR; Collins merges.
-5. Live: `npx supabase link --project-ref edggdeqvfmezibxmttsz`, `migration list`, `db push`; the daily
-   Wikidata job picks up the new clubs (or run them by hand), the fixture sync adds UCL that night.
+5. Live: `npx supabase link --project-ref edggdeqvfmezibxmttsz`, `migration list`, `db push` (both
+   migrations); then re-import every tracked club by name (`?club=`), since the plain job skips clubs
+   imported in the last 6 days and those have no fame numbers, the fixture sync adds UCL that night.
 6. Delete the live drafts already made for the coming days in the maker, so they redraft under the rules.
 
 ### 16. The installable app (PWA)
