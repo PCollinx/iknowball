@@ -8,6 +8,8 @@ import { pickIssues, recallIssues, shownChoices, type OrderLine, type PickLine, 
 export const MIN_SHARED = 6;
 export const MAX_SHARED = 25;
 export const ORDER_SIZE = 5;
+/** In Order's clock (Collins, 30 Oct 2026: a minute was too long for five names). */
+export const ORDER_SECONDS = 45;
 /** Rapid picks: questions in a round, and the fewest worth playing. */
 export const PICK_SIZE = 10;
 export const MIN_PICKS = 5;
@@ -373,7 +375,7 @@ function typedDay(date: string, home: Club, away: Club, players: SharedPlayer[],
           format: "in_order",
           title: "In order",
           prompt: `They all played for ${club.name}. Who joined first? Earliest at the top.`,
-          time: 60,
+          time: ORDER_SECONDS,
           answers: order.map((a, i) => ({ answer_text: a.text, extra_aliases: [], position: i + 1, reveal_note: a.note })),
         }
       : null,

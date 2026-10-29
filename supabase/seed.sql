@@ -33,7 +33,7 @@ select p1.id, a.text, a.aliases from p1, (values
 with p2 as (
   insert into public.dailies (play_date, part, format, title, prompt, time_limit_seconds, answer_count, status, source_note)
   values (public.game_date(), 2, 'in_order', 'In order',
-          'When did they first sign for Chelsea? Earliest at the top.', 60, 6, 'scheduled',
+          'When did they first sign for Chelsea? Earliest at the top.', 45, 6, 'scheduled',
           'Sample for local development')
   returning id
 )
