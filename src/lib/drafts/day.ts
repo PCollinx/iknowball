@@ -95,7 +95,9 @@ export const TEMPLATES = {
   in_order: ["joined-first", "oldest-first", "career-path", "most-clubs", "managers-in-order", "tallest-first", "biggest-ground"],
   era: ["era-years", "year-of-move", "all-there-together", "manager-reign"],
 } as const;
-export type Template = (typeof TEMPLATES)[keyof typeof TEMPLATES][number];
+/** Built but out of the rotation for now (see the note on `pick` above). */
+const PAUSED = ["manager-picks"] as const;
+export type Template = (typeof TEMPLATES)[keyof typeof TEMPLATES][number] | (typeof PAUSED)[number];
 
 /** The order to try a round type's templates on a date: turns by date, the ones used lately last. */
 export function templateOrder<T extends string>(templates: readonly T[], date: string, recent: Set<string>): T[] {
