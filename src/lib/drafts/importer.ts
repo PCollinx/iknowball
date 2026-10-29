@@ -109,6 +109,15 @@ async function saveClub(admin: ReturnType<typeof createAdminClient>, club: Track
       );
       if (error) throw error;
     }
+    // Managers Wikidata no longer lists for the club (a vacancy, a correction) go.
+    const keep = new Set(extras.managers.map((m) => m.statement));
+    const { data: had, error: hadError } = await admin.from("club_managers").select("id, source_ref").eq("club_id", clubRow.id);
+    if (hadError) throw hadError;
+    const gone = (had ?? []).filter((m) => !keep.has(m.source_ref)).map((m) => m.id);
+    if (gone.length) {
+      const { error } = await admin.from("club_managers").delete().in("id", gone);
+      if (error) throw error;
+    }
   }
 
   const aliases = [...byPlayer.values()].flatMap((s) => s.aliases.map((alias) => ({ player_id: ids.get(s.playerQid)!, alias })));
@@ -134,5 +143,19 @@ async function saveClub(admin: ReturnType<typeof createAdminClient>, club: Track
     );
     if (error) throw error;
   }
+  // Spells Wikidata no longer gives for this club go (removed or corrected
+  // there, or a women's team player from before the import left them out).
+  const fresh = new Set(spells.map((s) => s.statement));
+  const { data: held, error: heldError } = await admin.from("player_spells").select("id, source_ref").eq("club_id", clubRow.id);
+  if (heldError) throw heldError;
+  const stale = (held ?? []).filter((h) => !fresh.has(h.source_ref)).map((h) => h.id);
+  // A short answer from Wikidata must never empty a club: more than a quarter
+  // going at once is left for a person to look at.
+  if (stale.length > (held ?? []).length / 4) throw new Error(`${stale.length} of ${held?.length} spells would go. Check Wikidata before importing again.`);
+  for (const batch of chunks(stale)) {
+    const { error } = await admin.from("player_spells").delete().in("id", batch);
+    if (error) throw error;
+  }
+
   return { club: club.name, players: byPlayer.size, spells: spells.length, positions: positions.size, facts: facts.size, managers: extras?.managers.length ?? 0 };
 }

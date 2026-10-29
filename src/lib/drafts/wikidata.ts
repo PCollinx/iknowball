@@ -5,6 +5,7 @@
 export const WIKIDATA_SPARQL = process.env.WIKIDATA_SPARQL_URL || "https://query.wikidata.org/sparql";
 const USER_AGENT = "iKnowBall/0.1 (https://playiknowball.com; data import)";
 const ASSOCIATION_FOOTBALL_PLAYER = "Q937857";
+const FEMALE = "Q6581072";
 
 /** PL era only: spells still running into the 1992/93 season, or open-ended ones from 1985 on. */
 export const ERA_START_YEAR = 1992;
@@ -16,6 +17,8 @@ export function clubPlayersQuery(wikipediaTitle: string): string {
   ?article schema:about ?club; schema:isPartOf <https://en.wikipedia.org/>; schema:name "${title}"@en.
   ?player p:P54 ?st. ?st ps:P54 ?club.
   ?player wdt:P106 wd:${ASSOCIATION_FOOTBALL_PLAYER}.
+  # The men's game only: Wikidata files women's team players under the same club.
+  FILTER NOT EXISTS { ?player wdt:P21 wd:${FEMALE}. }
   OPTIONAL { ?st pq:P580 ?start. }
   OPTIONAL { ?st pq:P582 ?end. }
   # League appearances and goals for the spell, where Wikidata has them (Clash facts).
@@ -235,16 +238,22 @@ export function parsePlayerFacts(facts: { results: { bindings: Binding[] } }, cl
   return out;
 }
 
-async function sparql(query: string): Promise<{ results: { bindings: Binding[] } }> {
-  const res = await fetch(WIKIDATA_SPARQL, {
-    method: "POST",
-    headers: { Accept: "application/sparql-results+json", "Content-Type": "application/x-www-form-urlencoded", "User-Agent": USER_AGENT },
-    body: new URLSearchParams({ query }),
-    cache: "no-store",
-    signal: AbortSignal.timeout(65_000),
-  });
-  if (!res.ok) throw new Error(`Wikidata answered ${res.status}`);
-  return res.json();
+/** One query, tried again after a pause when Wikidata is busy (429) or times out (5xx). */
+async function sparql(query: string, tries = 3): Promise<{ results: { bindings: Binding[] } }> {
+  for (let attempt = 1; ; attempt++) {
+    const res = await fetch(WIKIDATA_SPARQL, {
+      method: "POST",
+      headers: { Accept: "application/sparql-results+json", "Content-Type": "application/x-www-form-urlencoded", "User-Agent": USER_AGENT },
+      body: new URLSearchParams({ query }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(65_000),
+    });
+    if (res.ok) return res.json();
+    if (attempt >= tries || (res.status !== 429 && res.status < 500)) throw new Error(`Wikidata answered ${res.status}`);
+    // Wikidata says how long to wait when it's busy; otherwise wait a little longer each time.
+    const wait = Number(res.headers.get("retry-after")) || 5 * attempt;
+    await new Promise((r) => setTimeout(r, Math.min(wait, 30) * 1000));
+  }
 }
 
 /** Build B's facts for players by Wikidata id, a couple of hundred per query. */
@@ -269,6 +278,8 @@ export function clubExtrasQuery(clubQid: string): string {
   {
     BIND("manager" AS ?kind)
     wd:${clubQid} p:P286 ?st. ?st ps:P286 ?who.
+    # People only: a vacancy is filed as "position not filled".
+    ?who wdt:P31 wd:Q5.
     OPTIONAL { ?st pq:P580 ?start. }
     OPTIONAL { ?st pq:P582 ?end. }
     FILTER(!BOUND(?end) || YEAR(?end) >= ${ERA_START_YEAR})

@@ -486,7 +486,7 @@ export function mostClubs(spells: ClubSpell[], careers: Map<number, CareerSpell[
   const clubsOf = (p: ClubSpell) => Math.max(p.careerClubs ?? 0, new Set((careers.get(p.id) ?? []).map((s) => s.club)).size) || null;
   const pool = rotate(uniquePlayers(spells).filter((p) => !recent.has(normalizeName(p.name))).sort(byFame).slice(0, KNOWN_POOL * 2), seed);
   const five = spreadFive(pool, clubsOf, 2);
-  return five ? five.sort((a, b) => clubsOf(b)! - clubsOf(a)!).map((p) => ({ text: p.name, note: `${clubsOf(p)} clubs` })) : [];
+  return five ? five.sort((a, b) => clubsOf(b)! - clubsOf(a)!).map((p) => ({ text: p.name, note: clubsOf(p) === 1 ? "1 club" : `${clubsOf(p)} clubs` })) : [];
 }
 
 /** Part 2 #6: five of the club's best known by height, tallest first, three centimetres or more apart. */
