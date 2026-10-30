@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { startTransition, useActionState, useMemo, useState } from "react";
 import { saveDay } from "@/app/maker/actions";
 import { shortDate } from "@/components/daily/Masthead";
@@ -44,7 +43,7 @@ export function DayEditor({ date, today, status, parts }: Props) {
 
   return (
     <main className="mx-auto min-h-dvh max-w-[1200px] px-4 lg:px-8">
-      <MakerBar right={<Link href="/maker" className="label text-navy/60 underline underline-offset-[3px]">All days</Link>} />
+      <MakerBar />
       {/* Submitted by hand, not with action=, so a rejected save keeps what was typed. */}
       <form
         onSubmit={(e) => {

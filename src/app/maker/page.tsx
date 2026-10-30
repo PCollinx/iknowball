@@ -31,7 +31,7 @@ async function DayList() {
 
   return (
     <main className="mx-auto min-h-dvh max-w-[1000px] px-4 pb-12 lg:px-8">
-      <MakerBar right={<span className="label hidden sm:inline">{shortDate(today)}</span>} />
+      <MakerBar active="days" right={<span className="label hidden sm:inline">{shortDate(today)}</span>} />
       <div className="grid gap-4 border-b-[3px] border-double border-navy py-4 lg:grid-cols-[1fr_auto] lg:items-end">
         <div>
           <h1 className="font-display text-[56px] leading-[0.9] uppercase lg:text-[88px]">
