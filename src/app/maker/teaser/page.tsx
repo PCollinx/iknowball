@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { shortDate } from "@/components/daily/Masthead";
@@ -37,13 +36,7 @@ async function TeaserMaker({ searchParams }: { searchParams: Promise<Search> }) 
 
   return (
     <main className="mx-auto min-h-dvh max-w-[1200px] px-4 pb-12 lg:px-8">
-      <MakerBar
-        right={
-          <Link href="/maker" className="label text-navy/60 underline underline-offset-[3px]">
-            All days
-          </Link>
-        }
-      />
+      <MakerBar active="teaser" />
       <div className="grid gap-2 border-b-[3px] border-double border-navy py-4 lg:grid-cols-[1fr_auto] lg:items-end">
         <h1 className="font-display text-[56px] leading-[0.9] uppercase lg:text-[88px]">
           Teaser <span className="text-royal">quiz</span>

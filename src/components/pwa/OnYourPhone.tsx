@@ -6,26 +6,17 @@ import { useInstall } from "./useInstall";
 
 // "On your phone" on Your shirt (step 16, option C, Collins, 30 Oct 2026):
 // always there, so whoever said "Not now" to the full-time ticket can still
-// add the app. The icon hangs on a peg like your shirt. Hidden where the
-// browser can't install (or it's already installed and you're in the browser).
+// add the app. The icon hangs on a peg like your shirt. Hidden once it's
+// installed (Collins, 31 Oct 2026) and where the browser can't install.
 
 const PEG = "flex h-[100px] w-[92px] shrink-0 items-center justify-center border-t-[5px] border-navy bg-mist";
 
 export function OnYourPhone({ guest, icon }: { guest: boolean; icon: string }) {
   const { way, inApp, install } = useInstall();
-  if (way === null || way === "none") return null;
+  if (way !== "prompt" && way !== "ios") return null;
 
   const phone = way === "ios" || /Android|Mobile/.test(navigator.userAgent);
   const title = phone ? "On your phone" : "On your desktop";
-  if (way === "installed") {
-    return (
-      <Section title={title}>
-        <span className="inline-block -rotate-3 border-2 border-navy bg-teal-light px-2.5 py-1 font-display text-xl uppercase shadow-[3px_3px_0_var(--color-navy)]">
-          {phone ? "On your phone ✓" : "Installed ✓"}
-        </span>
-      </Section>
-    );
-  }
   return (
     <Section title={title}>
       <div className="flex items-center gap-3.5">

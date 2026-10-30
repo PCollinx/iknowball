@@ -30,7 +30,7 @@ async function Lists() {
 
   return (
     <main className="mx-auto min-h-dvh max-w-[1000px] px-4 pb-12 lg:px-8">
-      <MakerBar />
+      <MakerBar active="lists" />
       <div className="border-b-[3px] border-double border-navy py-4">
         <h1 className="font-display text-[56px] leading-[0.9] uppercase lg:text-[88px]">
           The <span className="text-royal">lists</span>
