@@ -64,6 +64,7 @@ alter table public.famous_results enable row level security;
 alter table public.player_moments enable row level security;
 
 -- The maker saves a whole list at once: the rows given replace the list.
+-- "where true": through the API, Supabase refuses a delete without a where.
 create function public.maker_save_list(p_list text, p_rows jsonb)
 returns void
 language plpgsql
@@ -72,23 +73,23 @@ as $$
 begin
   case p_list
     when 'standings' then
-      delete from season_standings;
+      delete from season_standings where true;
       insert into season_standings (season, position, club, points)
         select season, position, club, points from jsonb_to_recordset(p_rows) as r(season text, position smallint, club text, points smallint);
     when 'golden-boots' then
-      delete from golden_boots;
+      delete from golden_boots where true;
       insert into golden_boots (season, player, club, goals)
         select season, player, club, goals from jsonb_to_recordset(p_rows) as r(season text, player text, club text, goals smallint);
     when 'captains' then
-      delete from club_captains;
+      delete from club_captains where true;
       insert into club_captains (club, player, from_year, to_year)
         select club, player, from_year, to_year from jsonb_to_recordset(p_rows) as r(club text, player text, from_year smallint, to_year smallint);
     when 'results' then
-      delete from famous_results;
+      delete from famous_results where true;
       insert into famous_results (played_on, home, home_goals, away_goals, away)
         select played_on, home, home_goals, away_goals, away from jsonb_to_recordset(p_rows) as r(played_on date, home text, home_goals smallint, away_goals smallint, away text);
     when 'moments' then
-      delete from player_moments;
+      delete from player_moments where true;
       insert into player_moments (player, moment, club, happened_on, born_on)
         select player, moment, club, happened_on, born_on from jsonb_to_recordset(p_rows) as r(player text, moment text, club text, happened_on date, born_on date);
     else
