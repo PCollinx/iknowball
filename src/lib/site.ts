@@ -1,7 +1,7 @@
 // Links shown in the site footer. Change them here and nowhere else.
 
 export const SOCIAL = {
-  x: { handle: "@twiceatwt", url: "https://x.com/twiceatwt" },
+  x: { handle: "@playiKnowBall", url: "https://x.com/playiKnowBall" },
   github: { handle: "PCollinx", url: "https://github.com/PCollinx" },
   linkedin: { name: "Collins Paul", url: "https://www.linkedin.com/in/collins-paul-60006b19b" },
 } as const;
