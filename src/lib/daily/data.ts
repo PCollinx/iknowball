@@ -70,10 +70,12 @@ export const currentUser = cache(async (): Promise<User | null> => {
 
 /** The signed-in player's id, from the session token verified on this server
  * (no call to Supabase), so answering a question stays fast. */
-export const currentUserId = cache(async (): Promise<string | null> => {
-  const { data } = await (await createClient()).auth.getClaims();
-  return data?.claims.sub ?? null;
-});
+const currentClaims = cache(async () => (await (await createClient()).auth.getClaims()).data?.claims ?? null);
+
+export const currentUserId = cache(async (): Promise<string | null> => (await currentClaims())?.sub ?? null);
+
+/** Whether the player is a guest (no email or Google yet), from the same token. */
+export const currentIsGuest = cache(async (): Promise<boolean> => (await currentClaims())?.is_anonymous === true);
 
 export async function todaysParts(): Promise<DailyRow[]> {
   const { data, error } = await createAdminClient()

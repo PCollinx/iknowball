@@ -8,7 +8,7 @@ import { InOrder } from "@/components/daily/InOrder";
 import { PickRound } from "@/components/daily/PickRound";
 import { KickOff } from "@/components/daily/KickOff";
 import { Masthead, shortDate } from "@/components/daily/Masthead";
-import { currentUserId, getDailyView } from "@/lib/daily/data";
+import { currentIsGuest, currentUserId, getDailyView } from "@/lib/daily/data";
 import { clubInTitle, kitOf, type Club } from "@/lib/profile/club";
 import { clubChoices, getRating, getSupporter, kitForFixture, kitsForFixture, pathClubs } from "@/lib/profile/data";
 import { pathOf } from "@/components/daily/KitTrail";
@@ -148,9 +148,10 @@ async function DailyScreen() {
       );
     case "fulltime": {
       // "Who do you support?" is asked once, right after a first Daily.
-      const [choices, rating] = await Promise.all([
+      const [choices, rating, guest] = await Promise.all([
         supporter && !supporter.asked ? clubChoices() : null,
         userId ? getRating(userId) : null,
+        currentIsGuest(),
       ]);
       const title = view.recall?.daily.title ?? "";
       return (
@@ -174,6 +175,7 @@ async function DailyScreen() {
           rating={rating}
           fanOf={clubInTitle(supporter?.club ?? null, title) ? supporter!.club!.name : null}
           testSite={isTestSite()}
+          guest={guest}
         />
       );
     }

@@ -72,7 +72,7 @@ function ShirtLink({ rating }: { rating: number | null | undefined }) {
   );
 }
 
-function Brand() {
+export function Brand() {
   return (
     <>
       <Logo />

@@ -7,6 +7,8 @@ import { ClubSection } from "@/components/profile/ClubSection";
 import { GoogleButton } from "@/components/profile/GoogleButton";
 import { EmptyPeg, LeagueStickers, Peg, Section, StatStickers } from "@/components/profile/Peg";
 import { EmailForm, UsernameForm } from "@/components/profile/ProfileForms";
+import { OnYourPhone } from "@/components/pwa/OnYourPhone";
+import { APP_ICON_SRC } from "@/lib/og/logo";
 import { currentUser } from "@/lib/daily/data";
 import { getHub } from "@/lib/league/data";
 import { clubChoices, getProfileView } from "@/lib/profile/data";
@@ -110,6 +112,8 @@ async function ProfileScreen({ searchParams }: { searchParams: SearchParams }) {
         <Section title="Your leagues">
           <LeagueStickers leagues={leagues} />
         </Section>
+
+        <OnYourPhone guest={guest} icon={APP_ICON_SRC} />
 
         <Section title={guest ? "Keep your shirt" : "Account"}>
           {guest ? (

@@ -153,6 +153,9 @@ iPhone, opening full screen like an app: a web manifest (name, the light-teal ap
 the iPhone meta tags, and a small offline screen in the house style ("No signal", like the VAR monitor).
 No offline play: answers are checked on the server. Mock the install prompt and the offline screen first.
 Keep it off the first-load budget (about 200 KB). By Sun 8 Nov, so beta testers install it.
+Built 30 Oct 2026 on `claude/pwa` (Collins picked A + C and offline A from
+https://claude.ai/artifact/CQFt8CLgLZEpMYkf9ZV6uE; details in CLAUDE.md, "The installable app"). To check on a
+preview: install on an Android phone and an iPhone, then turn on flight mode and open a page.
 
 ### 17. The launch email
 The waitlist promises "We'll email you on Fri 20 Nov when the gates open". One email to everyone on the
@@ -179,8 +182,9 @@ By Wed 18 Nov.
   weekend's two big games: **Chelsea v Man United** (Sat 31 Oct, 13:30 WAT; no app name, it's before
   1 Nov) and **Liverpool v Arsenal** (Sun 1 Nov, 17:30 WAT; the name can go on from 1 Nov). Post each
   before kick-off; the teaser page warns if a club or player is in a Daily in the next 14 days.
-- [ ] **Collins:** create the app's own X account (the footer links @twiceatwt, `src/lib/site.ts`); once it
-  exists, point the footer and the waitlist's X link at it.
+- [x] **Collins:** create the app's own X account: done 30 Oct, **@playiKnowBall**. The footer and the
+  waitlist link to it (`src/lib/site.ts`); profile picture (400 × 400) and header
+  (1500 × 500) drawn from the logo canvas's option A2 (https://claude.ai/artifact/BCUq7vK7p7NRFQnyY3F1Hz).
 - [ ] **Sun 1 Nov:** the waitlist goes up at midnight WAT by itself; reveal the name and the waitlist on X;
   send the first beta invite links to the most engaged followers.
 - [ ] **Sun 8 Nov checkpoint:** Collins and three friends trade Clash challenge links.
@@ -194,6 +198,8 @@ After launch: step 14 (Support, with Vercel Pro), Rate mode (18 Dec), whether to
 
 ## Also on the list
 
+- **Automated posts on X** (Collins, 30 Oct, "in the near future"): the app posts to @playiKnowBall by itself,
+  such as the team of the week card and matchday teasers. Not built; needs X API access.
 - **Fixture history** (Collins, 30 Oct): head-to-head results and scorers for the fixtures we theme on, so
   the Daily and teasers can ask fixture questions ("most goals in Chelsea v Man United"). Part of template
   build D: Highlightly's box scores give every new match's scorers; the matches before the sync need a
