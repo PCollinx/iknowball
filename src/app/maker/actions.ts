@@ -8,6 +8,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getDay, isAdmin, requireAdmin } from "@/lib/maker/data";
 import { orderIssues, parseOrder, parsePicks, parseRecall, pickIssues, recallIssues, shownChoices } from "@/lib/maker/parse";
 import { clubsIn, LIST_KINDS, parseList } from "@/lib/curated/lists";
+import { JOB_NAMES } from "@/lib/control/problems";
+import { runJob } from "@/lib/control/runs";
 
 export type SignInState = { error: string; email: string } | null;
 
@@ -148,4 +150,16 @@ export async function saveList(_prev: ListState, formData: FormData): Promise<Li
   if (error) return { ok: false, errors: [error.message] };
   refresh();
   return { ok: true, rows: rows.length, warnings: unknown.length ? [`Not clubs we track, so they never come up as the day's clubs: ${unknown.join(", ")}.`] : [] };
+}
+
+export type RunState = { status: "ok" | "warning" | "failed"; problems: string[] } | null;
+
+/** The control room's Run now: runs a scheduled job straight away, logged as manual. */
+export async function runJobNow(_prev: RunState, formData: FormData): Promise<RunState> {
+  await requireAdmin();
+  const job = z.enum(JOB_NAMES).safeParse(formData.get("job"));
+  if (!job.success) return { status: "failed", problems: ["Unknown job."] };
+  const run = await runJob(job.data, "manual");
+  refresh();
+  return { status: run.status, problems: run.problems };
 }

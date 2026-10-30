@@ -100,6 +100,8 @@ describe("lists", () => {
 });
 
 describe("build C templates", () => {
+  const players = ["Ade Bolt", "Ben Cole", "Cal Dunn", "Dan Eze", "Eli Fox", "Fin Gray"].map((name, i) => ({ id: i + 1, name, aliases: [], joinedA: null, joinedB: null }));
+
   it("asks for Golden Boot winners from the first season that keeps the list short enough", () => {
     const found = goldenBootWinners(boots, TODAY)!;
     expect(found.since).toBeNull();
@@ -185,7 +187,7 @@ describe("build C templates", () => {
       grounds: [],
       lists: { standings, goldenBoots: boots, captains, results, moments },
     };
-    const parts = Array.from({ length: 30 }, (_, i) => draftDay(`2026-11-${String(i + 1).padStart(2, "0")}`, { id: 1, name: "Arsenal" }, { id: 2, name: "Chelsea" }, [], new Set(), { decoys: [], spells: new Map(), nowYear: 2026 }, more))
+    const parts = Array.from({ length: 30 }, (_, i) => draftDay(`2026-11-${String(i + 1).padStart(2, "0")}`, { id: 1, name: "Arsenal" }, { id: 2, name: "Chelsea" }, players, new Set(), { decoys: [], spells: new Map(), nowYear: 2026 }, more))
       .flatMap((d) => [d.part1, d.part2])
       .filter((p) => p && p.source);
     expect(new Set(parts.map((p) => p!.template))).toEqual(
@@ -194,7 +196,6 @@ describe("build C templates", () => {
   });
 
   it("rests Golden Boot winners after a go", () => {
-    const players = ["Ade Bolt", "Ben Cole", "Cal Dunn", "Dan Eze", "Eli Fox", "Fin Gray"].map((name, i) => ({ id: i + 1, name, aliases: [], joinedA: null, joinedB: null }));
     const more: TemplateData = {
       clubs: new Map(),
       spellsAt: new Map(),

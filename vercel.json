@@ -3,6 +3,7 @@
   "crons": [
     { "path": "/api/jobs/import-wikidata", "schedule": "0 3 * * *" },
     { "path": "/api/jobs/drafts", "schedule": "0 19 * * *" },
-    { "path": "/api/jobs/fixtures", "schedule": "30 23 * * *" }
+    { "path": "/api/jobs/fixtures", "schedule": "30 23 * * *" },
+    { "path": "/api/jobs/match-data", "schedule": "0 0 * * *" }
   ]
 }

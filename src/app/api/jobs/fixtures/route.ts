@@ -1,14 +1,15 @@
 import { connection, NextResponse } from "next/server";
-import { syncFixtures } from "@/lib/fixtures/sync";
+import { runJob } from "@/lib/control/runs";
 import { isAuthorizedJob } from "@/lib/jobs";
 
 export const maxDuration = 60;
 
 // Nightly at 00:30 WAT (vercel.json), after the evening's matches: the
-// season's Premier League and Champions League fixtures and results from
-// Highlightly, about 7 calls.
+// season's Premier League, Champions League and cup fixtures and results from
+// Highlightly, about 12 calls. Logged in the control room (/maker/jobs).
 export async function GET(request: Request) {
   await connection();
   if (!isAuthorizedJob(request)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  return NextResponse.json(await syncFixtures());
+  const run = await runJob("fixtures");
+  return NextResponse.json(run, { status: run.status === "failed" ? 500 : 200 });
 }
