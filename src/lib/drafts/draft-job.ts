@@ -2,9 +2,10 @@ import "server-only";
 import { getLists } from "@/lib/curated/data";
 import { normalizeName } from "@/lib/daily/match";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { addDays, gameDate, matchweekBounds } from "@/lib/time";
+import { addDays, gameDate, matchweekBounds, seasonOf } from "@/lib/time";
 import { draftDay, LONG_REST_DAYS, type PickData, type TemplateData } from "./day";
 import { pairKey, pickPair, type Club, type PairRules, type SharedPlayer } from "./generate";
+import type { MatchData, MatchPlayer, PlayedMatch } from "./matchday";
 import type { CareerSpell, ClubSpell, FamousPlayer, Ground, ManagerStay } from "./templates";
 
 /** Days ahead the job keeps drafted, so there is about a week to review. */
@@ -46,6 +47,7 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
     famousPlayers(),
     getLists(),
   ]);
+  const season = await seasonData(today);
   const grounds: Ground[] = (clubRows ?? []).flatMap((c) => (c.ground && c.ground_capacity ? [{ club: c.id, name: c.ground, capacity: c.ground_capacity }] : []));
   if (pairError) throw pairError;
   const pairs = ((candidates ?? []) as { club_a: number; club_b: number; players: number }[]).map((c) => ({
@@ -115,6 +117,7 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
       grounds,
       lists,
       restedTemplates: templatesBefore(date, LONG_REST_DAYS),
+      matchday: await withMeetings(season, home.id, away.id, spellsAt, clubs),
     };
     const day = draftDay(date, home, away, players, recent, picks, more);
 
@@ -296,4 +299,145 @@ async function fixturePairs(from: string, to: string): Promise<[string, [number,
     .lte("kickoff_at", `${to}T23:59:59Z`)
     .order("kickoff_at");
   return (data ?? []).map((f) => [gameDate(new Date(f.kickoff_at)), [f.home_club_id, f.away_club_id], f.competition]);
+}
+
+type SeasonData = { asOf: string; table: MatchData["table"]; matches: PlayedMatch[]; players: Map<number, MatchPlayer> };
+
+/** Pages through a query that may return more than one page. */
+async function allRows<T>(page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>): Promise<T[]> {
+  const rows: T[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await page(from, from + PAGE - 1);
+    if (error) throw error;
+    rows.push(...(data ?? []));
+    if ((data ?? []).length < PAGE) return rows;
+  }
+}
+
+type EventRow = { fixture_id: number; type: string; club_id: number | null; player_id: number | null };
+const goalOf = (e: EventRow) => ({ player: e.player_id, club: e.club_id ?? 0, ownGoal: e.type === "own-goal" });
+const GOAL_TYPES = ["goal", "penalty", "own-goal"];
+
+/** This season's Premier League so far (build D): the table, every detailed match, the players in them. */
+async function seasonData(today: string): Promise<SeasonData> {
+  const admin = createAdminClient();
+  const season = seasonOf(today);
+  const [table, fixtures, lines, events] = await Promise.all([
+    admin.from("league_table").select("club_id, position, points, played").eq("season", season),
+    allRows((from, to) =>
+      admin
+        .from("fixtures")
+        .select("id, kickoff_at, home_club_id, away_club_id, home_score, away_score")
+        .eq("competition", "PL")
+        .eq("season", season)
+        .eq("status", "finished")
+        .not("details_synced_at", "is", null)
+        .order("kickoff_at", { ascending: false })
+        .range(from, to),
+    ),
+    allRows((from, to) =>
+      admin
+        .from("player_match_stats")
+        .select("fixture_id, player_id, club_id, started, minutes, match_rating, key_passes, goals, position, fixtures!inner(season, competition)")
+        .eq("fixtures.season", season)
+        .eq("fixtures.competition", "PL")
+        .order("fixture_id")
+        .order("player_id")
+        .range(from, to),
+    ),
+    allRows((from, to) =>
+      admin
+        .from("match_events")
+        .select("fixture_id, type, club_id, player_id, fixtures!inner(season, competition)")
+        .in("type", GOAL_TYPES)
+        .eq("fixtures.season", season)
+        .eq("fixtures.competition", "PL")
+        .order("fixture_id")
+        .order("seq")
+        .range(from, to),
+    ),
+  ]);
+  if (table.error) throw table.error;
+  const linesOf = new Map<number, PlayedMatch["lines"]>();
+  for (const l of lines)
+    linesOf.set(l.fixture_id, [
+      ...(linesOf.get(l.fixture_id) ?? []),
+      {
+        player: l.player_id,
+        club: l.club_id ?? 0,
+        started: l.started ?? false,
+        minutes: l.minutes ?? 0,
+        rating: l.match_rating === null ? null : Number(l.match_rating),
+        keyPasses: l.key_passes ?? 0,
+        goals: l.goals ?? 0,
+        position: l.position,
+      },
+    ]);
+  const goalsOf = new Map<number, PlayedMatch["goals"]>();
+  for (const e of events as EventRow[]) goalsOf.set(e.fixture_id, [...(goalsOf.get(e.fixture_id) ?? []), goalOf(e)]);
+  const matches = fixtures.map((f) => ({
+    date: gameDate(new Date(f.kickoff_at)),
+    home: f.home_club_id,
+    away: f.away_club_id,
+    homeGoals: f.home_score ?? 0,
+    awayGoals: f.away_score ?? 0,
+    goals: goalsOf.get(f.id) ?? [],
+    lines: linesOf.get(f.id) ?? [],
+  }));
+  const players = await playersById([...new Set([...lines.map((l) => l.player_id), ...(events as EventRow[]).flatMap((e) => (e.player_id ? [e.player_id] : []))])]);
+  return { asOf: today, table: (table.data ?? []).map((t) => ({ club: t.club_id, position: t.position, points: t.points, played: t.played })), matches, players };
+}
+
+/** Names, fame and nationality of some players. */
+async function playersById(ids: number[]): Promise<Map<number, MatchPlayer>> {
+  const admin = createAdminClient();
+  const out = new Map<number, MatchPlayer>();
+  for (let i = 0; i < ids.length; i += 300) {
+    const { data, error } = await admin.from("players").select("id, known_as, sitelinks, nationality").in("id", ids.slice(i, i + 300));
+    if (error) throw error;
+    for (const p of data ?? []) out.set(p.id, { name: p.known_as, fame: p.sitelinks ?? 0, nationality: p.nationality });
+  }
+  return out;
+}
+
+/** The season's data plus the day's pair's last meetings with their goals. */
+async function withMeetings(season: SeasonData, a: number, b: number, spells: ClubSpell[][], clubs: Map<number, Club>): Promise<MatchData> {
+  const admin = createAdminClient();
+  const { data: meetings, error } = await admin
+    .from("fixtures")
+    .select("id, kickoff_at, home_club_id, away_club_id, home_score, away_score")
+    .or(`and(home_club_id.eq.${a},away_club_id.eq.${b}),and(home_club_id.eq.${b},away_club_id.eq.${a})`)
+    .eq("status", "finished")
+    .not("details_synced_at", "is", null)
+    .order("kickoff_at", { ascending: false })
+    .limit(10);
+  if (error) throw error;
+  const ids = (meetings ?? []).map((m) => m.id);
+  const { data: events, error: eventError } = ids.length
+    ? await admin.from("match_events").select("fixture_id, type, club_id, player_id").in("fixture_id", ids).in("type", GOAL_TYPES).order("seq")
+    : { data: [], error: null };
+  if (eventError) throw eventError;
+  const players = new Map(season.players);
+  const missing = (events ?? []).flatMap((e) => (e.player_id && !players.has(e.player_id) ? [e.player_id] : []));
+  for (const [id, p] of await playersById([...new Set(missing)])) players.set(id, p);
+  // Wrong options in old meetings come from the clubs' spells; they need to be named players too.
+  for (const s of spells.flat()) if (!players.has(s.id)) players.set(s.id, { name: s.name, fame: s.fame, nationality: s.nationality ?? null });
+  return {
+    ...season,
+    players,
+    meetings: (meetings ?? []).map((m) => ({
+      date: gameDate(new Date(m.kickoff_at)),
+      home: m.home_club_id,
+      away: m.away_club_id,
+      homeGoals: m.home_score ?? 0,
+      awayGoals: m.away_score ?? 0,
+      goals: (events ?? []).filter((e) => e.fixture_id === m.id).map((e) => goalOf(e as EventRow)),
+      lines: [],
+    })),
+    clubName: new Map([...clubs.values()].map((c) => [c.id, c.name])),
+    spellsAt: new Map([
+      [a, spells[0]],
+      [b, spells[1]],
+    ]),
+  };
 }

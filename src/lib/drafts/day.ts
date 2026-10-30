@@ -1,5 +1,7 @@
 import type { CuratedLists } from "@/lib/curated/lists";
 import { shownChoices, type PickLine } from "@/lib/maker/parse";
+import { matchweekBounds } from "@/lib/time";
+import { clubScorers, dayLabel, keyPassesOrder, lastTimeTheyMet, matchRatings, scoredInMatch, scoreline, seasonGoals, startersThisSeason, superEaglesNow, tableOrder, type MatchData } from "./matchday";
 import { captainsOf, captainYears, goldenBootPicks, goldenBootSeasons, goldenBootWinners, howOld, resultSeasons, titleSeasons, whereTheyFinished } from "./curated";
 import {
   eraPicks,
@@ -89,22 +91,40 @@ export type TemplateData = {
   lists?: CuratedLists;
   /** Templates used in the last LONG_REST_DAYS, for the ones whose answers never change. */
   restedTemplates?: Set<string>;
+  /** What's happened in matches this season, and the day's pair's meetings (build D). */
+  matchday?: MatchData;
 };
 
-/** Golden Boot winners has the same answers every time, so it waits this long between goes. */
+/** How long a LONG_REST template (same answers for weeks) waits between goes. */
 export const LONG_REST_DAYS = 60;
 const FROM_LISTS = "Drafted from the maker's lists. Check before scheduling.";
+const FROM_MATCHES = "Drafted from Highlightly's match data. Check before scheduling.";
+/** Templates with the same answers for weeks, rested LONG_REST_DAYS between goes. */
+const LONG_REST = new Set(["golden-boot-winners", "super-eagles-now"]);
 
 /** The template kinds, by round type. The first of each is the original. */
 export const TEMPLATES = {
   // Three-club chain (Free Recall #14) was tried and dropped on 29 Oct 2026: no
   // pair had more than 5 players at both clubs and a third top club.
-  free_recall: ["played-for-both", "dressing-room", "nation-at-club", "managers", "golden-boot-winners", "captains"],
+  free_recall: ["played-for-both", "dressing-room", "nation-at-club", "managers", "golden-boot-winners", "captains", "super-eagles-now", "starters-this-season", "club-scorers"],
   // Manager picks (Rapid #6) is out of the rotation until we have a fuller
   // list of managers: Wikidata gives Aston Villa 4 since 1992, so a wrong
   // option could be someone who managed there (Steve Bruce, 29 Oct 2026).
-  pick: ["played-for-both-picks", "straight-swap", "career-path-picks", "nation-picks", "golden-boot-picks"],
-  in_order: ["joined-first", "oldest-first", "career-path", "most-clubs", "managers-in-order", "tallest-first", "biggest-ground", "where-they-finished"],
+  pick: ["played-for-both-picks", "straight-swap", "career-path-picks", "nation-picks", "golden-boot-picks", "scored-in-match", "last-time-they-met"],
+  in_order: [
+    "joined-first",
+    "oldest-first",
+    "career-path",
+    "most-clubs",
+    "managers-in-order",
+    "tallest-first",
+    "biggest-ground",
+    "where-they-finished",
+    "table-order",
+    "season-goals",
+    "key-passes",
+    "match-rating",
+  ],
   era: ["era-years", "year-of-move", "all-there-together", "manager-reign", "title-season", "golden-boot-season", "captain-years", "famous-result", "how-old"],
 } as const;
 /** Templates built but out of the rotation for now (see the note on `pick` above). */
@@ -181,6 +201,7 @@ export function draftDay(
   // Each club, the home side or the away side first by the date.
   const sides = (template: string) => (templateSeed(date, template) % 2 ? [away, home] : [home, away]);
   const lists = more?.lists;
+  const md = more?.matchday;
   const dayClubs = [home.name, away.name];
   const eraPart = (template: string, prompt: string, lines: PickLine[]): DraftPart | null =>
     lines.length ? { format: "era", template, title: "Era picks", prompt, time: pickSeconds(lines.length, true), answers: pickAnswers(lines), source: FROM_LISTS } : null;
@@ -221,7 +242,7 @@ export function draftDay(
     },
 
     "golden-boot-winners": () => {
-      if (!lists || more?.restedTemplates?.has("golden-boot-winners")) return null;
+      if (!lists) return null;
       const found = goldenBootWinners(lists.goldenBoots, date);
       if (!found) return null;
       const since = found.since ? ` since ${found.since}` : "";
@@ -234,6 +255,59 @@ export function draftDay(
         if (list) return { ...recallPart("captains", title, (n) => `Name the ${n} players who've captained ${club.name} since 1992.`, list), source: FROM_LISTS };
       }
       return null;
+    },
+
+    "super-eagles-now": () => {
+      const found = md && superEaglesNow(md);
+      return found
+        ? { ...recallPart("super-eagles-now", title, (n) => `Name the ${n} Nigerians who've played in the Premier League this season, up to ${dayLabel(md!.asOf)}.`, found), source: FROM_MATCHES }
+        : null;
+    },
+
+    "starters-this-season": () => {
+      for (const club of sides("starters-this-season")) {
+        const found = md && startersThisSeason(md, club.id);
+        if (found)
+          return {
+            ...recallPart("starters-this-season", title, (n) => `Name the ${n} players who've started a Premier League game for ${club.name} this season, up to ${dayLabel(md!.asOf)}.`, found),
+            source: FROM_MATCHES,
+          };
+      }
+      return null;
+    },
+
+    "club-scorers": () => {
+      for (const club of sides("club-scorers")) {
+        const found = md && clubScorers(md, club.id);
+        if (found)
+          return {
+            ...recallPart("club-scorers", title, (n) => `Name the ${n} players who've scored for ${club.name} in the Premier League this season, up to ${dayLabel(md!.asOf)}.`, found),
+            source: FROM_MATCHES,
+          };
+      }
+      return null;
+    },
+
+    "scored-in-match": () => {
+      const lines = picks && md ? scoredInMatch(md, [home.id, away.id], templateSeed(date, "scored-in-match")) : [];
+      return lines.length
+        ? { format: "pick", template: "scored-in-match", title, prompt: "Tap a player who scored in each match.", time: pickSeconds(lines.length), answers: pickAnswers(lines), source: FROM_MATCHES }
+        : null;
+    },
+
+    "last-time-they-met": () => {
+      const lines = picks && md ? lastTimeTheyMet(md, templateSeed(date, "last-time-they-met")) : [];
+      return lines.length
+        ? {
+            format: "pick",
+            template: "last-time-they-met",
+            title,
+            prompt: `${home.name} and ${away.name} have met before. Tap a player who scored in each meeting.`,
+            time: pickSeconds(lines.length),
+            answers: pickAnswers(lines),
+            source: FROM_MATCHES,
+          }
+        : null;
     },
 
     "golden-boot-picks": () => {
@@ -377,6 +451,37 @@ export function draftDay(
       return found ? { ...orderPart("where-they-finished", `Order these clubs by where they finished in ${found.season}. Highest at the top.`, found.lines), source: FROM_LISTS } : null;
     },
 
+    "table-order": () => {
+      const lines = md ? tableOrder(md, [home.id, away.id], templateSeed(date, "table-order")) : [];
+      return lines.length ? { ...orderPart("table-order", `Order these clubs by where they stood in the table on ${dayLabel(md!.asOf)}. Top at the top.`, lines), source: FROM_MATCHES } : null;
+    },
+
+    "season-goals": () => {
+      const lines = md ? seasonGoals(md, [home.id, away.id], templateSeed(date, "season-goals")) : [];
+      return lines.length
+        ? { ...orderPart("season-goals", `Order them by Premier League goals this season, up to ${dayLabel(md!.asOf)}. Most at the top.`, lines), source: FROM_MATCHES }
+        : null;
+    },
+
+    "key-passes": () => {
+      const found = md && keyPassesOrder(md, [home.id, away.id], (d) => matchweekBounds(d).startsOn, templateSeed(date, "key-passes"));
+      return found
+        ? { ...orderPart("key-passes", `Order them by key passes in the Premier League matchweek from ${dayLabel(found.week)}. Most at the top.`, found.lines), source: FROM_MATCHES }
+        : null;
+    },
+
+    "match-rating": () => {
+      for (const club of sides("match-rating")) {
+        const found = md && matchRatings(md, club.id);
+        if (found)
+          return {
+            ...orderPart("match-rating", `${club.name}'s starters in ${scoreline(found.match, md!.clubName)} (${dayLabel(found.match.date)}): order them by match rating. Best at the top.`, found.lines),
+            source: FROM_MATCHES,
+          };
+      }
+      return null;
+    },
+
     "title-season": () =>
       picks && lists ? eraPart("title-season", "When did they win the league? Tap the season.", titleSeasons(lists.standings, dayClubs, templateSeed(date, "title-season"), date)) : null,
 
@@ -436,6 +541,7 @@ export function draftDay(
   };
   const first = (templates: Template[]) => {
     for (const t of templates) {
+      if (LONG_REST.has(t) && more?.restedTemplates?.has(t)) continue;
       const part = build[t]();
       if (part) return part;
     }
