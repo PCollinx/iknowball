@@ -62,6 +62,7 @@ const data: MatchData = {
   // A table of 20, Arsenal 2nd and Chelsea 5th.
   table: Array.from({ length: 20 }, (_, i) => ({ club: i + 1, position: [2, 5, 1, 3, 4, ...Array.from({ length: 15 }, (_, k) => k + 6)][i], points: 40 - i, played: 6 })),
   matches,
+  seasonComplete: true,
   meetings: [
     { date: "2025-04-01", home: ARS, away: CHE, homeGoals: 2, awayGoals: 1, goals: [{ player: 101, club: ARS, ownGoal: false }, { player: 205, club: CHE, ownGoal: false }], lines: [] },
     { date: "2024-10-01", home: CHE, away: ARS, homeGoals: 1, awayGoals: 0, goals: [{ player: 206, club: CHE, ownGoal: false }], lines: [] },
@@ -82,6 +83,13 @@ describe("build D templates", () => {
     expect(superEaglesNow(data)).toBeNull(); // 48 of them: more than Free Recall takes
     expect(startersThisSeason(data, ARS)!.map((p) => p.id).sort()).toEqual([101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111]);
     expect(clubScorers(data, ARS)).toBeNull(); // one scorer: too few
+  });
+
+  it("waits for the whole season before asking season-wide questions", () => {
+    const partial = { ...data, seasonComplete: false };
+    expect(startersThisSeason(partial, ARS)).toBeNull();
+    expect(seasonGoals(partial, [ARS, CHE], 0)).toEqual([]);
+    expect(tableOrder(partial, [ARS, CHE], 1)).not.toEqual([]); // the table is always whole
   });
 
   it("asks who scored in the day's clubs' matches, newest first", () => {

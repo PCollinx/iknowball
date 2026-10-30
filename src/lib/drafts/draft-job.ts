@@ -301,7 +301,7 @@ async function fixturePairs(from: string, to: string): Promise<[string, [number,
   return (data ?? []).map((f) => [gameDate(new Date(f.kickoff_at)), [f.home_club_id, f.away_club_id], f.competition]);
 }
 
-type SeasonData = { asOf: string; table: MatchData["table"]; matches: PlayedMatch[]; players: Map<number, MatchPlayer> };
+type SeasonData = { asOf: string; table: MatchData["table"]; matches: PlayedMatch[]; seasonComplete: boolean; players: Map<number, MatchPlayer> };
 
 /** Pages through a query that may return more than one page. */
 async function allRows<T>(page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: unknown }>): Promise<T[]> {
@@ -322,8 +322,17 @@ const GOAL_TYPES = ["goal", "penalty", "own-goal"];
 async function seasonData(today: string): Promise<SeasonData> {
   const admin = createAdminClient();
   const season = seasonOf(today);
-  const [table, fixtures, lines, events] = await Promise.all([
+  const [table, waiting, fixtures, lines, events] = await Promise.all([
     admin.from("league_table").select("club_id, position, points, played").eq("season", season),
+    // Finished matches the nightly job hasn't reached yet (it skips any without a Highlightly id too).
+    admin
+      .from("fixtures")
+      .select("id", { head: true, count: "exact" })
+      .eq("competition", "PL")
+      .eq("season", season)
+      .eq("status", "finished")
+      .is("details_synced_at", null)
+      .not("highlightly_match_id", "is", null),
     allRows((from, to) =>
       admin
         .from("fixtures")
@@ -358,6 +367,7 @@ async function seasonData(today: string): Promise<SeasonData> {
     ),
   ]);
   if (table.error) throw table.error;
+  if (waiting.error) throw waiting.error;
   const linesOf = new Map<number, PlayedMatch["lines"]>();
   for (const l of lines)
     linesOf.set(l.fixture_id, [
@@ -385,7 +395,7 @@ async function seasonData(today: string): Promise<SeasonData> {
     lines: linesOf.get(f.id) ?? [],
   }));
   const players = await playersById([...new Set([...lines.map((l) => l.player_id), ...(events as EventRow[]).flatMap((e) => (e.player_id ? [e.player_id] : []))])]);
-  return { asOf: today, table: (table.data ?? []).map((t) => ({ club: t.club_id, position: t.position, points: t.points, played: t.played })), matches, players };
+  return { asOf: today, table: (table.data ?? []).map((t) => ({ club: t.club_id, position: t.position, points: t.points, played: t.played })), matches, seasonComplete: matches.length > 0 && waiting.count === 0, players };
 }
 
 /** Names, fame and nationality of some players. */

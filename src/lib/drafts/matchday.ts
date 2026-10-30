@@ -30,6 +30,12 @@ export type MatchData = {
   table: { club: number; position: number; points: number; played: number }[];
   /** This season's Premier League matches with their details, newest first. */
   matches: PlayedMatch[];
+  /**
+   * Every finished Premier League match this season has its details. The
+   * season-wide templates wait for it: while the nightly job is still filling
+   * the season in, "who's started for Arsenal" would leave out right answers.
+   */
+  seasonComplete: boolean;
   /** The day's pair's past meetings (any competition we sync), newest first. */
   meetings: PlayedMatch[];
   players: Map<number, MatchPlayer>;
@@ -63,17 +69,20 @@ const fame = (d: MatchData, id: number) => d.players.get(id)?.fame ?? 0;
 
 /** Free Recall #6: the Nigerians who've played in the Premier League this season. */
 export function superEaglesNow(d: MatchData): SharedPlayer[] | null {
+  if (!d.seasonComplete) return null;
   const played = new Set(d.matches.flatMap((m) => m.lines.filter((l) => l.minutes > 0).map((l) => l.player)));
   return fair([...played].filter((id) => d.players.get(id)?.nationality === "Nigeria"), d);
 }
 
 /** Free Recall #7: who's started a Premier League game for the club this season. */
 export function startersThisSeason(d: MatchData, club: number): SharedPlayer[] | null {
+  if (!d.seasonComplete) return null;
   return fair([...new Set(d.matches.flatMap((m) => m.lines.filter((l) => l.club === club && l.started).map((l) => l.player)))], d);
 }
 
 /** Free Recall #8: who's scored for the club in the Premier League this season (own goals aside). */
 export function clubScorers(d: MatchData, club: number): SharedPlayer[] | null {
+  if (!d.seasonComplete) return null;
   return fair([...new Set(d.matches.flatMap((m) => m.goals.filter((g) => g.club === club && !g.ownGoal && g.player !== null).map((g) => g.player!)))], d);
 }
 
@@ -143,6 +152,7 @@ function totals(d: MatchData) {
 
 /** In Order #8: five players by Premier League goals this season, one of the day's clubs' top scorers among them. */
 export function seasonGoals(d: MatchData, dayClubs: number[], seed: number): OrderLine[] {
+  if (!d.seasonComplete) return [];
   const scorers = [...totals(d)].filter(([id, t]) => t.goals > 0 && d.players.has(id)).map(([id, t]) => ({ id, ...t }));
   const ours = scorers.filter((s) => dayClubs.includes(s.club)).sort((a, b) => b.goals - a.goals || fame(d, b.id) - fame(d, a.id)).slice(0, 1);
   const known = rotate(scorers.filter((s) => !ours.includes(s)).sort((a, b) => fame(d, b.id) - fame(d, a.id)).slice(0, 25), seed);
