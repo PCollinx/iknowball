@@ -180,8 +180,8 @@ By Wed 18 Nov.
   1 Nov) and **Liverpool v Arsenal** (Sun 1 Nov, 17:30 WAT; the name can go on from 1 Nov). Post each
   before kick-off; the teaser page warns if a club or player is in a Daily in the next 14 days.
 - [x] **Collins:** create the app's own X account: done 30 Oct, **@playiKnowBall**. The footer and the
-  waitlist link to it (`src/lib/site.ts`); profile picture (the mark on a light-teal tile, 400 × 400) and
-  banner (1500 × 500) drawn from the logo.
+  waitlist link to it (`src/lib/site.ts`); profile picture (400 × 400) and header
+  (1500 × 500) drawn from the logo canvas's option A2 (https://claude.ai/artifact/BCUq7vK7p7NRFQnyY3F1Hz).
 - [ ] **Sun 1 Nov:** the waitlist goes up at midnight WAT by itself; reveal the name and the waitlist on X;
   send the first beta invite links to the most engaged followers.
 - [ ] **Sun 8 Nov checkpoint:** Collins and three friends trade Clash challenge links.
