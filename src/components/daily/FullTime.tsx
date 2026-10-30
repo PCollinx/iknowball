@@ -1,9 +1,11 @@
 import Link from "next/link";
 import { ClubPicker } from "@/components/profile/ClubPicker";
+import { SeasonTicket } from "@/components/pwa/SeasonTicket";
+import { APP_ICON_SRC } from "@/lib/og/logo";
 import { RatingBadge } from "@/components/profile/RatingBadge";
 import { scoreInk } from "@/lib/profile/rating";
 import type { Club } from "@/lib/profile/club";
-import { gameDateClosesAt } from "@/lib/time";
+import { gameDate, gameDateClosesAt, seasonLabel, seasonOf } from "@/lib/time";
 import type { OrderReveal, RecallReveal, TableRow } from "@/lib/daily/data";
 import { halfRating } from "@/lib/daily/score";
 import { clock } from "./clock";
@@ -57,6 +59,8 @@ type Props = {
   rating: number | null;
   /** Previews and local runs, where today's Daily can be replayed. */
   testSite?: boolean;
+  /** Playing without an account: the iPhone steps say to save the shirt first. */
+  guest: boolean;
 };
 
 const WORDS = ["None", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"];
@@ -177,6 +181,8 @@ export function FullTime(props: Props) {
               </div>
             )}
             <ShareButtons text={shareText} image={card ? { url: "/daily/card", name: `iknowball-daily-${String(issue).padStart(3, "0")}.png` } : null} />
+            {/* Not on a first full time, which asks "Who do you support?" instead. */}
+            {!props.clubChoices && <SeasonTicket guest={props.guest} icon={APP_ICON_SRC} season={seasonLabel(seasonOf(gameDate()))} />}
           </aside>
 
           <TodaysTable top={props.top} me={props.me} position={position} players={players} />

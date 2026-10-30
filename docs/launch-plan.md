@@ -153,6 +153,9 @@ iPhone, opening full screen like an app: a web manifest (name, the light-teal ap
 the iPhone meta tags, and a small offline screen in the house style ("No signal", like the VAR monitor).
 No offline play: answers are checked on the server. Mock the install prompt and the offline screen first.
 Keep it off the first-load budget (about 200 KB). By Sun 8 Nov, so beta testers install it.
+Built 30 Oct 2026 on `claude/pwa` (Collins picked A + C and offline A from
+https://claude.ai/artifact/CQFt8CLgLZEpMYkf9ZV6uE; details in CLAUDE.md, "The installable app"). To check on a
+preview: install on an Android phone and an iPhone, then turn on flight mode and open a page.
 
 ### 17. The launch email
 The waitlist promises "We'll email you on Fri 20 Nov when the gates open". One email to everyone on the

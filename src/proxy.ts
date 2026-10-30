@@ -45,7 +45,7 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     {
-      source: "/((?!_next/static|_next/image|favicon.ico|api/health|api/jobs|ingest|monitoring|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+      source: "/((?!_next/static|_next/image|favicon.ico|sw\\.js|manifest\\.webmanifest|api/health|api/jobs|ingest|monitoring|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
       missing: [{ type: "header", key: "next-action" }],
     },
   ],

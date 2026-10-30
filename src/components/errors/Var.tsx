@@ -12,15 +12,17 @@ type Props = {
   stripClass: string;
   verdict: string;
   verdictClass: string;
+  /** The strip's corner: "● Live" while the monitor is on. */
+  status?: string;
   children: React.ReactNode;
 };
 
-export function VarBox({ strip, stripClass, verdict, verdictClass, children }: Props) {
+export function VarBox({ strip, stripClass, verdict, verdictClass, status = "● Live", children }: Props) {
   return (
     <section className="border-[3px] border-navy bg-navy shadow-[6px_6px_0_var(--color-navy)]">
       <div className={`flex items-center justify-between px-2.5 py-1.5 ${stripClass}`}>
         <span className="font-display text-lg uppercase">{strip}</span>
-        <span className="label">● Live</span>
+        <span className="label">{status}</span>
       </div>
       <div className="p-2">{children}</div>
       <div className={`flex items-center justify-between px-3 py-2 font-display text-[26px] text-white uppercase ${verdictClass}`}>
@@ -53,15 +55,15 @@ export function OffsideScreen() {
   );
 }
 
-/** A technical fault: the test card's colour bars, "Signal lost". */
-export function SignalLost() {
+/** A technical fault: the test card's colour bars, "Signal lost" (or what `label` says). */
+export function SignalLost({ label = "Signal lost" }: { label?: string }) {
   return (
-    <div className="relative flex h-[200px] lg:h-[260px]" role="img" aria-label="Signal lost">
+    <div className="relative flex h-[200px] lg:h-[260px]" role="img" aria-label={label}>
       {["bg-white", "bg-teal-light", "bg-[#F4C21B]", "bg-teal", "bg-[#C04CFF]", "bg-red-card", "bg-royal"].map((c) => (
         <span key={c} className={`flex-1 ${c}`} />
       ))}
       <span className="absolute top-1/2 left-1/2 -translate-1/2 -rotate-2 bg-navy px-3.5 py-2 font-display text-[26px] whitespace-nowrap text-white uppercase">
-        Signal lost
+        {label}
       </span>
     </div>
   );
