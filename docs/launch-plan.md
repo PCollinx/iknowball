@@ -194,6 +194,10 @@ After launch: step 14 (Support, with Vercel Pro), Rate mode (18 Dec), whether to
 
 ## Also on the list
 
+- **Fixture history** (Collins, 30 Oct): head-to-head results and scorers for the fixtures we theme on, so
+  the Daily and teasers can ask fixture questions ("most goals in Chelsea v Man United"). Part of template
+  build D: Highlightly's box scores give every new match's scorers; the matches before the sync need a
+  source found for them (no Wikipedia rivalry page has a scorer table).
 - **Share images** (`src/lib/daily/ShareImage.tsx`, `src/lib/clash/ResultImage.tsx`) follow their
   screens in steps 3 and 6.
 
