@@ -1,6 +1,7 @@
 import "server-only";
 import { serverEnv } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
+import type { HighlightlyBoxTeam, HighlightlyEvent, HighlightlyStandings } from "@/lib/matchdata/parse";
 import type { HighlightlyMatch } from "./parse";
 
 // The only place that calls Highlightly. Every call is logged in api_calls so
@@ -55,3 +56,22 @@ export async function seasonMatches(leagueId?: number): Promise<HighlightlyMatch
     if (!page.data.length || offset + 100 >= page.pagination.totalCount) return matches;
   }
 }
+
+/** A finished match's details: its goals, penalties and cards are in `events`. */
+export async function matchDetails(matchId: number): Promise<{ events: HighlightlyEvent[] } | null> {
+  const body = await get<{ events: HighlightlyEvent[] } | { events: HighlightlyEvent[] }[]>(`/matches/${matchId}`, {});
+  return (Array.isArray(body) ? body[0] : body) ?? null;
+}
+
+/** Every player's stats in a match, both teams. */
+export const boxScore = (matchId: number) => get<HighlightlyBoxTeam[]>(`/box-score/${matchId}`, {});
+
+/** The Premier League table this season. */
+export function standings(): Promise<HighlightlyStandings> {
+  const env = serverEnv();
+  return get<HighlightlyStandings>("/standings", { leagueId: env.HIGHLIGHTLY_PL_LEAGUE_ID, season: env.HIGHLIGHTLY_SEASON });
+}
+
+/** Two teams' last ten meetings, any competition, newest first. */
+export const headToHead = (teamA: number, teamB: number) =>
+  get<(HighlightlyMatch & { league: { id: number; name: string } })[]>("/head-2-head", { teamIdOne: teamA, teamIdTwo: teamB });

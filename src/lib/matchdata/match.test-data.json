@@ -1,0 +1,215 @@
+{
+ "id": 604789464,
+ "events": [
+  {
+   "team": {
+    "id": 28867,
+    "logo": "https://highlightly.net/soccer/images/teams/28867.png",
+    "name": "Manchester United"
+   },
+   "time": "45",
+   "type": "Yellow Card",
+   "assist": null,
+   "player": "Scott McTominay",
+   "playerId": 145537,
+   "substituted": null,
+   "assistingPlayerId": null
+  },
+  {
+   "team": {
+    "id": 28867,
+    "logo": "https://highlightly.net/soccer/images/teams/28867.png",
+    "name": "Manchester United"
+   },
+   "time": "49",
+   "type": "Yellow Card",
+   "assist": null,
+   "player": "Marcus Rashford",
+   "playerId": 146503,
+   "substituted": null,
+   "assistingPlayerId": null
+  },
+  {
+   "team": {
+    "id": 28867,
+    "logo": "https://highlightly.net/soccer/images/teams/28867.png",
+    "name": "Manchester United"
+   },
+   "time": "50",
+   "type": "Goal",
+   "assist": null,
+   "player": "J. Sancho",
+   "playerId": 3052,
+   "substituted": null,
+   "assistingPlayerId": null
+  },
+  {
+   "team": {
+    "id": 42483,
+    "logo": "https://highlightly.net/soccer/images/teams/42483.png",
+    "name": "Chelsea"
+   },
+   "time": "53",
+   "type": "Yellow Card",
+   "assist": null,
+   "player": "Reece James",
+   "playerId": 3146899,
+   "substituted": null,
+   "assistingPlayerId": null
+  },
+  {
+   "team": {
+    "id": 28867,
+    "logo": "https://highlightly.net/soccer/images/teams/28867.png",
+    "name": "Manchester United"
+   },
+   "time": "64",
+   "type": "Substitution",
+   "assist": null,
+   "player": "J. Sancho",
+   "playerId": 3052,
+   "substituted": "Cristiano Ronaldo",
+   "assistingPlayerId": 140868
+  },
+  {
+   "team": {
+    "id": 42483,
+    "logo": "https://highlightly.net/soccer/images/teams/42483.png",
+    "name": "Chelsea"
+   },
+   "time": "69",
+   "type": "Penalty",
+   "assist": null,
+   "player": "Jorginho",
+   "playerId": 368683,
+   "substituted": null,
+   "assistingPlayerId": null
+  },
+  {
+   "team": {
+    "id": 28867,
+    "logo": "https://highlightly.net/soccer/images/teams/28867.png",
+    "name": "Manchester United"
+   },
+   "time": "77",
+   "type": "Yellow Card",
+   "assist": null,
+   "player": "Bruno Fernandes",
+   "playerId": 239239,
+   "substituted": null,
+   "assistingPlayerId": null
+  },
+  {
+   "team": {
+    "id": 28867,
+    "logo": "https://highlightly.net/soccer/images/teams/28867.png",
+    "name": "Manchester United"
+   },
+   "time": "77",
+   "type": "Substitution",
+   "assist": null,
+   "player": "M. Rashford",
+   "playerId": 146503,
+   "substituted": "J. Lingard",
+   "assistingPlayerId": 145054
+  },
+  {
+   "team": {
+    "id": 42483,
+    "logo": "https://highlightly.net/soccer/images/teams/42483.png",
+    "name": "Chelsea"
+   },
+   "time": "78",
+   "type": "Substitution",
+   "assist": null,
+   "player": "C. Hudson-Odoi",
+   "playerId": 370132,
+   "substituted": "C. Pulisic",
+   "assistingPlayerId": 2891
+  },
+  {
+   "team": {
+    "id": 42483,
+    "logo": "https://highlightly.net/soccer/images/teams/42483.png",
+    "name": "Chelsea"
+   },
+   "time": "78",
+   "type": "Substitution",
+   "assist": null,
+   "player": "Marcos Alonso",
+   "playerId": 366912,
+   "substituted": "M. Mount",
+   "assistingPlayerId": 3094574
+  },
+  {
+   "team": {
+    "id": 42483,
+    "logo": "https://highlightly.net/soccer/images/teams/42483.png",
+    "name": "Chelsea"
+   },
+   "time": "82",
+   "type": "Substitution",
+   "assist": null,
+   "player": "T. Werner",
+   "playerId": 187880,
+   "substituted": "R. Lukaku",
+   "assistingPlayerId": 146181
+  },
+  {
+   "team": {
+    "id": 28867,
+    "logo": "https://highlightly.net/soccer/images/teams/28867.png",
+    "name": "Manchester United"
+   },
+   "time": "89",
+   "type": "Substitution",
+   "assist": null,
+   "player": "Bruno Fernandes",
+   "playerId": 239239,
+   "substituted": "D. van de Beek",
+   "assistingPlayerId": 88221
+  },
+  {
+   "team": {
+    "id": 42483,
+    "logo": "https://highlightly.net/soccer/images/teams/42483.png",
+    "name": "Chelsea"
+   },
+   "time": "90+5",
+   "type": "Yellow Card",
+   "assist": null,
+   "player": "Jorginho",
+   "playerId": 368683,
+   "substituted": null,
+   "assistingPlayerId": null
+  },
+  {
+   "team": {
+    "id": 28867,
+    "logo": "https://highlightly.net/soccer/images/teams/28867.png",
+    "name": "Manchester United"
+   },
+   "time": "90+6",
+   "type": "Yellow Card",
+   "assist": null,
+   "player": "Eric Bailly",
+   "playerId": 142639,
+   "substituted": null,
+   "assistingPlayerId": null
+  },
+  {
+   "team": {
+    "id": 28867,
+    "logo": "https://highlightly.net/soccer/images/teams/28867.png",
+    "name": "Manchester United"
+   },
+   "time": "90+2",
+   "type": "Yellow Card",
+   "assist": null,
+   "player": "Cristiano Ronaldo",
+   "playerId": 140868,
+   "substituted": null,
+   "assistingPlayerId": null
+  }
+ ]
+}

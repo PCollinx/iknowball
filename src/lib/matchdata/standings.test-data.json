@@ -1,0 +1,349 @@
+{
+ "groups": [
+  {
+   "name": "Premier League",
+   "standings": [
+    {
+     "position": 1,
+     "points": 21,
+     "team": {
+      "id": 43334,
+      "logo": "https://highlightly.net/soccer/images/teams/43334.png",
+      "name": "Manchester City"
+     },
+     "total": {
+      "wins": 7,
+      "draws": 0,
+      "games": 8,
+      "loses": 1,
+      "scoredGoals": 20,
+      "receivedGoals": 9
+     }
+    },
+    {
+     "position": 2,
+     "points": 21,
+     "team": {
+      "id": 36526,
+      "logo": "https://highlightly.net/soccer/images/teams/36526.png",
+      "name": "Arsenal"
+     },
+     "total": {
+      "wins": 7,
+      "draws": 0,
+      "games": 8,
+      "loses": 1,
+      "scoredGoals": 13,
+      "receivedGoals": 5
+     }
+    },
+    {
+     "position": 3,
+     "points": 16,
+     "team": {
+      "id": 44185,
+      "logo": "https://highlightly.net/soccer/images/teams/44185.png",
+      "name": "Brighton"
+     },
+     "total": {
+      "wins": 5,
+      "draws": 1,
+      "games": 8,
+      "loses": 2,
+      "scoredGoals": 23,
+      "receivedGoals": 7
+     }
+    },
+    {
+     "position": 4,
+     "points": 15,
+     "team": {
+      "id": 34824,
+      "logo": "https://highlightly.net/soccer/images/teams/34824.png",
+      "name": "Liverpool"
+     },
+     "total": {
+      "wins": 4,
+      "draws": 3,
+      "games": 8,
+      "loses": 1,
+      "scoredGoals": 11,
+      "receivedGoals": 8
+     }
+    },
+    {
+     "position": 5,
+     "points": 13,
+     "team": {
+      "id": 42483,
+      "logo": "https://highlightly.net/soccer/images/teams/42483.png",
+      "name": "Chelsea"
+     },
+     "total": {
+      "wins": 4,
+      "draws": 1,
+      "games": 8,
+      "loses": 3,
+      "scoredGoals": 17,
+      "receivedGoals": 15
+     }
+    },
+    {
+     "position": 6,
+     "points": 11,
+     "team": {
+      "id": 47589,
+      "logo": "https://highlightly.net/soccer/images/teams/47589.png",
+      "name": "Brentford"
+     },
+     "total": {
+      "wins": 2,
+      "draws": 5,
+      "games": 8,
+      "loses": 1,
+      "scoredGoals": 14,
+      "receivedGoals": 9
+     }
+    },
+    {
+     "position": 7,
+     "points": 11,
+     "team": {
+      "id": 54397,
+      "logo": "https://highlightly.net/soccer/images/teams/54397.png",
+      "name": "Leeds"
+     },
+     "total": {
+      "wins": 2,
+      "draws": 5,
+      "games": 8,
+      "loses": 1,
+      "scoredGoals": 9,
+      "receivedGoals": 6
+     }
+    },
+    {
+     "position": 8,
+     "points": 11,
+     "team": {
+      "id": 29718,
+      "logo": "https://highlightly.net/soccer/images/teams/29718.png",
+      "name": "Newcastle United"
+     },
+     "total": {
+      "wins": 3,
+      "draws": 2,
+      "games": 8,
+      "loses": 3,
+      "scoredGoals": 12,
+      "receivedGoals": 14
+     }
+    },
+    {
+     "position": 9,
+     "points": 11,
+     "team": {
+      "id": 56950,
+      "logo": "https://highlightly.net/soccer/images/teams/56950.png",
+      "name": "Aston Villa"
+     },
+     "total": {
+      "wins": 3,
+      "draws": 2,
+      "games": 8,
+      "loses": 3,
+      "scoredGoals": 9,
+      "receivedGoals": 12
+     }
+    },
+    {
+     "position": 10,
+     "points": 10,
+     "team": {
+      "id": 55248,
+      "logo": "https://highlightly.net/soccer/images/teams/55248.png",
+      "name": "Hull City"
+     },
+     "total": {
+      "wins": 2,
+      "draws": 4,
+      "games": 8,
+      "loses": 2,
+      "scoredGoals": 9,
+      "receivedGoals": 8
+     }
+    },
+    {
+     "position": 11,
+     "points": 10,
+     "team": {
+      "id": 39079,
+      "logo": "https://highlightly.net/soccer/images/teams/39079.png",
+      "name": "Everton"
+     },
+     "total": {
+      "wins": 2,
+      "draws": 4,
+      "games": 8,
+      "loses": 2,
+      "scoredGoals": 8,
+      "receivedGoals": 9
+     }
+    },
+    {
+     "position": 12,
+     "points": 10,
+     "team": {
+      "id": 49291,
+      "logo": "https://highlightly.net/soccer/images/teams/49291.png",
+      "name": "Ipswich"
+     },
+     "total": {
+      "wins": 3,
+      "draws": 1,
+      "games": 8,
+      "loses": 4,
+      "scoredGoals": 12,
+      "receivedGoals": 16
+     }
+    },
+    {
+     "position": 13,
+     "points": 9,
+     "team": {
+      "id": 30569,
+      "logo": "https://highlightly.net/soccer/images/teams/30569.png",
+      "name": "Bournemouth"
+     },
+     "total": {
+      "wins": 2,
+      "draws": 3,
+      "games": 8,
+      "loses": 3,
+      "scoredGoals": 12,
+      "receivedGoals": 13
+     }
+    },
+    {
+     "position": 14,
+     "points": 9,
+     "team": {
+      "id": 40781,
+      "logo": "https://highlightly.net/soccer/images/teams/40781.png",
+      "name": "Tottenham"
+     },
+     "total": {
+      "wins": 2,
+      "draws": 3,
+      "games": 8,
+      "loses": 3,
+      "scoredGoals": 8,
+      "receivedGoals": 10
+     }
+    },
+    {
+     "position": 15,
+     "points": 8,
+     "team": {
+      "id": 31420,
+      "logo": "https://highlightly.net/soccer/images/teams/31420.png",
+      "name": "Fulham"
+     },
+     "total": {
+      "wins": 2,
+      "draws": 2,
+      "games": 8,
+      "loses": 4,
+      "scoredGoals": 8,
+      "receivedGoals": 10
+     }
+    },
+    {
+     "position": 16,
+     "points": 7,
+     "team": {
+      "id": 28867,
+      "logo": "https://highlightly.net/soccer/images/teams/28867.png",
+      "name": "Manchester United"
+     },
+     "total": {
+      "wins": 1,
+      "draws": 4,
+      "games": 8,
+      "loses": 3,
+      "scoredGoals": 10,
+      "receivedGoals": 13
+     }
+    },
+    {
+     "position": 17,
+     "points": 7,
+     "team": {
+      "id": 45036,
+      "logo": "https://highlightly.net/soccer/images/teams/45036.png",
+      "name": "Crystal Palace"
+     },
+     "total": {
+      "wins": 2,
+      "draws": 1,
+      "games": 8,
+      "loses": 5,
+      "scoredGoals": 9,
+      "receivedGoals": 19
+     }
+    },
+    {
+     "position": 18,
+     "points": 6,
+     "team": {
+      "id": 56099,
+      "logo": "https://highlightly.net/soccer/images/teams/56099.png",
+      "name": "Nottingham Forest"
+     },
+     "total": {
+      "wins": 1,
+      "draws": 3,
+      "games": 8,
+      "loses": 4,
+      "scoredGoals": 6,
+      "receivedGoals": 10
+     }
+    },
+    {
+     "position": 19,
+     "points": 6,
+     "team": {
+      "id": 1146230,
+      "logo": "https://highlightly.net/soccer/images/teams/1146230.png",
+      "name": "Coventry"
+     },
+     "total": {
+      "wins": 2,
+      "draws": 0,
+      "games": 8,
+      "loses": 6,
+      "scoredGoals": 6,
+      "receivedGoals": 15
+     }
+    },
+    {
+     "position": 20,
+     "points": 5,
+     "team": {
+      "id": 635630,
+      "logo": "https://highlightly.net/soccer/images/teams/635630.png",
+      "name": "Sunderland"
+     },
+     "total": {
+      "wins": 1,
+      "draws": 2,
+      "games": 8,
+      "loses": 5,
+      "scoredGoals": 6,
+      "receivedGoals": 14
+     }
+    }
+   ]
+  }
+ ]
+}
