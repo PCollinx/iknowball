@@ -1,4 +1,6 @@
+import type { CuratedLists } from "@/lib/curated/lists";
 import { shownChoices, type PickLine } from "@/lib/maker/parse";
+import { captainsOf, captainYears, goldenBootPicks, goldenBootSeasons, goldenBootWinners, howOld, resultSeasons, titleSeasons, whereTheyFinished } from "./curated";
 import {
   eraPicks,
   hash,
@@ -59,6 +61,8 @@ export type DraftPart = {
   prompt: string;
   time: number;
   answers: DraftAnswer[];
+  /** Where the answers came from, for the maker; Wikidata when left out. */
+  source?: string;
 };
 export type DraftDay = { part1: DraftPart; part2: DraftPart | null };
 
@@ -81,19 +85,27 @@ export type TemplateData = {
   famous: FamousPlayer[];
   /** Grounds of the clubs we track, with capacities (build B). */
   grounds: Ground[];
+  /** The lists kept by hand in the maker (build C). */
+  lists?: CuratedLists;
+  /** Templates used in the last LONG_REST_DAYS, for the ones whose answers never change. */
+  restedTemplates?: Set<string>;
 };
+
+/** Golden Boot winners has the same answers every time, so it waits this long between goes. */
+export const LONG_REST_DAYS = 60;
+const FROM_LISTS = "Drafted from the maker's lists. Check before scheduling.";
 
 /** The template kinds, by round type. The first of each is the original. */
 export const TEMPLATES = {
   // Three-club chain (Free Recall #14) was tried and dropped on 29 Oct 2026: no
   // pair had more than 5 players at both clubs and a third top club.
-  free_recall: ["played-for-both", "dressing-room", "nation-at-club", "managers"],
+  free_recall: ["played-for-both", "dressing-room", "nation-at-club", "managers", "golden-boot-winners", "captains"],
   // Manager picks (Rapid #6) is out of the rotation until we have a fuller
   // list of managers: Wikidata gives Aston Villa 4 since 1992, so a wrong
   // option could be someone who managed there (Steve Bruce, 29 Oct 2026).
-  pick: ["played-for-both-picks", "straight-swap", "career-path-picks", "nation-picks"],
-  in_order: ["joined-first", "oldest-first", "career-path", "most-clubs", "managers-in-order", "tallest-first", "biggest-ground"],
-  era: ["era-years", "year-of-move", "all-there-together", "manager-reign"],
+  pick: ["played-for-both-picks", "straight-swap", "career-path-picks", "nation-picks", "golden-boot-picks"],
+  in_order: ["joined-first", "oldest-first", "career-path", "most-clubs", "managers-in-order", "tallest-first", "biggest-ground", "where-they-finished"],
+  era: ["era-years", "year-of-move", "all-there-together", "manager-reign", "title-season", "golden-boot-season", "captain-years", "famous-result", "how-old"],
 } as const;
 /** Templates built but out of the rotation for now (see the note on `pick` above). */
 type Paused = "manager-picks";
@@ -168,6 +180,10 @@ export function draftDay(
   const order = <T extends string>(list: readonly T[]) => (more ? templateOrder(list, date, used) : [list[0]]);
   // Each club, the home side or the away side first by the date.
   const sides = (template: string) => (templateSeed(date, template) % 2 ? [away, home] : [home, away]);
+  const lists = more?.lists;
+  const dayClubs = [home.name, away.name];
+  const eraPart = (template: string, prompt: string, lines: PickLine[]): DraftPart | null =>
+    lines.length ? { format: "era", template, title: "Era picks", prompt, time: pickSeconds(lines.length, true), answers: pickAnswers(lines), source: FROM_LISTS } : null;
 
   const build: Record<Template, () => DraftPart | null> = {
     "played-for-both": () =>
@@ -202,6 +218,29 @@ export function draftDay(
         if (list) return recallPart("managers", title, (n) => `Name the ${n} permanent managers of ${club.name} since 1992.`, list);
       }
       return null;
+    },
+
+    "golden-boot-winners": () => {
+      if (!lists || more?.restedTemplates?.has("golden-boot-winners")) return null;
+      const found = goldenBootWinners(lists.goldenBoots, date);
+      if (!found) return null;
+      const since = found.since ? ` since ${found.since}` : "";
+      return { ...recallPart("golden-boot-winners", title, (n) => `Name the ${n} players who've won the Premier League Golden Boot${since}.`, found.players), source: FROM_LISTS };
+    },
+
+    captains: () => {
+      for (const club of sides("captains")) {
+        const list = lists && captainsOf(lists.captains, club.name);
+        if (list) return { ...recallPart("captains", title, (n) => `Name the ${n} players who've captained ${club.name} since 1992.`, list), source: FROM_LISTS };
+      }
+      return null;
+    },
+
+    "golden-boot-picks": () => {
+      const lines = picks && lists ? goldenBootPicks(lists.goldenBoots, dayClubs, templateSeed(date, "golden-boot-picks"), date) : [];
+      return lines.length
+        ? { format: "pick", template: "golden-boot-picks", title, prompt: "Who won the Golden Boot that season? Tap the player.", time: pickSeconds(lines.length), answers: pickAnswers(lines), source: FROM_LISTS }
+        : null;
     },
 
     "played-for-both-picks": () => {
@@ -332,6 +371,27 @@ export function draftDay(
       const lines = more ? biggestGround(more.grounds, [home, away], templateSeed(date, "biggest-ground")) : [];
       return lines.length ? orderPart("biggest-ground", "Order these grounds by how many they hold. Biggest at the top.", lines) : null;
     },
+
+    "where-they-finished": () => {
+      const found = lists && whereTheyFinished(lists.standings, dayClubs, templateSeed(date, "where-they-finished"), date);
+      return found ? { ...orderPart("where-they-finished", `Order these clubs by where they finished in ${found.season}. Highest at the top.`, found.lines), source: FROM_LISTS } : null;
+    },
+
+    "title-season": () =>
+      picks && lists ? eraPart("title-season", "When did they win the league? Tap the season.", titleSeasons(lists.standings, dayClubs, templateSeed(date, "title-season"), date)) : null,
+
+    "golden-boot-season": () =>
+      picks && lists
+        ? eraPart("golden-boot-season", "When did they win the Golden Boot? Tap the season.", goldenBootSeasons(lists.goldenBoots, dayClubs, templateSeed(date, "golden-boot-season"), date))
+        : null,
+
+    "captain-years": () =>
+      picks && lists ? eraPart("captain-years", "When did they wear the armband? Tap the years.", captainYears(lists.captains, dayClubs, templateSeed(date, "captain-years"), picks.nowYear)) : null,
+
+    "famous-result": () =>
+      picks && lists ? eraPart("famous-result", "When did it happen? Tap the season.", resultSeasons(lists.results, dayClubs, templateSeed(date, "famous-result"), date)) : null,
+
+    "how-old": () => (picks && lists ? eraPart("how-old", "How old was he? Tap his age.", howOld(lists.moments, dayClubs, templateSeed(date, "how-old"))) : null),
 
     "manager-reign": () => {
       const lines = picks && more ? managerReigns(more.managers, [home, away], templateSeed(date, "manager-reign"), picks.nowYear, date) : [];

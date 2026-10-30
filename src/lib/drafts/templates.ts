@@ -35,7 +35,7 @@ const surname = (name: string) => {
 const byFame = <T extends { fame?: number }>(a: T, b: T) => (b.fame ?? 0) - (a.fame ?? 0);
 
 /** Rotates a list by a seed, so a rerun picks the same items. */
-function rotate<T>(items: T[], seed: number): T[] {
+export function rotate<T>(items: T[], seed: number): T[] {
   if (!items.length) return items;
   const k = seed % items.length;
   return [...items.slice(k), ...items.slice(0, k)];

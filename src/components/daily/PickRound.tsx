@@ -132,11 +132,13 @@ export function PickRound(props: Props) {
       <section className="pt-3 pb-4 [grid-area:squad] lg:pt-6 lg:pb-10">
         {/* One line for the player: the next name replaces this one in place. */}
         {current && era && <EraQuestion question={current.question} />}
+        {/* Any other question on a Rapid picks round (a Golden Boot season), in the same big line. */}
+        {current && !era && current.question && !pathOf(current.question) && <EraQuestion question={current.question} />}
         {/* A career path: the player's clubs as a trail of kits, the next path replacing this one in place. */}
         {current && !era && pathOf(current.question) && (
           <KitTrail key={`path-${current.id}`} clubs={pathOf(current.question)!} kits={props.pathKits ?? {}} className="animate-deal-in" />
         )}
-        <div className={era || pathOf(current?.question ?? null) ? "mt-3 lg:mt-5" : ""}>{progress}</div>
+        <div className={era || current?.question ? "mt-3 lg:mt-5" : ""}>{progress}</div>
 
         {current && !era && (
           // Rapid picks: four shirts on the pitch, pick your man. The pitch

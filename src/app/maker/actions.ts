@@ -7,6 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { getDay, isAdmin, requireAdmin } from "@/lib/maker/data";
 import { orderIssues, parseOrder, parsePicks, parseRecall, pickIssues, recallIssues, shownChoices } from "@/lib/maker/parse";
+import { clubsIn, LIST_KINDS, parseList } from "@/lib/curated/lists";
 
 export type SignInState = { error: string; email: string } | null;
 
@@ -120,4 +121,31 @@ export async function saveDay(_prev: SaveState, formData: FormData): Promise<Sav
   if (error) return { ok: false, errors: [error.message] };
   refresh();
   return { ok: true, savedAt: new Date().toISOString() };
+}
+
+export type ListState = { ok: true; rows: number; warnings: string[] } | { ok: false; errors: string[] } | null;
+
+/** Saves one of build C's lists whole, from the Lists page's text. */
+export async function saveList(_prev: ListState, formData: FormData): Promise<ListState> {
+  await requireAdmin();
+  const kind = z.enum(LIST_KINDS).safeParse(formData.get("kind"));
+  if (!kind.success) return { ok: false, errors: ["Unknown list."] };
+  const { rows, errors } = parseList(kind.data, String(formData.get("text") ?? ""));
+  if (errors.length) return { ok: false, errors };
+  if (!rows.length) return { ok: false, errors: ["The list is empty. Saving it would wipe it."] };
+
+  // The drafts find the day's clubs by our names, so a club we don't know is
+  // a typo where it must be ours (captains, moments) and a note elsewhere (QPR).
+  const admin = createAdminClient();
+  const { data: clubs, error: clubError } = await admin.from("clubs").select("name");
+  if (clubError) return { ok: false, errors: [clubError.message] };
+  const known = new Set((clubs ?? []).map((c) => c.name));
+  const unknown = [...new Set(clubsIn(kind.data, rows).filter((c) => !known.has(c)))];
+  if (unknown.length && (kind.data === "captains" || kind.data === "moments"))
+    return { ok: false, errors: [`Not one of our clubs: ${unknown.join(", ")}. Use the name the app uses, like Man United or Spurs.`] };
+
+  const { error } = await admin.rpc("maker_save_list", { p_list: kind.data, p_rows: rows });
+  if (error) return { ok: false, errors: [error.message] };
+  refresh();
+  return { ok: true, rows: rows.length, warnings: unknown.length ? [`Not clubs we track, so they never come up as the day's clubs: ${unknown.join(", ")}.`] : [] };
 }

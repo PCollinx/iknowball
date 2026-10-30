@@ -10,6 +10,9 @@ export function MakerBar({ right }: { right?: React.ReactNode }) {
       </Link>
       <div className="flex items-center gap-4">
         {right}
+        <Link href="/maker/lists" className="label text-navy/60 underline underline-offset-[3px]">
+          Lists
+        </Link>
         <Link href="/maker/teaser" className="label text-navy/60 underline underline-offset-[3px]">
           Teasers
         </Link>

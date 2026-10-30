@@ -1,8 +1,9 @@
 import "server-only";
+import { getLists } from "@/lib/curated/data";
 import { normalizeName } from "@/lib/daily/match";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addDays, gameDate, matchweekBounds } from "@/lib/time";
-import { draftDay, type PickData, type TemplateData } from "./day";
+import { draftDay, LONG_REST_DAYS, type PickData, type TemplateData } from "./day";
 import { pairKey, pickPair, type Club, type PairRules, type SharedPlayer } from "./generate";
 import type { CareerSpell, ClubSpell, FamousPlayer, Ground, ManagerStay } from "./templates";
 
@@ -38,11 +39,12 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
   const empty = Array.from({ length: DRAFT_DAYS_AHEAD + 1 }, (_, i) => addDays(today, i)).filter((d) => !filled.has(d));
   if (!empty.length) return result;
 
-  const [{ data: clubRows }, { data: candidates, error: pairError }, managers, famous] = await Promise.all([
+  const [{ data: clubRows }, { data: candidates, error: pairError }, managers, famous, lists] = await Promise.all([
     admin.from("clubs").select("id, name, top, in_premier_league, ground, ground_capacity"),
     admin.rpc("club_pair_overlaps"),
     allManagers(),
     famousPlayers(),
+    getLists(),
   ]);
   const grounds: Ground[] = (clubRows ?? []).flatMap((c) => (c.ground && c.ground_capacity ? [{ club: c.id, name: c.ground, capacity: c.ground_capacity }] : []));
   if (pairError) throw pairError;
@@ -74,6 +76,8 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
   for (const d of existing ?? []) if (d.template) templatesOn.set(d.play_date as string, [...(templatesOn.get(d.play_date as string) ?? []), d.template]);
   const templatesNear = (date: string) =>
     new Set(Array.from({ length: 2 * TEMPLATE_COOLDOWN_DAYS + 1 }, (_, i) => templatesOn.get(addDays(date, i - TEMPLATE_COOLDOWN_DAYS)) ?? []).flat());
+  const templatesBefore = (date: string, days: number) =>
+    new Set(Array.from({ length: days }, (_, i) => templatesOn.get(addDays(date, -(i + 1))) ?? []).flat());
   const restedNear = (date: string) =>
     new Set(Array.from({ length: 2 * CLUB_REST_DAYS + 1 }, (_, i) => clubsOn.get(addDays(date, i - CLUB_REST_DAYS)) ?? []).flat());
   const recent = await recentAnswerNames(addDays(today, -PLAYER_COOLDOWN_DAYS), last);
@@ -109,6 +113,8 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
       managers,
       famous,
       grounds,
+      lists,
+      restedTemplates: templatesBefore(date, LONG_REST_DAYS),
     };
     const day = draftDay(date, home, away, players, recent, picks, more);
 
@@ -117,7 +123,7 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
       p_status: "draft",
       p_checked_by: null,
       p_parts: [day.part1, day.part2].map(
-        (p) => p && { format: p.format, template: p.template, title: p.title, prompt: p.prompt, time_limit_seconds: p.time, source_note: SOURCE, answers: p.answers },
+        (p) => p && { format: p.format, template: p.template, title: p.title, prompt: p.prompt, time_limit_seconds: p.time, source_note: p.source ?? SOURCE, answers: p.answers },
       ),
     });
     if (saveError) {
