@@ -1,4 +1,5 @@
 import type { Kit } from "@/components/daily/ShirtBack";
+import { splitFixture } from "@/components/daily/fixture";
 import { FORMATS, fitSize, linesAt, shirtGrid, shirtLabels, type Teaser } from "./layout";
 import { BODY, C, DISPLAY } from "@/lib/og/fonts";
 import { Shirt } from "@/lib/og/Shirt";
@@ -28,11 +29,12 @@ export function TeaserImage({ t, kits }: { t: Teaser; kits: Kit[] }) {
   // Wide: words left, shirts right. Square and tall: words on top, shirts below.
   const textW = wide ? Math.round(inner * 0.5) : inner;
   const headline = t.headline || "Name them";
+  const fixture = splitFixture(headline)[1] !== null;
   const headSize = fitSize(headline, textW, wide ? 150 : t.format === "square" ? 112 : 140, 64, wide ? 3 : 2);
   const headLines = linesAt(headline, headSize, textW);
   const qSize = t.format === "square" ? 30 : 34;
   const tab =
-    t.kind === "pick" ? "Pick one" : t.kind === "recall" && !t.names.length ? `${t.count} to name` : t.kind === "order" ? "Order of joining" : "The answers";
+    t.kind === "pick" ? "Pick one" : t.kind === "recall" && !t.names.length ? `${t.count} to name` : t.kind === "order" ? "Put in order" : "The answers";
 
   const wordsH = headSize * 0.92 * headLines + 28 + (t.question ? qSize * 1.25 * 2 + 12 : 0) + 64;
   const shirtsBox = wide ? { w: inner - textW - 56, h: bodyH } : { w: inner, h: bodyH - wordsH - 24 };
@@ -63,9 +65,16 @@ export function TeaserImage({ t, kits }: { t: Teaser; kits: Kit[] }) {
                 lineHeight: 0.92,
                 textTransform: "uppercase",
                 color: C.navy,
+                flexWrap: "wrap",
+                columnGap: headSize * 0.24,
               }}
             >
-              {headline}
+              {/* Word by word, so a fixture's "v" can be royal, as on the Daily. */}
+              {headline.split(/\s+/).map((word, i) => (
+                <span key={i} style={{ display: "flex", color: word.toLowerCase() === "v" && fixture ? C.royal : C.navy }}>
+                  {word}
+                </span>
+              ))}
             </div>
             {t.question && <div style={{ display: "flex", fontSize: qSize, fontWeight: 600, lineHeight: 1.25, marginTop: 24 }}>{t.question}</div>}
             {/* The countdown tab of the Daily's scoreboard, here a tally. */}
