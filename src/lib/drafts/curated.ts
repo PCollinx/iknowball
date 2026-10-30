@@ -181,15 +181,18 @@ export function ageOn(born: string, on: string): number {
   return y - by - (m < bm || (m === bm && d < bd) ? 1 : 0);
 }
 
-/** Era #12: how old a player was at his debut or first goal, the day's clubs first. */
+/** Era #12: how old a player was at his debut or first goal, the day's clubs first, one moment a player. */
 export function howOld(moments: Moment[], dayClubs: string[], seed: number): PickLine[] {
   if (!moments.some((m) => dayClubs.includes(m.club))) return [];
   const lines: PickLine[] = [];
+  const seen = new Set<string>();
   for (const [i, m] of oursFirst(moments, (r) => dayClubs.includes(r.club), seed).entries()) {
     if (lines.length === ERA_SIZE) break;
+    if (seen.has(m.player)) continue; // one moment a player
     const age = ageOn(m.born_on, m.happened_on);
     const wrong = rotate([age + 1, age - 1, age + 2, age - 2].filter((a) => a >= 14), seed + i).slice(0, 3).map(String);
     if (wrong.length < 3) continue;
+    seen.add(m.player);
     const what = m.moment === "debut" ? "PL debut" : "first PL goal";
     lines.push({ question: `${m.player}'s ${what} at ${m.club}`, answer: String(age), wrong });
   }
