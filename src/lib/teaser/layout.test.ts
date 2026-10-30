@@ -68,7 +68,7 @@ describe("pick one", () => {
 
 describe("withHeadline", () => {
   it("uses the clubs when the headline is blank", () => {
-    expect(withHeadline(parseTeaser({}), ["Arsenal", "Spurs"]).headline).toBe("Arsenal and Spurs");
+    expect(withHeadline(parseTeaser({}), ["Arsenal", "Spurs"]).headline).toBe("Arsenal v Spurs");
     expect(withHeadline(parseTeaser({ headline: "Derby day" }), ["Arsenal"]).headline).toBe("Derby day");
   });
 });

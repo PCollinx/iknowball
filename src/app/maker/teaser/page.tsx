@@ -90,7 +90,7 @@ async function TeaserMaker({ searchParams }: { searchParams: Promise<Search> }) 
 
           <label className="grid gap-1.5">
             <span className="label">Headline</span>
-            <input name="headline" defaultValue={t.headline} placeholder="Blank uses the clubs: Arsenal and Spurs" maxLength={60} className={input} />
+            <input name="headline" defaultValue={t.headline} placeholder="Blank uses the fixture: Arsenal v Spurs" maxLength={60} className={input} />
           </label>
           <label className="grid gap-1.5">
             <span className="label">Question</span>

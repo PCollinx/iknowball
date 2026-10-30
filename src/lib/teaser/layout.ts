@@ -160,9 +160,9 @@ export function shirtGrid(n: number, width: number, height: number, gap: number)
   return best;
 }
 
-/** A blank headline takes the clubs' names: "Arsenal and Spurs". */
+/** A blank headline takes the fixture, as the Daily prints it: "Arsenal v Spurs". */
 export function withHeadline(t: Teaser, clubNames: string[]): Teaser {
-  return t.headline || !clubNames.length ? t : { ...t, headline: clubNames.join(" and ") };
+  return t.headline || !clubNames.length ? t : { ...t, headline: clubNames.join(" v ") };
 }
 
 /** Each shirt's kit: its own club's when the line names one, else the teaser's. */
