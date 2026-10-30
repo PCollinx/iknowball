@@ -335,7 +335,15 @@ insert into public.club_captains (club, player, from_year, to_year) values
   ('Man United', 'Antonio Valencia', 2018, 2019),
   ('Man United', 'Ashley Young', 2019, 2020),
   ('Man United', 'Harry Maguire', 2020, 2023),
-  ('Man United', 'Bruno Fernandes', 2023, null);
+  ('Man United', 'Bruno Fernandes', 2023, null),
+  -- Chelsea: written by Collins on the Lists page (30 Oct 2026); Wikipedia has no list.
+  ('Chelsea', 'Andy Townsend', 1991, 1993),
+  ('Chelsea', 'Dennis Wise', 1993, 2001),
+  ('Chelsea', 'Marcel Desailly', 2001, 2004),
+  ('Chelsea', 'John Terry', 2004, 2017),
+  ('Chelsea', 'Gary Cahill', 2017, 2019),
+  ('Chelsea', 'César Azpilicueta', 2019, 2023),
+  ('Chelsea', 'Reece James', 2023, null);
 
 insert into public.famous_results (played_on, home, home_goals, away_goals, away) values
   ('1995-03-04', 'Man United', 9, 0, 'Ipswich'),
