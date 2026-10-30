@@ -175,6 +175,12 @@ By Wed 18 Nov.
 
 - [ ] **Before Sun 1 Nov:** set `BETA_CODE` (8+ characters) in Vercel Production and redeploy.
 - [ ] **By Sat 31 Oct:** last teaser quizzes on X (no app name on them until 1 Nov).
+- [ ] **After template build D, before step 16 (Collins, 30 Oct):** teasers (`/maker/teaser`) for this
+  weekend's two big games: **Chelsea v Man United** (Sat 31 Oct, 13:30 WAT; no app name, it's before
+  1 Nov) and **Liverpool v Arsenal** (Sun 1 Nov, 17:30 WAT; the name can go on from 1 Nov). Post each
+  before kick-off; the teaser page warns if a club or player is in a Daily in the next 14 days.
+- [ ] **Collins:** create the app's own X account (the footer links @twiceatwt, `src/lib/site.ts`); once it
+  exists, point the footer and the waitlist's X link at it.
 - [ ] **Sun 1 Nov:** the waitlist goes up at midnight WAT by itself; reveal the name and the waitlist on X;
   send the first beta invite links to the most engaged followers.
 - [ ] **Sun 8 Nov checkpoint:** Collins and three friends trade Clash challenge links.
