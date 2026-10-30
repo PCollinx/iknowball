@@ -4,6 +4,8 @@ import type { TrackedClub } from "./clubs";
 import { fetchClubExtras, fetchClubPlayers, fetchPlayerFacts, fetchPositions, type PlayerFacts, type Position, type Spell } from "./wikidata";
 
 const BATCH = 500;
+// Supabase answers at most this many rows a request.
+const HELD_PAGE = 1000;
 
 function chunks<T>(rows: T[]): T[][] {
   return Array.from({ length: Math.ceil(rows.length / BATCH) }, (_, i) => rows.slice(i * BATCH, (i + 1) * BATCH));
@@ -146,12 +148,23 @@ async function saveClub(admin: ReturnType<typeof createAdminClient>, club: Track
   // Spells Wikidata no longer gives for this club go (removed or corrected
   // there, or a women's team player from before the import left them out).
   const fresh = new Set(spells.map((s) => s.statement));
-  const { data: held, error: heldError } = await admin.from("player_spells").select("id, source_ref").eq("club_id", clubRow.id);
-  if (heldError) throw heldError;
-  const stale = (held ?? []).filter((h) => !fresh.has(h.source_ref)).map((h) => h.id);
+  // Paged, as big clubs hold more spells than one request returns.
+  const held: { id: number; source_ref: string }[] = [];
+  for (let from = 0; ; from += HELD_PAGE) {
+    const { data, error } = await admin
+      .from("player_spells")
+      .select("id, source_ref")
+      .eq("club_id", clubRow.id)
+      .order("id")
+      .range(from, from + HELD_PAGE - 1);
+    if (error) throw error;
+    held.push(...(data ?? []));
+    if ((data ?? []).length < HELD_PAGE) break;
+  }
+  const stale = held.filter((h) => !fresh.has(h.source_ref)).map((h) => h.id);
   // A short answer from Wikidata must never empty a club: more than a quarter
   // going at once is left for a person to look at.
-  if (stale.length > (held ?? []).length / 4) throw new Error(`${stale.length} of ${held?.length} spells would go. Check Wikidata before importing again.`);
+  if (stale.length > held.length / 4) throw new Error(`${stale.length} of ${held.length} spells would go. Check Wikidata before importing again.`);
   for (const batch of chunks(stale)) {
     const { error } = await admin.from("player_spells").delete().in("id", batch);
     if (error) throw error;
