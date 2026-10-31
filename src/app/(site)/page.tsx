@@ -7,7 +7,6 @@ import { ShirtSticker } from "@/components/home/ShirtSticker";
 import { BeatenBanner } from "@/components/clash/Challenges";
 import { getChallenges, getHomeClash } from "@/lib/clash/data";
 import { statOfDay } from "@/lib/clash/rules";
-import { clashSample, SAMPLE_CHALLENGES, SAMPLE_MONDAY } from "@/lib/clash/sample";
 import { currentUserId, getHomeDaily } from "@/lib/daily/data";
 import { getHomeBoard } from "@/lib/league/data";
 import { getProfileView, kitsForFixture } from "@/lib/profile/data";
@@ -18,12 +17,10 @@ import { KeepyUppy } from "@/components/loading/KeepyUppy";
 // sticker, Clash as a match ticket, the League as a scoreboard and your shirt
 // as a sticker, under the Programme navbar.
 
-type SearchParams = Promise<Record<string, string | string[] | undefined>>;
-
-export default function Home({ searchParams }: { searchParams: SearchParams }) {
+export default function Home() {
   return (
     <Suspense fallback={<Loading />}>
-      <HomeScreen searchParams={searchParams} />
+      <HomeScreen />
     </Suspense>
   );
 }
@@ -35,21 +32,17 @@ function readClock() {
 }
 
 // Reads the session and the clock, so it renders per request.
-async function HomeScreen({ searchParams }: { searchParams: SearchParams }) {
+async function HomeScreen() {
   await connection();
-  const [me, params] = await Promise.all([currentUserId(), searchParams]);
-  // Test sites: ?sample=challenges or ?sample=monday (see src/lib/clash/sample.ts).
-  const sample = clashSample(params.sample);
+  const me = await currentUserId();
   const { today, closesAt, serverNow } = readClock();
-  const [daily, real, board, view, found] = await Promise.all([
+  const [daily, clash, board, view, challenges] = await Promise.all([
     getHomeDaily(me),
     me ? getHomeClash(me) : null,
     getHomeBoard(me),
     me ? getProfileView(me) : null,
     me ? getChallenges(me) : [],
   ]);
-  const clash = sample === "monday" && real ? { ...real, ...SAMPLE_MONDAY } : real;
-  const challenges = sample === "challenges" ? SAMPLE_CHALLENGES : found;
   // A challenge of yours that a mate beat since you last looked: the banner at the top.
   const beaten = challenges.find((c) => c.news);
   const kits = await kitsForFixture(daily?.parts.find((p) => p.part === 1)?.title ?? null);
