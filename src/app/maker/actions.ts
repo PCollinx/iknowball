@@ -10,6 +10,7 @@ import { orderIssues, parseOrder, parsePicks, parseRecall, pickIssues, recallIss
 import { clubsIn, LIST_KINDS, parseList } from "@/lib/curated/lists";
 import { JOB_NAMES } from "@/lib/control/problems";
 import { runJob } from "@/lib/control/runs";
+import { PER_PLAYER, WEEK_STATS } from "@/lib/clash/rules";
 
 export type SignInState = { error: string; email: string } | null;
 
@@ -162,4 +163,30 @@ export async function runJobNow(_prev: RunState, formData: FormData): Promise<Ru
   const run = await runJob(job.data, "manual");
   refresh();
   return { status: run.status, problems: run.problems };
+}
+
+const strike = z.object({
+  stat: z.enum(WEEK_STATS as [string, ...string[]]),
+  player: z.coerce.number().int().positive(),
+  club: z.coerce.number().int().positive(),
+  struck: z.enum(["0", "1"]),
+});
+
+/** Strikes a Clash number out of every new set, or puts it back. Height and
+ * career clubs are the player's own, so their strike covers every club. */
+export async function strikeClash(formData: FormData): Promise<void> {
+  const userId = await requireAdmin();
+  const { stat, player, club, struck } = strike.parse(Object.fromEntries(formData));
+  const clubId = PER_PLAYER.includes(stat as (typeof PER_PLAYER)[number]) ? null : club;
+  const admin = createAdminClient();
+  if (struck === "1") {
+    let q = admin.from("clash_strikes").delete().eq("stat", stat).eq("player_id", player);
+    q = clubId === null ? q.is("club_id", null) : q.eq("club_id", clubId);
+    const { error } = await q;
+    if (error) throw error;
+  } else {
+    const { error } = await admin.from("clash_strikes").insert({ stat, player_id: player, club_id: clubId, struck_by: userId });
+    if (error && error.code !== "23505") throw error;
+  }
+  refresh();
 }

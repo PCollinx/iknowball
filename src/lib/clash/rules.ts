@@ -26,6 +26,19 @@ export const STATS: Record<Stat, { label: string; short: string; min: number; ga
   sample: { label: "Premier League goals (sample)", short: "PL goals", min: 0, gap: 1, ask: "Who has more?" },
 };
 
+/** The range a stat's numbers usually fall in: outside it, the maker's Clash
+ * page flags the row for a second look ("Check"). */
+export const USUAL: Record<LiveStat, [number, number]> = {
+  goals: [5, 500],
+  apps: [40, 700],
+  height: [160, 205],
+  years: [1, 22],
+  clubs: [2, 14],
+};
+
+/** Stats that are the player's own, not per club: a strike covers every club. */
+export const PER_PLAYER: LiveStat[] = ["height", "clubs"];
+
 /** Today's stat (Collins, 31 Oct 2026): every solo sprint of a day draws the
  * same one, Monday first, so each weekday has its own and players learn the week. */
 export const WEEK_STATS: LiveStat[] = ["goals", "apps", "height", "years", "clubs", "goals", "apps"];

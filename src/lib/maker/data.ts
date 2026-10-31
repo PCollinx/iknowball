@@ -29,6 +29,8 @@ export type MakerPart = {
   answer_count: number;
   status: "draft" | "scheduled";
   source_note: string | null;
+  /** The template that drafted it; null for a part written in the maker. */
+  template: string | null;
   plays: number;
 };
 
@@ -39,7 +41,7 @@ async function playCounts(ids: number[]): Promise<Map<number, number>> {
   return new Map((data ?? []).map((r) => [r.daily_id as number, r.plays as number]));
 }
 
-const PART_COLUMNS = "id, play_date, part, format, title, prompt, time_limit_seconds, answer_count, status, source_note";
+const PART_COLUMNS = "id, play_date, part, format, title, prompt, time_limit_seconds, answer_count, status, source_note, template";
 
 /** Every part dated between two game dates (inclusive), by date. */
 export async function listParts(from: string, to: string): Promise<Map<string, MakerPart[]>> {
