@@ -131,7 +131,7 @@ function Signed({ position, name, club, again, siteUrl }: { position: number; na
         </div>
       </div>
       <p className="mt-3.5 text-base leading-snug">
-        We&apos;ll email you on {GATES_OPEN_LABEL} when the gates open. Bring your mates and your league starts on day one.
+        We&apos;ll email you on {GATES_OPEN_LABEL} when the gates open. Named a league? Sign in with this email that day and it&apos;s waiting, with you as captain.
       </p>
       <button type="button" onClick={share} className="btn-white btn-press mt-4 flex w-full items-center justify-between px-4 py-3 font-display text-[24px] uppercase lg:text-[26px]">
         <span>Bring your mates</span>

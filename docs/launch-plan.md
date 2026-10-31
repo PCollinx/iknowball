@@ -168,6 +168,10 @@ The sheet says "Bring your league and your league starts on day one", but the le
 connected to anything yet. Decide with Collins: make those leagues at launch (the person who named it
 becomes captain once they sign in with the same email, and gets the invite code), or soften the line on
 the page. Decide by Sun 8 Nov, build by 18 Nov.
+Decided 31 Oct 2026 (Collins): the leagues launch on launch day. Built: the league is made the first time
+that email signs in from Fri 20 Nov (test sites any time), with them as captain, on sign-in (straight to
+the league with "Send the invite"), on home or on the League page (`src/lib/league/waitlist.ts`, migration
+`20261107000000_waitlist_leagues`). The launch email (step 17) should tell them to sign in with the same email.
 
 ### 19. The demo video on the waitlist
 The demo video goes out Thu 19 Nov and is pinned on the waitlist page for its last day. Add a slot for it
@@ -228,5 +232,5 @@ After launch: step 14 (Support, with Vercel Pro), Rate mode (18 Dec), whether to
 - [x] 16. The installable app (PRs #66, #67; real installs on Android and iPhone still to check)
 - [x] Extra: Clash every day (today's stat, your three, beaten challenges) and the maker redesigned (31 Oct, `claude/clash-maker`)
 - [ ] 17. The launch email (by 19 Nov)
-- [ ] 18. Waitlist leagues on day one (decide by 8 Nov, build by 18 Nov)
+- [x] 18. Waitlist leagues on day one (built 31 Oct)
 - [ ] 19. The demo video on the waitlist (by 18 Nov)

@@ -77,6 +77,12 @@ export const currentUserId = cache(async (): Promise<string | null> => (await cu
 /** Whether the player is a guest (no email or Google yet), from the same token. */
 export const currentIsGuest = cache(async (): Promise<boolean> => (await currentClaims())?.is_anonymous === true);
 
+/** The signed-in player's email, from the same token: only once confirmed, and never a guest's. */
+export const currentEmail = cache(async (): Promise<string | null> => {
+  const claims = await currentClaims();
+  return claims && !claims.is_anonymous && typeof claims.email === "string" && claims.email ? claims.email : null;
+});
+
 export async function todaysParts(): Promise<DailyRow[]> {
   const { data, error } = await createAdminClient()
     .from("dailies")
