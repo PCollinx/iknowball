@@ -1,5 +1,6 @@
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
+import { claimWaitlistLeague } from "@/lib/league/waitlist";
 import { createClient } from "@/lib/supabase/server";
 
 // Where email links and Google send players back. Finishes the sign-in (or the
@@ -23,8 +24,16 @@ export async function GET(request: NextRequest) {
     failed = true;
   }
 
+  // A league named on the waitlist starts the first time that email signs in
+  // from launch day: straight to it, ready to send the invite.
+  let league: string | null = null;
+  if (!failed) {
+    const claims = (await supabase.auth.getClaims()).data?.claims;
+    if (claims && !claims.is_anonymous && typeof claims.email === "string") league = await claimWaitlistLeague(claims.sub, claims.email);
+  }
+
   // A Google account that already belongs to another player can't be linked.
   const reason = url.searchParams.get("error_code") === "identity_already_exists" ? "taken" : "link";
-  const to = new URL(failed ? `/profile?auth_error=${reason}` : next, url.origin);
+  const to = new URL(failed ? `/profile?auth_error=${reason}` : league ? `/league/${league}?new=1` : next, url.origin);
   return NextResponse.redirect(to);
 }

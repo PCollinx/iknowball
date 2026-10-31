@@ -4,6 +4,7 @@ import type { Club } from "@/lib/profile/club";
 import { clubsByIds } from "@/lib/profile/data";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { gapLine } from "./standing";
+import { claimMine } from "./waitlist";
 import { addDays, gameDate, gameDateClosesAt, matchweekBounds } from "@/lib/time";
 import { fanbaseTable, movement, weekTable, type FanbaseRow, type WeekPart, type WeekRow, type WeekSprint } from "./week";
 
@@ -180,7 +181,7 @@ export type Hub = {
 };
 
 export async function getHub(): Promise<Hub> {
-  const me = await currentUserId();
+  const [me] = await Promise.all([currentUserId(), claimMine()]);
   const week = currentWeek();
   const none = { week, leagues: [], everyone: { position: null, players: 0, points: 0, moved: null }, club: null, fanbase: { position: null, clubs: 0 } };
   if (!me) return none;
@@ -288,6 +289,7 @@ function boardRow(r: TableLine): BoardRow {
 
 /** The home page's League board: a tab per league you're in, then Everyone and your club's fans. */
 export async function getHomeBoard(me: string | null): Promise<{ tabs: BoardTab[]; club: Club | null }> {
+  if (me) await claimMine();
   const week = currentWeek();
   const [memberships, parts, sprints] = await Promise.all([
     me
