@@ -4,10 +4,12 @@ import { ordinal } from "@/components/daily/formats";
 import { ShareButtons } from "@/components/daily/ShareButtons";
 import { RatingBadge } from "@/components/profile/RatingBadge";
 import type { Result } from "@/lib/clash/data";
+import { sprintLine } from "@/lib/clash/rules";
 import { AlbumPage } from "./Album";
 import { ChallengeButton } from "./ChallengeButton";
 import { Kick } from "./KickRow";
 import { ClashMasthead } from "./Masthead";
+import { MiniThree } from "./YourThree";
 import { banter, calledLine, outcomeLabel, outcomeOf, slots, toBeat, verdictLine, type Outcome, type Side } from "./result";
 
 // Full time, option D (picked 25 Oct 2026, docs/launch-plan.md step 6): the
@@ -31,9 +33,13 @@ type Props = {
   rating: number | null;
   /** This is your best sprint of its matchweek. */
   weekBest: boolean;
+  /** What this sprint did to your three this week. */
+  week: { three: number[]; added: number; replaced: number | null };
+  /** On a rematch you started: the mate it's for. */
+  rival?: string | null;
 };
 
-export function ClashFullTime({ code, statLabel, setSize, right, kicks, bestRun, table, siteUrl, rating, weekBest }: Props) {
+export function ClashFullTime({ code, statLabel, setSize, right, kicks, bestRun, table, siteUrl, rating, weekBest, week, rival = null }: Props) {
   const mine = table.find((r) => r.mine) ?? null;
   const setter = table.find((r) => r.setter && !r.mine) ?? null;
   const outcome = setter ? outcomeOf(right, setter.right) : null;
@@ -41,7 +47,7 @@ export function ClashFullTime({ code, statLabel, setSize, right, kicks, bestRun,
   const url = `${siteUrl.replace(/\/$/, "")}/clash/${code}`;
 
   const board = <ChallengeTable table={table} mine={mine} right={right} />;
-  const ticket = <Ticket code={code} url={url} setSize={setSize} right={right} table={table} challenge={Boolean(setter)} />;
+  const ticket = <Ticket code={code} url={url} setSize={setSize} right={right} table={table} challenge={Boolean(setter)} rival={setter ? null : rival} />;
 
   return (
     <main className="mx-auto w-full max-w-[560px] flex-1 px-4 pb-10 lg:max-w-[1180px] lg:px-12">
@@ -80,6 +86,14 @@ export function ClashFullTime({ code, statLabel, setSize, right, kicks, bestRun,
           )}
 
           <Stickers outcome={outcome} bestRun={bestRun} weekBest={weekBest} rating={rating} />
+          <section className="mt-4 grid gap-2 lg:mt-5" aria-label="Your three this week">
+            <p className={`w-fit rotate-[0.8deg] border-2 border-navy px-2.5 py-1 text-sm font-semibold shadow-[3px_3px_0_var(--color-navy)] lg:text-[15px] ${week.added > 0 ? "bg-teal-light" : "bg-white"}`}>
+              {sprintLine(right, week)}
+            </p>
+            <div className="max-w-60">
+              <MiniThree three={week.three} />
+            </div>
+          </section>
           <p className="mt-3.5 font-display text-base leading-tight uppercase lg:mt-4 lg:text-2xl lg:leading-none">
             <span className="text-red-card">“</span>
             {banter(right, setter, mine)}
@@ -255,7 +269,7 @@ function ChallengeTable({ table, mine, right }: { table: Result[]; mine: Result 
 }
 
 /** The home page's ticket for sending the set on: the score to beat on the stub. */
-function Ticket({ code, url, setSize, right, table, challenge }: { code: string; url: string; setSize: number; right: number; table: Result[]; challenge: boolean }) {
+function Ticket({ code, url, setSize, right, table, challenge, rival }: { code: string; url: string; setSize: number; right: number; table: Result[]; challenge: boolean; rival: string | null }) {
   const beat = toBeat(table, right);
   return (
     <section className="grid rotate-[0.8deg] grid-cols-[minmax(0,1fr)_96px] border-[3px] border-navy bg-white shadow-[5px_5px_0_var(--color-navy)] lg:grid-cols-[minmax(0,1fr)_120px] lg:shadow-[7px_7px_0_var(--color-navy)]">
@@ -269,6 +283,10 @@ function Ticket({ code, url, setSize, right, table, challenge }: { code: string;
             <>
               Pass it <span className="sash-mark">on</span>
             </>
+          ) : rival ? (
+            <>
+              For <span className="sash-mark">{rival}</span>
+            </>
           ) : (
             <>
               Settle <span className="sash-mark">it</span>
@@ -278,13 +296,15 @@ function Ticket({ code, url, setSize, right, table, challenge }: { code: string;
         <p className="mb-3 text-[13px] lg:text-[15px]">
           {challenge
             ? `Same link, same ${setSize} players. Whoever plays next has to beat ${beat.right}.`
-            : `Your mates get the same ${setSize} players in the same order, one go each.`}
+            : rival
+              ? `A new set of ${setSize}, same stat. ${rival} has to beat your ${beat.right}.`
+              : `Your mates get the same ${setSize} players in the same order, one go each.`}
         </p>
         <div className="mr-1.5">
           <ChallengeButton
             url={url}
             text={`Think you know ball? Beat ${beat.right} in 60 seconds of Higher or Lower on iKnowBall.`}
-            label={challenge ? "Pass it on" : "Send it"}
+            label={challenge ? "Pass it on" : rival ? `Send to ${rival}` : "Send it"}
             code={code}
           />
         </div>

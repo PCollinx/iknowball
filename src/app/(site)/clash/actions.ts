@@ -6,7 +6,7 @@ import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureUserId } from "@/lib/supabase/guest";
 import { currentUserId } from "@/lib/daily/data";
-import { cachedSet, cardOf, createSet, getSet, GRACE_MS, type Card } from "@/lib/clash/data";
+import { cachedSet, cardOf, createSet, getChallenges, getSet, GRACE_MS, markSeen, type Card } from "@/lib/clash/data";
 import { isRight, PENALTY_SECONDS, SPRINT_SECONDS, type Guess } from "@/lib/clash/rules";
 import type { ClockStart } from "@/components/daily/useRoundClock";
 
@@ -18,11 +18,13 @@ const code = z.string().regex(/^[A-Z0-9]{6}$/);
 /** The clock starts when the sprint is on screen, at most this long after Kick off. */
 const START_ALLOWANCE_SECONDS = 10;
 
-/** Starts a sprint: a new set for a solo sprint, or the challenge's set from a link. */
+/** Starts a sprint: a new set for a solo sprint, the challenge's set from a
+ * link, or a rematch ("Settle it") on a challenge of yours that a mate beat. */
 export async function startSprint(formData: FormData) {
   const userId = await ensureUserId();
   const given = formData.get("code");
-  const set = given ? await getSet(code.parse(given)) : await createSet(userId);
+  const rematch = formData.get("rematch");
+  const set = given ? await getSet(code.parse(given)) : rematch ? await rematchSet(userId, code.parse(rematch)) : await createSet(userId);
   if (!set) throw new Error("That challenge doesn't exist.");
 
   const now = Date.now();
@@ -39,6 +41,18 @@ export async function startSprint(formData: FormData) {
       { onConflict: "set_id,user_id", ignoreDuplicates: true },
     );
   redirect(`/clash/${set.code}`);
+}
+
+/** A new set on a beaten challenge's stat, for the mate who beat it. */
+async function rematchSet(userId: string, beatenCode: string) {
+  const beaten = await getSet(beatenCode);
+  if (!beaten || beaten.created_by !== userId) return createSet(userId);
+  const challenge = (await getChallenges(userId)).find((c) => c.code === beatenCode);
+  await markSeen(beaten.id);
+  return createSet(userId, {
+    stat: beaten.stat === "sample" ? undefined : beaten.stat,
+    rivalId: challenge?.state === "beaten" ? challenge.rival?.userId : undefined,
+  });
 }
 
 /** Starts the sprint's clock once its first players are on screen. Also loads

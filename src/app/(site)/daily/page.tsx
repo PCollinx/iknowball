@@ -8,6 +8,8 @@ import { InOrder } from "@/components/daily/InOrder";
 import { PickRound } from "@/components/daily/PickRound";
 import { KickOff } from "@/components/daily/KickOff";
 import { Masthead, shortDate } from "@/components/daily/Masthead";
+import { getHomeClash } from "@/lib/clash/data";
+import { statOfDay } from "@/lib/clash/rules";
 import { currentIsGuest, currentUserId, getDailyView } from "@/lib/daily/data";
 import { clubInTitle, kitOf, type Club } from "@/lib/profile/club";
 import { clubChoices, getRating, getSupporter, kitForFixture, kitsForFixture, pathClubs } from "@/lib/profile/data";
@@ -148,10 +150,11 @@ async function DailyScreen() {
       );
     case "fulltime": {
       // "Who do you support?" is asked once, right after a first Daily.
-      const [choices, rating, guest] = await Promise.all([
+      const [choices, rating, guest, clash] = await Promise.all([
         supporter && !supporter.asked ? clubChoices() : null,
         userId ? getRating(userId) : null,
         currentIsGuest(),
+        userId ? getHomeClash(userId) : null,
       ]);
       const title = view.recall?.daily.title ?? "";
       return (
@@ -176,6 +179,7 @@ async function DailyScreen() {
           fanOf={clubInTitle(supporter?.club ?? null, title) ? supporter!.club!.name : null}
           testSite={isTestSite()}
           guest={guest}
+          clash={{ three: clash?.three ?? [], stat: statOfDay(gameDate()) }}
         />
       );
     }

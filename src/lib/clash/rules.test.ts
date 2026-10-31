@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { afterAnswer, buildChain, isRight, newCode } from "./rules";
+import { afterAnswer, afterSprint, buildChain, handoffHeading, isRight, newCode, sprintLine, statOfDay, threeLine, threeTotal, yourThree } from "./rules";
 
 describe("isRight", () => {
   it("checks more and fewer, and lets a tie through", () => {
@@ -43,5 +43,72 @@ describe("afterAnswer", () => {
     let s = { answered: 0, right: 0, currentRun: 0, bestRun: 0, kicks: "" };
     for (const r of [true, true, false, true]) s = afterAnswer(s, r);
     expect(s).toEqual({ answered: 4, right: 3, currentRun: 1, bestRun: 2, kicks: "1101" });
+  });
+});
+
+describe("buildChain gap", () => {
+  const item = (name: string, value: number) => ({ name, club_id: 1, value });
+
+  it("keeps neighbours the gap apart when the pool allows", () => {
+    const pool = [item("A", 180), item("B", 181), item("C", 190), item("D", 182), item("E", 199), item("F", 170)];
+    for (let seed = 0; seed < 20; seed++) {
+      let x = seed / 20;
+      const chain = buildChain(pool, 4, () => (x = (x * 9301 + 0.49297) % 1), 3);
+      expect(chain.slice(1).every((c, i) => Math.abs(c.value - chain[i].value) >= 3)).toBe(true);
+    }
+  });
+});
+
+describe("statOfDay", () => {
+  it("gives each weekday its stat, Monday first", () => {
+    expect(statOfDay("2026-11-02")).toBe("goals");
+    expect(statOfDay("2026-11-03")).toBe("apps");
+    expect(statOfDay("2026-11-04")).toBe("height");
+    expect(statOfDay("2026-11-05")).toBe("years");
+    expect(statOfDay("2026-11-06")).toBe("clubs");
+    expect(statOfDay("2026-11-07")).toBe("goals");
+    expect(statOfDay("2026-11-08")).toBe("apps");
+  });
+});
+
+describe("your three", () => {
+  it("keeps the best three, highest first, and caps the total at 100", () => {
+    expect(yourThree([9, 18, 4, 14])).toEqual([18, 14, 9]);
+    expect(threeTotal([18, 14, 9])).toBe(41);
+    expect(threeTotal([40, 38, 35])).toBe(100);
+  });
+
+  it("says what a sprint added and what it pushed out", () => {
+    expect(afterSprint([18, 14, 9], 14)).toEqual({ three: [18, 14, 14], added: 5, replaced: 9 });
+    expect(afterSprint([18, 14, 9], 7)).toEqual({ three: [18, 14, 9], added: 0, replaced: null });
+    expect(afterSprint([12], 8)).toEqual({ three: [12, 8], added: 8, replaced: null });
+    expect(afterSprint([40, 38, 30], 35).added).toBe(0);
+  });
+
+  it("words the line under the slots", () => {
+    expect(threeLine([])).toBe("All three slots empty. Any score counts.");
+    expect(threeLine([12])).toBe("2 slots empty. Any score counts.");
+    expect(threeLine([12, 8])).toBe("1 slot empty. Any score counts.");
+    expect(threeLine([18, 14, 9])).toBe("Beat 9 to add points.");
+    expect(threeLine([40, 38, 30])).toBe("Full marks this week.");
+  });
+});
+
+describe("sprintLine", () => {
+  it("says what the sprint did to the week", () => {
+    expect(sprintLine(14, afterSprint([18, 14, 9], 14))).toBe("+5 this week. Your 14 replaces your 9.");
+    expect(sprintLine(12, afterSprint([], 12))).toBe("+12 this week. It fills a slot.");
+    expect(sprintLine(7, afterSprint([18, 14, 9], 7))).toBe("Your three stay 18 · 14 · 9. Beat 9 next time.");
+    expect(sprintLine(20, afterSprint([40, 38, 30], 20))).toBe("Full marks this week already.");
+  });
+});
+
+describe("handoffHeading", () => {
+  it("says what your three still need", () => {
+    expect(handoffHeading([])).toBe("Three sprints still to count");
+    expect(handoffHeading([12])).toBe("Two sprints still to count");
+    expect(handoffHeading([12, 8])).toBe("One sprint still to count");
+    expect(handoffHeading([18, 14, 9])).toBe("Beat 9 to add points");
+    expect(handoffHeading([40, 38, 30])).toBe("Full marks this week");
   });
 });

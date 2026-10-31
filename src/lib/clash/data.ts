@@ -2,7 +2,9 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { currentUserId, guestName } from "@/lib/daily/data";
 import { isTestSite } from "@/lib/daily/sample";
-import { buildChain, newCode, SET_SIZE, STATS, type Item, type Stat } from "./rules";
+import { afterSprint, buildChain, newCode, SET_SIZE, statOfDay, STATS, type Item, type LiveStat, type Stat } from "./rules";
+import { COUNTED_SPRINTS } from "@/lib/league/week";
+import { challengeOf, type Challenge } from "./challenges";
 import { samplePool } from "./sample";
 import { addDays, gameDate, gameDateClosesAt, matchweekBounds } from "@/lib/time";
 
@@ -12,7 +14,9 @@ import { addDays, gameDate, gameDateClosesAt, matchweekBounds } from "@/lib/time
 /** Answers that land just after the buzzer still count, as in the Daily. */
 export const GRACE_MS = 1500;
 
-export type SetRow = { id: number; code: string; stat: Stat; items: Item[]; created_by: string | null };
+/** `rival_id`: on a rematch, the mate it's for (see getChallenges). */
+export type SetRow = { id: number; code: string; stat: Stat; items: Item[]; created_by: string | null; rival_id: string | null };
+const SET_COLUMNS = "id, code, stat, items, created_by, rival_id";
 export type RunRow = {
   id: number;
   set_id: number;
@@ -37,7 +41,7 @@ export function isRunOpen(run: RunRow, now = Date.now()): boolean {
 export const isLastAnswer = (run: { answered: number }, set: SetRow) => run.answered + 1 >= set.items.length;
 
 export async function getSet(code: string): Promise<SetRow | null> {
-  const { data, error } = await createAdminClient().from("clash_sets").select("id, code, stat, items, created_by").eq("code", code).maybeSingle();
+  const { data, error } = await createAdminClient().from("clash_sets").select(SET_COLUMNS).eq("code", code).maybeSingle();
   if (error) throw error;
   return data as SetRow | null;
 }
@@ -73,21 +77,22 @@ export async function settle(run: RunRow): Promise<RunRow> {
 
 /** Famous players (Collins, 29 Oct 2026): their spells at top clubs, or at
  * any club when `top` is off (the fallback while top clubs are thin). */
-async function drawPool(stat: Exclude<Stat, "sample">, top: boolean): Promise<Item[]> {
+async function drawPool(stat: LiveStat, top: boolean): Promise<Item[]> {
   const { data, error } = await createAdminClient().rpc("clash_pool", { p_stat: stat, p_min: STATS[stat].min, p_limit: SET_SIZE * 3, p_top: top });
   if (error) throw error;
   return ((data ?? []) as { player_name: string; club_id: number; value: number }[]).map((r) => ({ name: r.player_name, club_id: r.club_id, value: r.value }));
 }
 
-/** A fresh set for a solo sprint: a stat with enough players, its chain and a code. */
-export async function createSet(userId: string): Promise<SetRow> {
+/** A fresh set for a solo sprint: today's stat (statOfDay), or a rematch's
+ * own, or league goals then games if that one is short of players. */
+export async function createSet(userId: string, opts: { stat?: LiveStat; rivalId?: string } = {}): Promise<SetRow> {
   const admin = createAdminClient();
-  const order: Exclude<Stat, "sample">[] = Math.random() < 0.5 ? ["goals", "apps"] : ["apps", "goals"];
+  const order = [...new Set<LiveStat>([opts.stat ?? statOfDay(gameDate()), "goals", "apps"])];
   let stat: Stat | null = null;
   let items: Item[] = [];
-  draw: for (const top of [true, false]) {
-    for (const s of order) {
-      const chain = buildChain(await drawPool(s, top));
+  draw: for (const s of order) {
+    for (const top of [true, false]) {
+      const chain = buildChain(await drawPool(s, top), SET_SIZE, Math.random, STATS[s].gap);
       if (chain.length >= SET_SIZE) {
         stat = s;
         items = chain;
@@ -106,8 +111,8 @@ export async function createSet(userId: string): Promise<SetRow> {
   for (let i = 0; i < 5; i++) {
     const { data, error } = await admin
       .from("clash_sets")
-      .insert({ code: newCode(), stat, items, created_by: userId })
-      .select("id, code, stat, items, created_by")
+      .insert({ code: newCode(), stat, items, created_by: userId, rival_id: opts.rivalId ?? null })
+      .select(SET_COLUMNS)
       .single();
     if (!error) return data as SetRow;
     if (error.code !== "23505") throw error;
@@ -141,7 +146,7 @@ export type ClashView =
       next: Card;
       serverNow: number;
     }
-  | { kind: "fulltime"; set: SetRow; run: RunRow; table: Result[] };
+  | { kind: "fulltime"; set: SetRow; run: RunRow; table: Result[]; /** A rematch's mate. */ rival: string | null };
 
 /** Everyone's finished go at a set, best first: the challenge table. */
 async function setTable(set: SetRow, me: string | null): Promise<Result[]> {
@@ -180,8 +185,13 @@ export async function getClashView(code: string): Promise<ClashView> {
   if (isRunOpen(run) && run.answered + 1 < set.items.length) {
     return { kind: "play", set, run, shown: set.items[run.answered], next: cardOf(set.items[run.answered + 1]), serverNow: Date.now() };
   }
-  const table = await setTable(set, userId);
-  return { kind: "fulltime", set, run, table };
+  const mine = set.created_by === userId;
+  const [table, rival] = await Promise.all([
+    setTable(set, userId),
+    mine && set.rival_id ? playerName(set.rival_id) : null,
+    mine ? markSeen(set.id) : null,
+  ]);
+  return { kind: "fulltime", set, run, table, rival };
 }
 
 /** Whether a finished run is the player's best sprint of its matchweek (a tie counts). */
@@ -200,24 +210,93 @@ export async function isWeekBest(run: RunRow): Promise<boolean> {
   return !data?.length;
 }
 
-/** Clash on the home page: your best sprint this matchweek and your latest challenge code. */
-export type HomeClash = { best: number | null; lastCode: string | null };
+/** The right answers of a player's best sprints in a game date's matchweek,
+ * best first: their three, or the three a run is measured against. */
+async function weekBests(userId: string, date: string, exceptRun?: number): Promise<number[]> {
+  const { startsOn, endsOn } = matchweekBounds(date);
+  let q = createAdminClient()
+    .from("clash_runs")
+    .select("right_count")
+    .eq("user_id", userId)
+    .gte("started_at", gameDateClosesAt(addDays(startsOn, -1)).toISOString())
+    .lt("started_at", gameDateClosesAt(endsOn).toISOString())
+    .order("right_count", { ascending: false })
+    .limit(COUNTED_SPRINTS);
+  if (exceptRun) q = q.neq("id", exceptRun);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []).map((r) => r.right_count);
+}
+
+/** What a finished run did to its week's three (see afterSprint). */
+export async function weekAfter(run: RunRow) {
+  return afterSprint(await weekBests(run.user_id, gameDate(new Date(run.started_at)), run.id), run.right_count);
+}
+
+/** Clash on the home page and the kick-off: your three this matchweek (best
+ * first), your latest challenge code, and on Monday and Tuesday before your
+ * first sprint, last week's three (the Monday reset). */
+export type HomeClash = { three: number[]; lastCode: string | null; lastWeek: number[] | null };
+
+/** Days into the week the Monday reset shows: Monday and Tuesday. */
+const RESET_DAYS = 2;
 
 export async function getHomeClash(userId: string): Promise<HomeClash> {
-  const admin = createAdminClient();
-  const { startsOn, endsOn } = matchweekBounds(gameDate());
-  const [runs, sets] = await Promise.all([
-    admin
-      .from("clash_runs")
-      .select("right_count")
-      .eq("user_id", userId)
-      .gte("started_at", gameDateClosesAt(addDays(startsOn, -1)).toISOString())
-      .lt("started_at", gameDateClosesAt(endsOn).toISOString())
-      .order("right_count", { ascending: false })
-      .limit(1),
-    admin.from("clash_sets").select("code").eq("created_by", userId).order("created_at", { ascending: false }).limit(1),
+  const today = gameDate();
+  const fresh = addDays(matchweekBounds(today).startsOn, RESET_DAYS) > today;
+  const [three, lastWeek, sets] = await Promise.all([
+    weekBests(userId, today),
+    fresh ? weekBests(userId, addDays(today, -7)) : null,
+    createAdminClient().from("clash_sets").select("code").eq("created_by", userId).order("created_at", { ascending: false }).limit(1),
   ]);
-  if (runs.error) throw runs.error;
   if (sets.error) throw sets.error;
-  return { best: runs.data?.[0]?.right_count ?? null, lastCode: sets.data?.[0]?.code ?? null };
+  return { three, lastCode: sets.data?.[0]?.code ?? null, lastWeek: three.length === 0 && lastWeek?.length ? lastWeek : null };
+}
+
+/** How far back your challenges list looks. */
+const CHALLENGE_DAYS = 14;
+const CHALLENGES_SHOWN = 5;
+
+/** Your challenges: the sets you started that someone else has played,
+ * newest first, plus your latest set while nobody has, so you can send it. */
+export async function getChallenges(userId: string): Promise<Challenge[]> {
+  const admin = createAdminClient();
+  const { data: sets, error } = await admin
+    .from("clash_sets")
+    .select("id, code, stat, created_at, seen_at, created_by")
+    .eq("created_by", userId)
+    .gte("created_at", new Date(Date.now() - CHALLENGE_DAYS * 86_400_000).toISOString())
+    .order("created_at", { ascending: false })
+    .limit(30);
+  if (error) throw error;
+  if (!sets?.length) return [];
+  const { data: runs, error: runsError } = await admin
+    .from("clash_runs")
+    .select("set_id, user_id, right_count, submitted_at, deadline_at, profiles(username)")
+    .in("set_id", sets.map((s) => s.id));
+  if (runsError) throw runsError;
+  const done = ((runs ?? []) as unknown as (Pick<RunRow, "set_id" | "user_id" | "right_count" | "submitted_at" | "deadline_at"> & { profiles: { username: string | null } | null })[])
+    .map((r) => ({ ...r, finishedAt: r.submitted_at ?? (Date.parse(r.deadline_at) + GRACE_MS < Date.now() ? r.deadline_at : null) }))
+    .filter((r): r is typeof r & { finishedAt: string } => r.finishedAt !== null);
+  const all = sets.map((s) =>
+    challengeOf(
+      { code: s.code, stat: s.stat as Stat, createdAt: s.created_at, seenAt: s.seen_at, createdBy: userId },
+      done.filter((r) => r.set_id === s.id).map((r) => ({ userId: r.user_id, name: r.profiles?.username ?? guestName(r.user_id), right: r.right_count, finishedAt: r.finishedAt })),
+    ),
+  );
+  const played = all.filter((c) => c.state !== "waiting");
+  const latest = all[0].state === "waiting" ? [all[0]] : [];
+  return [...latest, ...played].slice(0, CHALLENGES_SHOWN);
+}
+
+/** The setter has opened the challenge's table: its beats are no longer news. */
+export async function markSeen(setId: number): Promise<void> {
+  const { error } = await createAdminClient().from("clash_sets").update({ seen_at: new Date().toISOString() }).eq("id", setId);
+  if (error) throw error;
+}
+
+/** A player's name as the tables show it. */
+export async function playerName(userId: string): Promise<string> {
+  const { data } = await createAdminClient().from("profiles").select("username").eq("id", userId).maybeSingle();
+  return data?.username ?? guestName(userId);
 }

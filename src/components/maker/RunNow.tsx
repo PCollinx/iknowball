@@ -13,13 +13,13 @@ export function RunNow({ job, note }: { job: JobName; note?: string }) {
       <button
         type="submit"
         disabled={running}
-        className="btn-white btn-press flex items-center justify-between px-4 py-2 font-display text-xl uppercase disabled:opacity-50"
+        className="btn-white btn-press flex items-center justify-between px-3.5 py-1.5 font-display text-lg uppercase disabled:opacity-50"
       >
         <span>{running ? "Running" : "Run now"}</span>
         <span aria-hidden>→</span>
       </button>
-      {note && <p className="text-[14px] text-navy/60">{note}</p>}
-      <p aria-live="polite" className="text-[15px] font-semibold">
+      {note && <p className="text-[13px] text-slate">{note}</p>}
+      <p aria-live="polite" className="text-[13px] font-semibold">
         {state && !running && (state.status === "ok" ? <span className="text-royal">Done, no problems.</span> : <span className="text-red-card">{state.problems[0]}</span>)}
       </p>
     </form>

@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { DayEditor, type EditorPart } from "@/components/maker/DayEditor";
+import { MakerBar } from "@/components/maker/MakerBar";
 import { getDay, requireAdmin, type MakerAnswer } from "@/lib/maker/data";
 import type { DailyFormat } from "@/lib/daily/score";
 import { orderToText, picksToText, recallToText } from "@/lib/maker/parse";
@@ -10,15 +11,15 @@ import { gameDate } from "@/lib/time";
 
 export default function MakerDayPage({ searchParams }: { searchParams: Promise<{ date?: string }> }) {
   return (
-    <Suspense fallback={<main className="mx-auto min-h-dvh max-w-[1200px] px-4" aria-busy="true" />}>
+    <Suspense fallback={<main className="min-h-dvh" aria-busy="true" />}>
       <MakerDay searchParams={searchParams} />
     </Suspense>
   );
 }
 
 const BLANK: Record<1 | 2, Omit<EditorPart, "part">> = {
-  1: { format: "free_recall", title: "", prompt: "", time: 120, source: "", answers: "", plays: 0, exists: false },
-  2: { format: "in_order", title: "In order", prompt: "", time: ORDER_SECONDS, source: "", answers: "", plays: 0, exists: false },
+  1: { format: "free_recall", title: "", prompt: "", time: 120, source: "", answers: "", plays: 0, exists: false, template: null },
+  2: { format: "in_order", title: "In order", prompt: "", time: ORDER_SECONDS, source: "", answers: "", plays: 0, exists: false, template: null },
 };
 
 function answersText(format: DailyFormat, answers: MakerAnswer[]): string {
@@ -46,10 +47,16 @@ async function MakerDay({ searchParams }: { searchParams: Promise<{ date?: strin
       answers: answersText(p.format, p.answers),
       plays: p.plays,
       exists: true,
+      template: p.template,
     };
   });
   const status = day.parts.length && day.parts.every((p) => p.status === "scheduled") ? "scheduled" : "draft";
 
   // Keyed by date so opening another day starts a fresh form.
-  return <DayEditor key={date} date={date} today={gameDate()} status={status} parts={parts} />;
+  return (
+    <>
+      <MakerBar active="days" />
+      <DayEditor key={date} date={date} today={gameDate()} status={status} parts={parts} />
+    </>
+  );
 }

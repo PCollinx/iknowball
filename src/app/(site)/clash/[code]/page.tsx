@@ -7,7 +7,7 @@ import { ClashKickOff } from "@/components/clash/KickOff";
 import { ClashMasthead } from "@/components/clash/Masthead";
 import { Sprint } from "@/components/clash/Sprint";
 import type { Kit } from "@/components/daily/ShirtBack";
-import { getClashView, isWeekBest } from "@/lib/clash/data";
+import { getClashView, isWeekBest, weekAfter } from "@/lib/clash/data";
 import { STATS } from "@/lib/clash/rules";
 import { publicEnv } from "@/lib/env";
 import { kitOf } from "@/lib/profile/club";
@@ -60,7 +60,7 @@ async function ClashScreen({ params }: { params: Params }) {
         first && second
           ? { first: { name: first.name, kit: kitFor(first.club_id), value: first.value }, second: { name: second.name, kit: kitFor(second.club_id) } }
           : undefined;
-      return <ClashKickOff code={view.set.code} statLabel={STATS[view.set.stat].label} setter={view.setter} firstCall={firstCall} />;
+      return <ClashKickOff code={view.set.code} stat={view.set.stat} setter={view.setter} firstCall={firstCall} />;
     }
     case "play": {
       const ids = [...new Set(view.set.items.map((i) => i.club_id).filter((id): id is number => id !== null))];
@@ -76,6 +76,7 @@ async function ClashScreen({ params }: { params: Params }) {
             at={view.run.answered}
             begun={view.run.begun_at !== null}
             statLabel={STATS[view.set.stat].label}
+            ask={STATS[view.set.stat].ask}
             shown={{ name: view.shown.name, clubId: view.shown.club_id, value: view.shown.value }}
             next={view.next}
             deadlineAt={view.run.deadline_at}
@@ -89,7 +90,7 @@ async function ClashScreen({ params }: { params: Params }) {
       );
     }
     case "fulltime": {
-      const [rating, weekBest] = await Promise.all([getRating(view.run.user_id), isWeekBest(view.run)]);
+      const [rating, weekBest, week] = await Promise.all([getRating(view.run.user_id), isWeekBest(view.run), weekAfter(view.run)]);
       return (
         <ClashFullTime
           code={view.set.code}
@@ -102,6 +103,8 @@ async function ClashScreen({ params }: { params: Params }) {
           siteUrl={publicEnv().NEXT_PUBLIC_SITE_URL}
           rating={rating}
           weekBest={weekBest}
+          week={week}
+          rival={view.rival}
         />
       );
     }

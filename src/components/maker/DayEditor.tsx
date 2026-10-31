@@ -8,7 +8,8 @@ import { buildKeys, matchAnswer } from "@/lib/daily/match";
 import { orderIssues, parseOrder, parsePicks, parseRecall, pickIssues, recallIssues, type Issues } from "@/lib/maker/parse";
 import { FORMAT_NAME } from "@/components/daily/formats";
 import type { DailyFormat } from "@/lib/daily/score";
-import { MakerBar } from "./MakerBar";
+import { addDays } from "@/lib/time";
+import { Chip, MAKER_MAIN, MakerHead } from "./ui";
 
 export type EditorPart = {
   part: 1 | 2;
@@ -20,6 +21,8 @@ export type EditorPart = {
   answers: string;
   plays: number;
   exists: boolean;
+  /** The template that drafted it; null for a part written here. */
+  template: string | null;
 };
 
 type Props = { date: string; today: string; status: "draft" | "scheduled"; parts: EditorPart[] };
@@ -42,8 +45,7 @@ export function DayEditor({ date, today, status, parts }: Props) {
   const when = date === today ? "Today" : date < today ? "Gone" : null;
 
   return (
-    <main className="mx-auto min-h-dvh max-w-[1200px] px-4 lg:px-8">
-      <MakerBar />
+    <main className={MAKER_MAIN}>
       {/* Submitted by hand, not with action=, so a rejected save keeps what was typed. */}
       <form
         onSubmit={(e) => {
@@ -53,15 +55,35 @@ export function DayEditor({ date, today, status, parts }: Props) {
         }}
       >
         <input type="hidden" name="date" value={date} />
-        <div className="flex flex-wrap items-end justify-between gap-3 border-b-[3px] border-double border-navy py-4">
-          <h1 className="font-display text-[56px] leading-[0.9] uppercase lg:text-[88px]">
-            {shortDate(date)}
-            {when && <span className="ml-3 align-middle text-2xl text-teal lg:text-4xl">{when}</span>}
-          </h1>
-          <p className="max-w-[44ch] text-navy/70">
-            Two parts, one try. Part 1 is Free Recall or Rapid picks; Part 2 is In Order or Era picks and can be left blank.
-          </p>
-        </div>
+        <MakerHead
+          crumb={
+            <>
+              <a href="/maker" className="underline underline-offset-2">
+                Days
+              </a>{" "}
+              / {shortDate(date)}
+            </>
+          }
+          title={
+            <>
+              {shortDate(date)}
+              {parts[0].title && <span className="text-royal"> · {parts[0].title}</span>}
+              {when && <span className="ml-2 align-middle text-xl text-teal">{when}</span>}
+            </>
+          }
+          tools={
+            <>
+              <a href={`/maker/day?date=${addDays(date, -1)}`} className="btn-white btn-press px-3 py-1 font-display text-[15px] uppercase">
+                ← {shortDate(addDays(date, -1))}
+              </a>
+              <a href={`/maker/day?date=${addDays(date, 1)}`} className="btn-white btn-press px-3 py-1 font-display text-[15px] uppercase">
+                {shortDate(addDays(date, 1))} →
+              </a>
+            </>
+          }
+        >
+          Two parts, one try. Part 1 is Free Recall or Rapid picks; Part 2 is In Order or Era picks and can be left blank. A part locks once anyone starts it.
+        </MakerHead>
 
         <PartSection
           part={parts[0]}
@@ -96,22 +118,22 @@ export function DayEditor({ date, today, status, parts }: Props) {
           issues={issues2}
         />
 
-        <div className="sticky bottom-0 mt-8 grid gap-3 border-t-[3px] border-double border-navy bg-white py-3 sm:grid-cols-[1fr_auto] sm:items-center">
-          <div aria-live="polite">
+        <div className="sticky bottom-0 z-10 mt-6 grid gap-2.5 bg-navy px-3.5 py-2.5 text-white sm:grid-cols-[1fr_auto] sm:items-center">
+          <div aria-live="polite" className="text-sm">
             {state?.ok === false && (
-              <ul className="grid gap-1 font-semibold text-red-card">
+              <ul className="grid gap-1 font-semibold text-[#ff8a98]">
                 {state.errors.map((e) => (
                   <li key={e}>{e}</li>
                 ))}
               </ul>
             )}
-            {state?.ok && !saving && <p className="font-semibold text-royal">Saved.</p>}
+            {state?.ok && !saving && <p className="font-semibold text-teal-light">Saved.</p>}
           </div>
           <div className="flex items-stretch gap-3">
-            <fieldset className="flex border-2 border-navy">
+            <fieldset className="flex border-2 border-white">
               <legend className="sr-only">Status</legend>
               {(["draft", "scheduled"] as const).map((s) => (
-                <label key={s} className="flex cursor-pointer items-center px-3 has-checked:bg-navy has-checked:text-white">
+                <label key={s} className="flex cursor-pointer items-center px-2 has-checked:bg-teal-light has-checked:text-navy sm:px-3">
                   <input type="radio" name="status" value={s} defaultChecked={status === s} className="sr-only" />
                   <span className="label">{s === "draft" ? "Draft" : "Scheduled"}</span>
                 </label>
@@ -120,9 +142,10 @@ export function DayEditor({ date, today, status, parts }: Props) {
             <button
               type="submit"
               disabled={saving}
-              className="bg-royal px-6 py-2.5 font-display text-2xl text-white uppercase disabled:bg-track disabled:text-navy/60"
+              className="btn-teal btn-press flex flex-1 items-center justify-between gap-3 px-3 py-1.5 font-display text-xl whitespace-nowrap uppercase shadow-none! disabled:bg-track disabled:text-navy/60 sm:px-4 sm:text-2xl"
             >
-              {saving ? "Saving…" : "Save day"}
+              <span>{saving ? "Saving…" : "Save day"}</span>
+              <span aria-hidden="true">→</span>
             </button>
           </div>
         </div>
@@ -144,105 +167,110 @@ type SectionProps = {
   issues: Issues;
 };
 
-const input = "w-full border-2 border-navy bg-white p-2.5 disabled:border-track disabled:bg-mist";
+const input = "w-full border-2 border-navy bg-white px-2 py-1.5 text-sm disabled:border-track disabled:bg-mist";
 
 function PartSection({ part, format, formats, onFormat, titleHint, answersHint, answers, onAnswers, preview, issues }: SectionProps) {
   const locked = part.plays > 0;
   const id = (name: string) => `p${part.part}_${name}`;
   return (
-    <section className="grid gap-6 border-b-[3px] border-double border-navy py-6 lg:grid-cols-[minmax(0,1fr)_440px]">
-      <div className="grid content-start gap-4">
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 className="font-display text-4xl uppercase">
-            Part {part.part} · {FORMAT_NAME[format]}
-          </h2>
+    <section className="grid gap-4 py-3 lg:grid-cols-[minmax(0,1fr)_440px] lg:gap-6">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 bg-navy px-3 py-2 text-white">
+          <h2 className="font-display text-[22px] leading-none uppercase">Part {part.part}</h2>
+          <span>{FORMAT_NAME[format]}</span>
+          {part.template && <Chip kind="auto">Auto</Chip>}
+          {part.template && <span className="font-mono text-[11px] text-teal-light">{part.template}</span>}
           {locked && (
-            <span className="label bg-red-card px-2 py-1 text-white">
-              Locked · {part.plays} {part.plays === 1 ? "play" : "plays"}
+            <span className="ml-auto">
+              <Chip kind="failed">
+                Locked · {part.plays} {part.plays === 1 ? "play" : "plays"}
+              </Chip>
             </span>
           )}
         </div>
-        {locked && <p className="text-navy/70">Players have started this part, so its answers can&apos;t change.</p>}
-        <fieldset className="flex border-2 border-navy" disabled={locked}>
-          <legend className="sr-only">Round</legend>
-          {formats.map((f) => (
-            <label key={f} className="flex flex-1 cursor-pointer justify-center px-3 py-2 has-checked:bg-navy has-checked:text-white">
-              <input type="radio" name={id("format")} value={f} checked={format === f} onChange={() => onFormat(f)} className="sr-only" />
-              <span className="label">{FORMAT_NAME[f]}</span>
-            </label>
-          ))}
-        </fieldset>
-        <label className="grid gap-1.5">
-          <span className="label">Title</span>
-          <input name={id("title")} defaultValue={part.title} placeholder={titleHint} maxLength={80} disabled={locked} className={input} />
-        </label>
-        <label className="grid gap-1.5">
-          <span className="label">Prompt</span>
-          <textarea
-            name={id("prompt")}
-            defaultValue={part.prompt}
-            rows={2}
-            maxLength={280}
-            disabled={locked}
-            placeholder="What the player is asked"
-            className={input}
-          />
-        </label>
-        <div className="grid grid-cols-[140px_1fr] gap-4">
-          <label className="grid gap-1.5">
-            <span className="label">Seconds</span>
-            <input
-              name={id("time")}
-              type="number"
-              min={10}
-              max={600}
-              step={5}
-              defaultValue={part.time}
-              disabled={locked}
-              className={`${input} font-display text-2xl`}
-            />
+        <div className="grid content-start gap-3 border-2 border-t-0 border-navy p-3">
+          {locked && <p className="text-sm text-slate">Players have started this part, so its answers can&apos;t change.</p>}
+          <fieldset className="flex border-2 border-navy" disabled={locked}>
+            <legend className="sr-only">Round</legend>
+            {formats.map((f) => (
+              <label key={f} className="flex flex-1 cursor-pointer justify-center px-3 py-2 has-checked:bg-navy has-checked:text-white">
+                <input type="radio" name={id("format")} value={f} checked={format === f} onChange={() => onFormat(f)} className="sr-only" />
+                <span className="label">{FORMAT_NAME[f]}</span>
+              </label>
+            ))}
+          </fieldset>
+          <label className="grid gap-1">
+            <span className="label text-[10px]">Title</span>
+            <input name={id("title")} defaultValue={part.title} placeholder={titleHint} maxLength={80} disabled={locked} className={input} />
           </label>
           <label className="grid gap-1.5">
-            <span className="label">Checked against</span>
-            <input
-              name={id("source")}
-              defaultValue={part.source}
-              maxLength={200}
+            <span className="label">Prompt</span>
+            <textarea
+              name={id("prompt")}
+              defaultValue={part.prompt}
+              rows={2}
+              maxLength={280}
               disabled={locked}
-              placeholder="Where you checked the answers"
+              placeholder="What the player is asked"
               className={input}
             />
           </label>
+          <div className="grid grid-cols-[140px_1fr] gap-4">
+            <label className="grid gap-1.5">
+              <span className="label">Seconds</span>
+              <input
+                name={id("time")}
+                type="number"
+                min={10}
+                max={600}
+                step={5}
+                defaultValue={part.time}
+                disabled={locked}
+                className={`${input} font-display text-xl`}
+              />
+            </label>
+            <label className="grid gap-1.5">
+              <span className="label">Checked against</span>
+              <input
+                name={id("source")}
+                defaultValue={part.source}
+                maxLength={200}
+                disabled={locked}
+                placeholder="Where you checked the answers"
+                className={input}
+              />
+            </label>
+          </div>
+          <label className="grid gap-1.5">
+            <span className="label">Answers</span>
+            <textarea
+              name={id("answers")}
+              value={answers}
+              onChange={(e) => onAnswers(e.target.value)}
+              rows={10}
+              disabled={locked}
+              placeholder={answersHint}
+              spellCheck={false}
+              className={`${input} font-semibold leading-relaxed`}
+            />
+          </label>
+          {!locked && (issues.errors.length > 0 || issues.warnings.length > 0) && (
+            <ul className="grid gap-1 text-[15px]">
+              {issues.errors.map((e) => (
+                <li key={e} className="font-semibold text-red-card">
+                  {e}
+                </li>
+              ))}
+              {issues.warnings.map((w) => (
+                <li key={w} className="text-navy/70">
+                  {w}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-        <label className="grid gap-1.5">
-          <span className="label">Answers</span>
-          <textarea
-            name={id("answers")}
-            value={answers}
-            onChange={(e) => onAnswers(e.target.value)}
-            rows={10}
-            disabled={locked}
-            placeholder={answersHint}
-            spellCheck={false}
-            className={`${input} font-semibold leading-relaxed`}
-          />
-        </label>
-        {!locked && (issues.errors.length > 0 || issues.warnings.length > 0) && (
-          <ul className="grid gap-1 text-[15px]">
-            {issues.errors.map((e) => (
-              <li key={e} className="font-semibold text-red-card">
-                {e}
-              </li>
-            ))}
-            {issues.warnings.map((w) => (
-              <li key={w} className="text-navy/70">
-                {w}
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
-      <aside className="grid content-start gap-3 bg-mist p-4">{preview}</aside>
+      <aside className="grid content-start gap-3 self-start border-2 border-navy bg-mist p-3 lg:sticky lg:top-3">{preview}</aside>
     </section>
   );
 }

@@ -53,7 +53,7 @@ One step, before any redesign, so every later screen starts inside the same fram
   a full navbar and footer invite a mis-tap that throws away a timed attempt, so the navbar shrinks to the
   logo (not a link) and a "Live" tag, the round keeps its own clock, and the footer hides, until full time.
 - **Add a 404 page** in the same frame (there isn't one yet), and put the Daily's error screen inside it.
-- **Out of scope:** the maker (`/maker/*`) keeps its own admin bar and look; its redesign was dropped (Collins, 27 Oct 2026).
+- **The maker** (`/maker/*`) keeps its own admin bar; its redesign, dropped on 27 Oct, was done on 31 Oct 2026 with its Clash page (see CLAUDE.md "The maker redesigned").
 
 Screens covered: `/clash`, `/clash/[code]`, `/daily`, `/daily/table`, `/league`, `/league/[code]`,
 `/league/everyone`, `/league/fans`, `/profile`, `/privacy`, home, 404, errors.
@@ -225,7 +225,8 @@ After launch: step 14 (Support, with Vercel Pro), Rate mode (18 Dec), whether to
 - [x] 13. The waitlist (PR #56)
 - [ ] 14. Support iKnowBall (after launch, with Vercel Pro)
 - [x] 15. Popular games only (PR #58)
-- [ ] 16. The installable app (by 8 Nov)
+- [x] 16. The installable app (PRs #66, #67; real installs on Android and iPhone still to check)
+- [x] Extra: Clash every day (today's stat, your three, beaten challenges) and the maker redesigned (31 Oct, `claude/clash-maker`)
 - [ ] 17. The launch email (by 19 Nov)
 - [ ] 18. Waitlist leagues on day one (decide by 8 Nov, build by 18 Nov)
 - [ ] 19. The demo video on the waitlist (by 18 Nov)

@@ -10,7 +10,9 @@ import { Sticker, StickerHead, StickerSlot } from "./Sticker";
 // The Daily as a sticker in its album slot (picked 20 Oct 2026), the
 // fixture's two shirts floating over the number of answers. On the home page
 // it is a link with a Play strip; on the Daily's kick-off ("kickoff", 21 Oct
-// 2026) it is the page's heading, and the Kick off button sits below it.
+// 2026) it is the page's heading, and the Kick off button sits below it. The
+// band is light teal with navy type and a white sash (Collins, 31 Oct 2026,
+// option D of https://claude.ai/artifact/Fre9gLRrrodynK51Pt9jHw).
 
 type Props = {
   daily: HomeDaily | null;
@@ -69,7 +71,7 @@ export function DailySticker({ daily, kits, closesAt, serverNow, variant = "home
           </div>
         </div>
 
-        <div className="relative -mt-3.5 border-y-2 border-navy bg-royal sash px-3 py-2 text-white lg:-mt-4 lg:px-4 lg:py-2.5">
+        <div className="relative -mt-3.5 border-y-2 border-navy bg-teal-light sash px-3 py-2 text-navy [--sash:#fff] lg:-mt-4 lg:px-4 lg:py-2.5">
           <Heading className="font-display text-[30px] leading-[0.9] uppercase lg:text-[44px]">
             {first ? headlineFixture(first.title) : "No Daily today"}
           </Heading>

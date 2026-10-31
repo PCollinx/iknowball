@@ -18,6 +18,13 @@ describe("gapLine", () => {
     expect(gapLine([row("You", 50, true), row("dad", 0)])).toBe("Top of the table");
     expect(gapLine([row("You", 50, true)])).toBe("Top of the table");
   });
+  it("points to Clash when it could take you past the player above", () => {
+    const clash = (name: string, points: number, c: number, mine = false) => ({ name, points, mine, clash: c });
+    expect(gapLine([clash("tunde", 480, 78), clash("You", 469, 41, true)])).toBe("Win 12 more on Clash to pass tunde");
+    expect(gapLine([clash("ada", 520, 90), clash("tunde", 480, 78), clash("You", 469, 41, true)])).toBe("Win 12 more on Clash to pass tunde");
+    expect(gapLine([clash("tunde", 480, 78), clash("You", 400, 41, true)])).toBe("80 behind tunde");
+    expect(gapLine([clash("tunde", 480, 78), clash("You", 469, 95, true)])).toBe("11 behind tunde");
+  });
   it("waits for you to play", () => {
     expect(gapLine([row("tunde", 340), row("You", 0, true)])).toBe("Not played this week");
     expect(gapLine([row("tunde", 340)])).toBe("Not played this week");
@@ -72,6 +79,13 @@ describe("yourSpot", () => {
     expect(yourSpot({ position: 4, points: 240 }, 224)).toEqual({ kind: "xi", gap: null });
     expect(yourSpot({ position: 15, points: 212 }, 224)).toEqual({ kind: "bench", gap: 13 });
     expect(yourSpot({ position: 214, points: 96 }, 224)).toEqual({ kind: "below", gap: 129 });
+  });
+  it("points to Clash when it could take you past the player above", () => {
+    const clash = (name: string, points: number, c: number, mine = false) => ({ name, points, mine, clash: c });
+    expect(gapLine([clash("tunde", 480, 78), clash("You", 469, 41, true)])).toBe("Win 12 more on Clash to pass tunde");
+    expect(gapLine([clash("ada", 520, 90), clash("tunde", 480, 78), clash("You", 469, 41, true)])).toBe("Win 12 more on Clash to pass tunde");
+    expect(gapLine([clash("tunde", 480, 78), clash("You", 400, 41, true)])).toBe("80 behind tunde");
+    expect(gapLine([clash("tunde", 480, 78), clash("You", 469, 95, true)])).toBe("11 behind tunde");
   });
   it("waits for you to play", () => {
     expect(yourSpot(null, 224).kind).toBe("idle");

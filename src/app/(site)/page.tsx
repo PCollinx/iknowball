@@ -4,7 +4,10 @@ import { ClashTicket } from "@/components/home/ClashTicket";
 import { DailySticker } from "@/components/home/DailySticker";
 import { LeagueBoard } from "@/components/home/LeagueBoard";
 import { ShirtSticker } from "@/components/home/ShirtSticker";
-import { getHomeClash } from "@/lib/clash/data";
+import { BeatenBanner } from "@/components/clash/Challenges";
+import { getChallenges, getHomeClash } from "@/lib/clash/data";
+import { statOfDay } from "@/lib/clash/rules";
+import { clashSample, SAMPLE_CHALLENGES, SAMPLE_MONDAY } from "@/lib/clash/sample";
 import { currentUserId, getHomeDaily } from "@/lib/daily/data";
 import { getHomeBoard } from "@/lib/league/data";
 import { getProfileView, kitsForFixture } from "@/lib/profile/data";
@@ -15,10 +18,12 @@ import { KeepyUppy } from "@/components/loading/KeepyUppy";
 // sticker, Clash as a match ticket, the League as a scoreboard and your shirt
 // as a sticker, under the Programme navbar.
 
-export default function Home() {
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+export default function Home({ searchParams }: { searchParams: SearchParams }) {
   return (
     <Suspense fallback={<Loading />}>
-      <HomeScreen />
+      <HomeScreen searchParams={searchParams} />
     </Suspense>
   );
 }
@@ -30,16 +35,23 @@ function readClock() {
 }
 
 // Reads the session and the clock, so it renders per request.
-async function HomeScreen() {
+async function HomeScreen({ searchParams }: { searchParams: SearchParams }) {
   await connection();
-  const me = await currentUserId();
+  const [me, params] = await Promise.all([currentUserId(), searchParams]);
+  // Test sites: ?sample=challenges or ?sample=monday (see src/lib/clash/sample.ts).
+  const sample = clashSample(params.sample);
   const { today, closesAt, serverNow } = readClock();
-  const [daily, clash, board, view] = await Promise.all([
+  const [daily, real, board, view, found] = await Promise.all([
     getHomeDaily(me),
     me ? getHomeClash(me) : null,
     getHomeBoard(me),
     me ? getProfileView(me) : null,
+    me ? getChallenges(me) : [],
   ]);
+  const clash = sample === "monday" && real ? { ...real, ...SAMPLE_MONDAY } : real;
+  const challenges = sample === "challenges" ? SAMPLE_CHALLENGES : found;
+  // A challenge of yours that a mate beat since you last looked: the banner at the top.
+  const beaten = challenges.find((c) => c.news);
   const kits = await kitsForFixture(daily?.parts.find((p) => p.part === 1)?.title ?? null);
   const day = new Date(`${today}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
 
@@ -63,12 +75,18 @@ async function HomeScreen() {
           </h1>
         </div>
 
+        {beaten && (
+          <div className="mt-5 lg:mt-6">
+            <BeatenBanner challenge={beaten} />
+          </div>
+        )}
+
         <div className="mt-5 grid gap-7 lg:mt-6 lg:grid-cols-12 lg:gap-9">
           <div className="min-w-0 lg:col-span-7">
             <DailySticker daily={daily} kits={kits} closesAt={closesAt} serverNow={serverNow} />
           </div>
           <div className="flex min-w-0 flex-col gap-7 lg:col-span-5 lg:gap-8">
-            <ClashTicket clash={clash} />
+            <ClashTicket clash={clash} stat={statOfDay(today)} />
             <LeagueBoard tabs={board.tabs} club={board.club} />
           </div>
           <div className="px-1 lg:col-span-12 lg:px-0">
