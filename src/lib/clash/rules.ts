@@ -8,13 +8,31 @@ export const PENALTY_SECONDS = 5;
 /** Players in a set: more than anyone answers in a minute. */
 export const SET_SIZE = 40;
 
-export type Stat = "goals" | "apps" | "sample";
+export type Stat = "goals" | "apps" | "height" | "years" | "clubs" | "sample";
+/** The stats drawn from our data; "sample" is the test sites' pack. */
+export type LiveStat = Exclude<Stat, "sample">;
 
-export const STATS: Record<Stat, { label: string; short: string; min: number }> = {
-  goals: { label: "League goals for the club", short: "League goals", min: 5 },
-  apps: { label: "League games for the club", short: "League games", min: 40 },
-  sample: { label: "Premier League goals (sample)", short: "PL goals", min: 0 },
+/** `min`: the smallest number a player needs to be drawn. `gap`: how far apart
+ * two players in a row must be where the pool allows, so a call is never a
+ * coin flip (a few centimetres or one club is too close to know). */
+export const STATS: Record<Stat, { label: string; short: string; min: number; gap: number; ask: string }> = {
+  goals: { label: "League goals for the club", short: "Goals", min: 5, gap: 1, ask: "Who has more?" },
+  apps: { label: "League games for the club", short: "Games", min: 40, gap: 1, ask: "Who has more?" },
+  height: { label: "Height (cm)", short: "Height", min: 150, gap: 3, ask: "Who's taller?" },
+  years: { label: "Years at the club", short: "Years", min: 1, gap: 1, ask: "Who stayed longer?" },
+  clubs: { label: "Clubs in his career", short: "Clubs", min: 2, gap: 2, ask: "Who's had more clubs?" },
+  sample: { label: "Premier League goals (sample)", short: "PL goals", min: 0, gap: 1, ask: "Who has more?" },
 };
+
+/** Today's stat (Collins, 31 Oct 2026): every solo sprint of a day draws the
+ * same one, Monday first, so each weekday has its own and players learn the week. */
+export const WEEK_STATS: LiveStat[] = ["goals", "apps", "height", "years", "clubs", "goals", "apps"];
+
+/** The stat for a game date ("2026-11-04", a Wednesday: height). */
+export function statOfDay(date: string): LiveStat {
+  const [y, m, d] = date.split("-").map(Number);
+  return WEEK_STATS[(new Date(Date.UTC(y, m - 1, d)).getUTCDay() + 6) % 7];
+}
 
 export type Item = { name: string; club_id: number | null; value: number };
 
@@ -29,10 +47,10 @@ export function isRight(shown: number, next: number, guess: Guess): boolean {
 }
 
 /**
- * Orders a pool into a chain: no player twice, and no two neighbours with the
- * same number where it can be helped (a tie is a free point).
+ * Orders a pool into a chain: no player twice, and neighbours at least `gap`
+ * apart where it can be helped (a tie is a free point), else at least different.
  */
-export function buildChain(pool: Item[], size = SET_SIZE, random = Math.random): Item[] {
+export function buildChain(pool: Item[], size = SET_SIZE, random = Math.random, gap = 1): Item[] {
   const seen = new Set<string>();
   const left = pool.filter((p) => {
     const key = `${p.name}|${p.club_id}`;
@@ -45,7 +63,8 @@ export function buildChain(pool: Item[], size = SET_SIZE, random = Math.random):
   const chain: Item[] = [];
   while (chain.length < size && left.length) {
     const last = chain.at(-1);
-    const k = last ? left.findIndex((p) => p.value !== last.value && p.name !== last.name) : 0;
+    const apart = (min: number) => left.findIndex((p) => Math.abs(p.value - last!.value) >= min && p.name !== last!.name);
+    const k = last ? (gap > 1 && apart(gap) !== -1 ? apart(gap) : apart(1)) : 0;
     chain.push(left.splice(k === -1 ? 0 : k, 1)[0]);
   }
   return chain;

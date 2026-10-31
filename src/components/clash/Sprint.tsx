@@ -30,6 +30,8 @@ type Props = {
   /** Whether the clock had started when the page rendered. */
   begun: boolean;
   statLabel: string;
+  /** The stat's question while nothing is called: "Who's taller?". */
+  ask: string;
   shown: Shown;
   next: Card;
   deadlineAt: string;
@@ -106,7 +108,7 @@ export function Sprint(props: Props) {
         ? "Checking…"
         : runs.current > 1
           ? `Run of ${runs.current}${runs.best > runs.current ? ` · best ${runs.best}` : ""}`
-          : "Who has more?";
+          : props.ask;
   const ink = revealed ? (call.right ? "text-royal" : "text-red-card") : "";
   /** The sticker's look once a call is in: the picked one stamped, the other faded. */
   const state = (side: "shown" | "next"): StickerState => {

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { SET_SIZE, SPRINT_SECONDS } from "@/lib/clash/rules";
+import { SET_SIZE, SPRINT_SECONDS, STATS, type Stat } from "@/lib/clash/rules";
 
 // The kick-off's header, option D "The screen splits" (picked 28 Oct 2026, mocks
 // at https://claude.ai/artifact/KXh9PT72Dgos7NwVyzuDXS): the ground's navy
@@ -46,9 +46,10 @@ function Cell({ value, label, className = "", children }: { value: ReactNode; la
   );
 }
 
-/** Solo: the call, the clock, and the numbers. `best` streams in (see BestCell).
- * A challenge nobody has finished yet uses it too, with its own label. */
-export function SoloBoard({ best, label = "Clash · Sprint" }: { best?: ReactNode; label?: string }) {
+/** Solo: the call, the clock, and the numbers: today's stat, or a challenge's
+ * own. `best` streams in (see BestCell). A challenge nobody has finished yet
+ * uses it too, with its own label. */
+export function SoloBoard({ stat, best, label = "Clash · Sprint" }: { stat: Stat; best?: ReactNode; label?: string }) {
   return (
     <section className={`${BOARD} lg:grid lg:grid-cols-[minmax(0,1fr)_300px]`}>
       <div className="min-w-0">
@@ -67,7 +68,7 @@ export function SoloBoard({ best, label = "Clash · Sprint" }: { best?: ReactNod
       </div>
       <div className="grid grid-cols-3 divide-x-2 divide-slate lg:grid-cols-1 lg:grid-rows-3 lg:divide-x-0 lg:divide-y-2 lg:border-l-2 lg:border-slate">
         <Cell value={SET_SIZE} label="Players" className="text-teal-light" />
-        <Cell value="Goals" label="or games" className="text-teal-light" />
+        <Cell value={STATS[stat].short} label={label === "Clash · Sprint" ? "Today's stat" : "The stat"} className="text-teal-light" />
         {best ?? <BestCell best={null} lastCode={null} />}
       </div>
     </section>

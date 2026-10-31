@@ -60,7 +60,7 @@ async function ClashScreen({ params }: { params: Params }) {
         first && second
           ? { first: { name: first.name, kit: kitFor(first.club_id), value: first.value }, second: { name: second.name, kit: kitFor(second.club_id) } }
           : undefined;
-      return <ClashKickOff code={view.set.code} statLabel={STATS[view.set.stat].label} setter={view.setter} firstCall={firstCall} />;
+      return <ClashKickOff code={view.set.code} stat={view.set.stat} setter={view.setter} firstCall={firstCall} />;
     }
     case "play": {
       const ids = [...new Set(view.set.items.map((i) => i.club_id).filter((id): id is number => id !== null))];
@@ -76,6 +76,7 @@ async function ClashScreen({ params }: { params: Params }) {
             at={view.run.answered}
             begun={view.run.begun_at !== null}
             statLabel={STATS[view.set.stat].label}
+            ask={STATS[view.set.stat].ask}
             shown={{ name: view.shown.name, clubId: view.shown.club_id, value: view.shown.value }}
             next={view.next}
             deadlineAt={view.run.deadline_at}

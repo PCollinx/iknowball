@@ -3,6 +3,7 @@ import { startSprint } from "@/app/(site)/clash/actions";
 import { SubmitButton } from "@/components/daily/SubmitButton";
 import type { Kit } from "@/components/daily/ShirtBack";
 import type { Result } from "@/lib/clash/data";
+import { STATS, type Stat } from "@/lib/clash/rules";
 import { AlbumPage, Pair, PlayerSticker, RefereesNotes, Slot } from "./Album";
 import { ChallengeBoard, SoloBoard } from "./Board";
 
@@ -15,17 +16,29 @@ import { ChallengeBoard, SoloBoard } from "./Board";
 /** The first call of a set: the opening player with their number, the next one hidden. */
 export type FirstCall = { first: { name: string; kit?: Kit; value: number }; second: { name: string; kit?: Kit } };
 
-// A solo sprint has no set until kick-off, so its album page shows a call of the
-// kind you'll get: Shearer's Newcastle goals against Rooney's at United.
-const SOLO_CALL: FirstCall = {
-  first: { name: "Alan Shearer", kit: { shirt: "#241F20", number: "#FFFFFF", trim: "#FFFFFF", pattern: "stripes" }, value: 148 },
-  second: { name: "Wayne Rooney", kit: { shirt: "#DA291C", number: "#FFFFFF", trim: "#000000", pattern: "sides", collar: "polo" } },
+// A solo sprint has no set until kick-off, so its album page shows a call of
+// the kind you'll get on today's stat, with real numbers.
+const NEWCASTLE: Kit = { shirt: "#241F20", number: "#FFFFFF", trim: "#FFFFFF", pattern: "stripes" };
+const MAN_UNITED: Kit = { shirt: "#DA291C", number: "#FFFFFF", trim: "#000000", pattern: "sides", collar: "polo" };
+const LIVERPOOL: Kit = { shirt: "#C8102E", number: "#FFFFFF", trim: "#FFFFFF" };
+const MAN_CITY: Kit = { shirt: "#6CABDD", number: "#FFFFFF", trim: "#1C2C5B", collar: "polo" };
+const ARSENAL: Kit = { shirt: "#EF0107", number: "#FFFFFF", trim: "#FFFFFF", pattern: "sleeves" };
+const CHELSEA: Kit = { shirt: "#034694", number: "#FFFFFF", trim: "#FFFFFF" };
+
+const SOLO_CALLS: Record<Stat, FirstCall> = {
+  goals: { first: { name: "Alan Shearer", kit: NEWCASTLE, value: 148 }, second: { name: "Wayne Rooney", kit: MAN_UNITED } },
+  apps: { first: { name: "Steven Gerrard", kit: LIVERPOOL, value: 504 }, second: { name: "Ryan Giggs", kit: MAN_UNITED } },
+  height: { first: { name: "Peter Crouch", kit: LIVERPOOL, value: 201 }, second: { name: "Sergio Agüero", kit: MAN_CITY } },
+  years: { first: { name: "Thierry Henry", kit: ARSENAL, value: 8 }, second: { name: "John Terry", kit: CHELSEA } },
+  clubs: { first: { name: "Nicolas Anelka", kit: CHELSEA, value: 12 }, second: { name: "Ryan Giggs", kit: MAN_UNITED } },
+  sample: { first: { name: "Alan Shearer", kit: NEWCASTLE, value: 260 }, second: { name: "Wayne Rooney", kit: MAN_UNITED } },
 };
 
 type Props = {
   /** The challenge's code, on a challenge link. */
   code?: string;
-  statLabel?: string;
+  /** Today's stat, solo; the set's own on a challenge link. */
+  stat: Stat;
   setter?: Result | null;
   /** The challenge's own first call, shown on its album page. */
   firstCall?: FirstCall;
@@ -33,15 +46,16 @@ type Props = {
   best?: ReactNode;
 };
 
-export function ClashKickOff({ code, statLabel, setter, firstCall, best }: Props) {
+export function ClashKickOff({ code, stat, setter, firstCall, best }: Props) {
   const challenge = Boolean(code);
-  const call = firstCall ?? SOLO_CALL;
+  const call = firstCall ?? SOLO_CALLS[stat];
+  const { label: statLabel, ask } = STATS[stat];
   return (
     <main className="mx-auto w-full max-w-295 flex-1 px-4 pb-10 lg:px-12">
       {setter && code ? (
         <ChallengeBoard code={code} setter={setter.name} right={setter.right} statLabel={statLabel} />
       ) : (
-        <SoloBoard best={best} label={code ? `Clash · Challenge ${code}` : undefined} />
+        <SoloBoard stat={stat} best={best} label={code ? `Clash · Challenge ${code}` : undefined} />
       )}
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_420px] lg:items-start lg:gap-14">
         <div className="min-w-0 pt-5 lg:pt-8">
@@ -52,7 +66,7 @@ export function ClashKickOff({ code, statLabel, setter, firstCall, best }: Props
             </>
           )}
 
-          <AlbumPage label={firstCall && statLabel ? statLabel : "League goals for the club"} className={`${setter ? "mt-7 lg:mt-8" : "mt-4 lg:mt-3"} max-w-140`}>
+          <AlbumPage label={statLabel} className={`${setter ? "mt-7 lg:mt-8" : "mt-4 lg:mt-3"} max-w-140`}>
             <Pair>
               <Slot>
                 <PlayerSticker name={call.first.name} kit={call.first.kit} value={call.first.value} side="left" />
@@ -62,7 +76,7 @@ export function ClashKickOff({ code, statLabel, setter, firstCall, best }: Props
               </Slot>
             </Pair>
             <p className="mt-3 text-center text-[13px] lg:mt-4 lg:text-sm">
-              {firstCall ? "Your first call. Who has more?" : "How a call looks. Who has more?"}
+              {firstCall ? `Your first call. ${ask}` : `How a call looks. ${ask}`}
             </p>
           </AlbumPage>
         </div>

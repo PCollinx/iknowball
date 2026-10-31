@@ -2,7 +2,7 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { currentUserId, guestName } from "@/lib/daily/data";
 import { isTestSite } from "@/lib/daily/sample";
-import { buildChain, newCode, SET_SIZE, STATS, type Item, type Stat } from "./rules";
+import { buildChain, newCode, SET_SIZE, statOfDay, STATS, type Item, type LiveStat, type Stat } from "./rules";
 import { samplePool } from "./sample";
 import { addDays, gameDate, gameDateClosesAt, matchweekBounds } from "@/lib/time";
 
@@ -73,21 +73,22 @@ export async function settle(run: RunRow): Promise<RunRow> {
 
 /** Famous players (Collins, 29 Oct 2026): their spells at top clubs, or at
  * any club when `top` is off (the fallback while top clubs are thin). */
-async function drawPool(stat: Exclude<Stat, "sample">, top: boolean): Promise<Item[]> {
+async function drawPool(stat: LiveStat, top: boolean): Promise<Item[]> {
   const { data, error } = await createAdminClient().rpc("clash_pool", { p_stat: stat, p_min: STATS[stat].min, p_limit: SET_SIZE * 3, p_top: top });
   if (error) throw error;
   return ((data ?? []) as { player_name: string; club_id: number; value: number }[]).map((r) => ({ name: r.player_name, club_id: r.club_id, value: r.value }));
 }
 
-/** A fresh set for a solo sprint: a stat with enough players, its chain and a code. */
+/** A fresh set for a solo sprint: today's stat (statOfDay), or league goals
+ * then games if today's is short of players, its chain and a code. */
 export async function createSet(userId: string): Promise<SetRow> {
   const admin = createAdminClient();
-  const order: Exclude<Stat, "sample">[] = Math.random() < 0.5 ? ["goals", "apps"] : ["apps", "goals"];
+  const order = [...new Set<LiveStat>([statOfDay(gameDate()), "goals", "apps"])];
   let stat: Stat | null = null;
   let items: Item[] = [];
-  draw: for (const top of [true, false]) {
-    for (const s of order) {
-      const chain = buildChain(await drawPool(s, top));
+  draw: for (const s of order) {
+    for (const top of [true, false]) {
+      const chain = buildChain(await drawPool(s, top), SET_SIZE, Math.random, STATS[s].gap);
       if (chain.length >= SET_SIZE) {
         stat = s;
         items = chain;
