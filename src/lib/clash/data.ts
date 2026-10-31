@@ -2,7 +2,8 @@ import "server-only";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { currentUserId, guestName } from "@/lib/daily/data";
 import { isTestSite } from "@/lib/daily/sample";
-import { buildChain, newCode, SET_SIZE, statOfDay, STATS, type Item, type LiveStat, type Stat } from "./rules";
+import { afterSprint, buildChain, newCode, SET_SIZE, statOfDay, STATS, type Item, type LiveStat, type Stat } from "./rules";
+import { COUNTED_SPRINTS } from "@/lib/league/week";
 import { samplePool } from "./sample";
 import { addDays, gameDate, gameDateClosesAt, matchweekBounds } from "@/lib/time";
 
@@ -201,24 +202,38 @@ export async function isWeekBest(run: RunRow): Promise<boolean> {
   return !data?.length;
 }
 
-/** Clash on the home page: your best sprint this matchweek and your latest challenge code. */
-export type HomeClash = { best: number | null; lastCode: string | null };
+/** The right answers of a player's best sprints in a game date's matchweek,
+ * best first: their three, or the three a run is measured against. */
+async function weekBests(userId: string, date: string, exceptRun?: number): Promise<number[]> {
+  const { startsOn, endsOn } = matchweekBounds(date);
+  let q = createAdminClient()
+    .from("clash_runs")
+    .select("right_count")
+    .eq("user_id", userId)
+    .gte("started_at", gameDateClosesAt(addDays(startsOn, -1)).toISOString())
+    .lt("started_at", gameDateClosesAt(endsOn).toISOString())
+    .order("right_count", { ascending: false })
+    .limit(COUNTED_SPRINTS);
+  if (exceptRun) q = q.neq("id", exceptRun);
+  const { data, error } = await q;
+  if (error) throw error;
+  return (data ?? []).map((r) => r.right_count);
+}
+
+/** What a finished run did to its week's three (see afterSprint). */
+export async function weekAfter(run: RunRow) {
+  return afterSprint(await weekBests(run.user_id, gameDate(new Date(run.started_at)), run.id), run.right_count);
+}
+
+/** Clash on the home page and the kick-off: your three this matchweek (best
+ * first) and your latest challenge code. */
+export type HomeClash = { three: number[]; lastCode: string | null };
 
 export async function getHomeClash(userId: string): Promise<HomeClash> {
-  const admin = createAdminClient();
-  const { startsOn, endsOn } = matchweekBounds(gameDate());
-  const [runs, sets] = await Promise.all([
-    admin
-      .from("clash_runs")
-      .select("right_count")
-      .eq("user_id", userId)
-      .gte("started_at", gameDateClosesAt(addDays(startsOn, -1)).toISOString())
-      .lt("started_at", gameDateClosesAt(endsOn).toISOString())
-      .order("right_count", { ascending: false })
-      .limit(1),
-    admin.from("clash_sets").select("code").eq("created_by", userId).order("created_at", { ascending: false }).limit(1),
+  const [three, sets] = await Promise.all([
+    weekBests(userId, gameDate()),
+    createAdminClient().from("clash_sets").select("code").eq("created_by", userId).order("created_at", { ascending: false }).limit(1),
   ]);
-  if (runs.error) throw runs.error;
   if (sets.error) throw sets.error;
-  return { best: runs.data?.[0]?.right_count ?? null, lastCode: sets.data?.[0]?.code ?? null };
+  return { three, lastCode: sets.data?.[0]?.code ?? null };
 }

@@ -7,7 +7,7 @@ import { ClashKickOff } from "@/components/clash/KickOff";
 import { ClashMasthead } from "@/components/clash/Masthead";
 import { Sprint } from "@/components/clash/Sprint";
 import type { Kit } from "@/components/daily/ShirtBack";
-import { getClashView, isWeekBest } from "@/lib/clash/data";
+import { getClashView, isWeekBest, weekAfter } from "@/lib/clash/data";
 import { STATS } from "@/lib/clash/rules";
 import { publicEnv } from "@/lib/env";
 import { kitOf } from "@/lib/profile/club";
@@ -90,7 +90,7 @@ async function ClashScreen({ params }: { params: Params }) {
       );
     }
     case "fulltime": {
-      const [rating, weekBest] = await Promise.all([getRating(view.run.user_id), isWeekBest(view.run)]);
+      const [rating, weekBest, week] = await Promise.all([getRating(view.run.user_id), isWeekBest(view.run), weekAfter(view.run)]);
       return (
         <ClashFullTime
           code={view.set.code}
@@ -103,6 +103,7 @@ async function ClashScreen({ params }: { params: Params }) {
           siteUrl={publicEnv().NEXT_PUBLIC_SITE_URL}
           rating={rating}
           weekBest={weekBest}
+          week={week}
         />
       );
     }

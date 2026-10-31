@@ -4,10 +4,12 @@ import { ordinal } from "@/components/daily/formats";
 import { ShareButtons } from "@/components/daily/ShareButtons";
 import { RatingBadge } from "@/components/profile/RatingBadge";
 import type { Result } from "@/lib/clash/data";
+import { sprintLine } from "@/lib/clash/rules";
 import { AlbumPage } from "./Album";
 import { ChallengeButton } from "./ChallengeButton";
 import { Kick } from "./KickRow";
 import { ClashMasthead } from "./Masthead";
+import { MiniThree } from "./YourThree";
 import { banter, calledLine, outcomeLabel, outcomeOf, slots, toBeat, verdictLine, type Outcome, type Side } from "./result";
 
 // Full time, option D (picked 25 Oct 2026, docs/launch-plan.md step 6): the
@@ -31,9 +33,11 @@ type Props = {
   rating: number | null;
   /** This is your best sprint of its matchweek. */
   weekBest: boolean;
+  /** What this sprint did to your three this week. */
+  week: { three: number[]; added: number; replaced: number | null };
 };
 
-export function ClashFullTime({ code, statLabel, setSize, right, kicks, bestRun, table, siteUrl, rating, weekBest }: Props) {
+export function ClashFullTime({ code, statLabel, setSize, right, kicks, bestRun, table, siteUrl, rating, weekBest, week }: Props) {
   const mine = table.find((r) => r.mine) ?? null;
   const setter = table.find((r) => r.setter && !r.mine) ?? null;
   const outcome = setter ? outcomeOf(right, setter.right) : null;
@@ -80,6 +84,14 @@ export function ClashFullTime({ code, statLabel, setSize, right, kicks, bestRun,
           )}
 
           <Stickers outcome={outcome} bestRun={bestRun} weekBest={weekBest} rating={rating} />
+          <section className="mt-4 grid gap-2 lg:mt-5" aria-label="Your three this week">
+            <p className={`w-fit rotate-[0.8deg] border-2 border-navy px-2.5 py-1 text-sm font-semibold shadow-[3px_3px_0_var(--color-navy)] lg:text-[15px] ${week.added > 0 ? "bg-teal-light" : "bg-white"}`}>
+              {sprintLine(right, week)}
+            </p>
+            <div className="max-w-60">
+              <MiniThree three={week.three} />
+            </div>
+          </section>
           <p className="mt-3.5 font-display text-base leading-tight uppercase lg:mt-4 lg:text-2xl lg:leading-none">
             <span className="text-red-card">“</span>
             {banter(right, setter, mine)}

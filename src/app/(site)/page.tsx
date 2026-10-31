@@ -5,6 +5,7 @@ import { DailySticker } from "@/components/home/DailySticker";
 import { LeagueBoard } from "@/components/home/LeagueBoard";
 import { ShirtSticker } from "@/components/home/ShirtSticker";
 import { getHomeClash } from "@/lib/clash/data";
+import { statOfDay } from "@/lib/clash/rules";
 import { currentUserId, getHomeDaily } from "@/lib/daily/data";
 import { getHomeBoard } from "@/lib/league/data";
 import { getProfileView, kitsForFixture } from "@/lib/profile/data";
@@ -68,7 +69,7 @@ async function HomeScreen() {
             <DailySticker daily={daily} kits={kits} closesAt={closesAt} serverNow={serverNow} />
           </div>
           <div className="flex min-w-0 flex-col gap-7 lg:col-span-5 lg:gap-8">
-            <ClashTicket clash={clash} />
+            <ClashTicket clash={clash} stat={statOfDay(today)} />
             <LeagueBoard tabs={board.tabs} club={board.club} />
           </div>
           <div className="px-1 lg:col-span-12 lg:px-0">

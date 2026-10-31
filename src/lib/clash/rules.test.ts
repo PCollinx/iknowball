@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { afterAnswer, buildChain, isRight, newCode, statOfDay } from "./rules";
+import { afterAnswer, afterSprint, buildChain, isRight, newCode, sprintLine, statOfDay, threeLine, threeTotal, yourThree } from "./rules";
 
 describe("isRight", () => {
   it("checks more and fewer, and lets a tie through", () => {
@@ -68,5 +68,37 @@ describe("statOfDay", () => {
     expect(statOfDay("2026-11-06")).toBe("clubs");
     expect(statOfDay("2026-11-07")).toBe("goals");
     expect(statOfDay("2026-11-08")).toBe("apps");
+  });
+});
+
+describe("your three", () => {
+  it("keeps the best three, highest first, and caps the total at 100", () => {
+    expect(yourThree([9, 18, 4, 14])).toEqual([18, 14, 9]);
+    expect(threeTotal([18, 14, 9])).toBe(41);
+    expect(threeTotal([40, 38, 35])).toBe(100);
+  });
+
+  it("says what a sprint added and what it pushed out", () => {
+    expect(afterSprint([18, 14, 9], 14)).toEqual({ three: [18, 14, 14], added: 5, replaced: 9 });
+    expect(afterSprint([18, 14, 9], 7)).toEqual({ three: [18, 14, 9], added: 0, replaced: null });
+    expect(afterSprint([12], 8)).toEqual({ three: [12, 8], added: 8, replaced: null });
+    expect(afterSprint([40, 38, 30], 35).added).toBe(0);
+  });
+
+  it("words the line under the slots", () => {
+    expect(threeLine([])).toBe("All three slots empty. Any score counts.");
+    expect(threeLine([12])).toBe("2 slots empty. Any score counts.");
+    expect(threeLine([12, 8])).toBe("1 slot empty. Any score counts.");
+    expect(threeLine([18, 14, 9])).toBe("Beat 9 to add points.");
+    expect(threeLine([40, 38, 30])).toBe("Full marks this week.");
+  });
+});
+
+describe("sprintLine", () => {
+  it("says what the sprint did to the week", () => {
+    expect(sprintLine(14, afterSprint([18, 14, 9], 14))).toBe("+5 this week. Your 14 replaces your 9.");
+    expect(sprintLine(12, afterSprint([], 12))).toBe("+12 this week. It fills a slot.");
+    expect(sprintLine(7, afterSprint([18, 14, 9], 7))).toBe("Your three stay 18 · 14 · 9. Beat 9 next time.");
+    expect(sprintLine(20, afterSprint([40, 38, 30], 20))).toBe("Full marks this week already.");
   });
 });

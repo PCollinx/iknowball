@@ -3,8 +3,9 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { BestCell } from "@/components/clash/Board";
 import { ClashKickOff } from "@/components/clash/KickOff";
+import { YourThree } from "@/components/clash/YourThree";
 import { KeepyUppy } from "@/components/loading/KeepyUppy";
-import { getHomeClash } from "@/lib/clash/data";
+import { getHomeClash, type HomeClash } from "@/lib/clash/data";
 import { statOfDay } from "@/lib/clash/rules";
 import { currentUserId } from "@/lib/daily/data";
 import { gameDate } from "@/lib/time";
@@ -23,23 +24,32 @@ export default function ClashPage() {
 }
 
 // Today's stat follows the clock, so the kick-off renders per request; your
-// best this week streams into the board after it.
+// best and your three this week stream in after it, from one read.
 async function KickOff() {
   await connection();
+  const clash = currentUserId().then((id) => (id ? getHomeClash(id) : null));
   return (
     <ClashKickOff
       stat={statOfDay(gameDate())}
       best={
         <Suspense fallback={<BestCell best={null} lastCode={null} />}>
-          <Best />
+          <Best clash={clash} />
+        </Suspense>
+      }
+      three={
+        <Suspense fallback={<YourThree three={[]} />}>
+          <Three clash={clash} />
         </Suspense>
       }
     />
   );
 }
 
-async function Best() {
-  const userId = await currentUserId();
-  if (!userId) return <BestCell best={null} lastCode={null} />;
-  return <BestCell {...await getHomeClash(userId)} />;
+async function Best({ clash }: { clash: Promise<HomeClash | null> }) {
+  const c = await clash;
+  return <BestCell best={c?.three[0] ?? null} lastCode={c?.lastCode ?? null} />;
+}
+
+async function Three({ clash }: { clash: Promise<HomeClash | null> }) {
+  return <YourThree three={(await clash)?.three ?? []} />;
 }

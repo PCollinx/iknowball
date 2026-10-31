@@ -25,7 +25,7 @@ const MAN_CITY: Kit = { shirt: "#6CABDD", number: "#FFFFFF", trim: "#1C2C5B", co
 const ARSENAL: Kit = { shirt: "#EF0107", number: "#FFFFFF", trim: "#FFFFFF", pattern: "sleeves" };
 const CHELSEA: Kit = { shirt: "#034694", number: "#FFFFFF", trim: "#FFFFFF" };
 
-const SOLO_CALLS: Record<Stat, FirstCall> = {
+export const SOLO_CALLS: Record<Stat, FirstCall> = {
   goals: { first: { name: "Alan Shearer", kit: NEWCASTLE, value: 148 }, second: { name: "Wayne Rooney", kit: MAN_UNITED } },
   apps: { first: { name: "Steven Gerrard", kit: LIVERPOOL, value: 504 }, second: { name: "Ryan Giggs", kit: MAN_UNITED } },
   height: { first: { name: "Peter Crouch", kit: LIVERPOOL, value: 201 }, second: { name: "Sergio Agüero", kit: MAN_CITY } },
@@ -44,9 +44,11 @@ type Props = {
   firstCall?: FirstCall;
   /** Your best this week and last challenge (solo only), streamed into the board's last cell. */
   best?: ReactNode;
+  /** Your three this week (solo only), streamed in above the referee's notes. */
+  three?: ReactNode;
 };
 
-export function ClashKickOff({ code, stat, setter, firstCall, best }: Props) {
+export function ClashKickOff({ code, stat, setter, firstCall, best, three }: Props) {
   const challenge = Boolean(code);
   const call = firstCall ?? SOLO_CALLS[stat];
   const { label: statLabel, ask } = STATS[stat];
@@ -82,6 +84,7 @@ export function ClashKickOff({ code, stat, setter, firstCall, best }: Props) {
         </div>
 
         <div className="mt-7 grid gap-6 lg:mt-0 lg:gap-7 lg:pt-8">
+          {three}
           <RefereesNotes />
           <form action={startSprint}>
             {code && <input type="hidden" name="code" value={code} />}

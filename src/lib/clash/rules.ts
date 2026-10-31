@@ -1,6 +1,8 @@
 // Clash's Higher or Lower sprint: the rules, kept pure so they can be tested.
 // Decided 19 Oct 2026 (Collins picked the layout from the mocks).
 
+import { CLASH_MAX, COUNTED_SPRINTS } from "@/lib/league/week";
+
 /** The sprint's length, started on the server. */
 export const SPRINT_SECONDS = 60;
 /** What a wrong answer takes off the clock. */
@@ -89,4 +91,35 @@ export function afterAnswer(s: RunState, right: boolean): RunState {
     bestRun: Math.max(s.bestRun, currentRun),
     kicks: s.kicks + (right ? "1" : "0"),
   };
+}
+
+/** Your three (Collins, 31 Oct 2026): the week's best sprints, the ones the
+ * League counts, highest first. */
+export const yourThree = (rights: number[]): number[] => [...rights].sort((a, b) => b - a).slice(0, COUNTED_SPRINTS);
+
+/** What your three add to the week, at most CLASH_MAX. */
+export const threeTotal = (three: number[]): number => Math.min(CLASH_MAX, three.reduce((sum, r) => sum + r, 0));
+
+/** What a sprint did to your three: the points it added, and the score it
+ * pushed out when all three were filled. */
+export function afterSprint(others: number[], right: number): { three: number[]; added: number; replaced: number | null } {
+  const was = yourThree(others);
+  const three = yourThree([...others, right]);
+  const added = threeTotal(three) - threeTotal(was);
+  return { three, added, replaced: added > 0 && was.length === COUNTED_SPRINTS ? was[COUNTED_SPRINTS - 1] : null };
+}
+
+/** The line under your three: the slots left, the score to beat, or full marks. */
+export function threeLine(three: number[]): string {
+  const empty = COUNTED_SPRINTS - three.length;
+  if (threeTotal(three) >= CLASH_MAX) return "Full marks this week.";
+  if (empty > 0) return `${empty === COUNTED_SPRINTS ? "All three" : empty} ${empty === 1 ? "slot" : "slots"} empty. Any score counts.`;
+  return `Beat ${three[COUNTED_SPRINTS - 1]} to add points.`;
+}
+
+/** Full time's line on the week: what the sprint added, or why it didn't. */
+export function sprintLine(right: number, after: { three: number[]; added: number; replaced: number | null }): string {
+  if (after.added > 0) return after.replaced !== null ? `+${after.added} this week. Your ${right} replaces your ${after.replaced}.` : `+${after.added} this week. It fills a slot.`;
+  if (threeTotal(after.three) >= CLASH_MAX) return "Full marks this week already.";
+  return `Your three stay ${after.three.join(" · ")}. Beat ${after.three[COUNTED_SPRINTS - 1]} next time.`;
 }
