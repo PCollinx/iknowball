@@ -44,7 +44,7 @@ type Props = {
   firstCall?: FirstCall;
   /** Your best this week and last challenge (solo only), streamed into the board's last cell. */
   best?: ReactNode;
-  /** Your three this week (solo only), streamed in above the referee's notes. */
+  /** Your three this week and your challenges (solo only), streamed in above the referee's notes. */
   three?: ReactNode;
 };
 

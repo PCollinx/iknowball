@@ -104,6 +104,7 @@ async function ClashScreen({ params }: { params: Params }) {
           rating={rating}
           weekBest={weekBest}
           week={week}
+          rival={view.rival}
         />
       );
     }

@@ -4,7 +4,8 @@ import { ClashTicket } from "@/components/home/ClashTicket";
 import { DailySticker } from "@/components/home/DailySticker";
 import { LeagueBoard } from "@/components/home/LeagueBoard";
 import { ShirtSticker } from "@/components/home/ShirtSticker";
-import { getHomeClash } from "@/lib/clash/data";
+import { BeatenBanner } from "@/components/clash/Challenges";
+import { getChallenges, getHomeClash } from "@/lib/clash/data";
 import { statOfDay } from "@/lib/clash/rules";
 import { currentUserId, getHomeDaily } from "@/lib/daily/data";
 import { getHomeBoard } from "@/lib/league/data";
@@ -35,12 +36,15 @@ async function HomeScreen() {
   await connection();
   const me = await currentUserId();
   const { today, closesAt, serverNow } = readClock();
-  const [daily, clash, board, view] = await Promise.all([
+  const [daily, clash, board, view, challenges] = await Promise.all([
     getHomeDaily(me),
     me ? getHomeClash(me) : null,
     getHomeBoard(me),
     me ? getProfileView(me) : null,
+    me ? getChallenges(me) : [],
   ]);
+  // A challenge of yours that a mate beat since you last looked: the banner at the top.
+  const beaten = challenges.find((c) => c.news);
   const kits = await kitsForFixture(daily?.parts.find((p) => p.part === 1)?.title ?? null);
   const day = new Date(`${today}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
 
@@ -63,6 +67,12 @@ async function HomeScreen() {
             )}
           </h1>
         </div>
+
+        {beaten && (
+          <div className="mt-5 lg:mt-6">
+            <BeatenBanner challenge={beaten} />
+          </div>
+        )}
 
         <div className="mt-5 grid gap-7 lg:mt-6 lg:grid-cols-12 lg:gap-9">
           <div className="min-w-0 lg:col-span-7">

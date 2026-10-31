@@ -4,6 +4,7 @@ import { currentUserId, guestName } from "@/lib/daily/data";
 import { isTestSite } from "@/lib/daily/sample";
 import { afterSprint, buildChain, newCode, SET_SIZE, statOfDay, STATS, type Item, type LiveStat, type Stat } from "./rules";
 import { COUNTED_SPRINTS } from "@/lib/league/week";
+import { challengeOf, type Challenge } from "./challenges";
 import { samplePool } from "./sample";
 import { addDays, gameDate, gameDateClosesAt, matchweekBounds } from "@/lib/time";
 
@@ -13,7 +14,9 @@ import { addDays, gameDate, gameDateClosesAt, matchweekBounds } from "@/lib/time
 /** Answers that land just after the buzzer still count, as in the Daily. */
 export const GRACE_MS = 1500;
 
-export type SetRow = { id: number; code: string; stat: Stat; items: Item[]; created_by: string | null };
+/** `rival_id`: on a rematch, the mate it's for (see getChallenges). */
+export type SetRow = { id: number; code: string; stat: Stat; items: Item[]; created_by: string | null; rival_id: string | null };
+const SET_COLUMNS = "id, code, stat, items, created_by, rival_id";
 export type RunRow = {
   id: number;
   set_id: number;
@@ -38,7 +41,7 @@ export function isRunOpen(run: RunRow, now = Date.now()): boolean {
 export const isLastAnswer = (run: { answered: number }, set: SetRow) => run.answered + 1 >= set.items.length;
 
 export async function getSet(code: string): Promise<SetRow | null> {
-  const { data, error } = await createAdminClient().from("clash_sets").select("id, code, stat, items, created_by").eq("code", code).maybeSingle();
+  const { data, error } = await createAdminClient().from("clash_sets").select(SET_COLUMNS).eq("code", code).maybeSingle();
   if (error) throw error;
   return data as SetRow | null;
 }
@@ -80,11 +83,11 @@ async function drawPool(stat: LiveStat, top: boolean): Promise<Item[]> {
   return ((data ?? []) as { player_name: string; club_id: number; value: number }[]).map((r) => ({ name: r.player_name, club_id: r.club_id, value: r.value }));
 }
 
-/** A fresh set for a solo sprint: today's stat (statOfDay), or league goals
- * then games if today's is short of players, its chain and a code. */
-export async function createSet(userId: string): Promise<SetRow> {
+/** A fresh set for a solo sprint: today's stat (statOfDay), or a rematch's
+ * own, or league goals then games if that one is short of players. */
+export async function createSet(userId: string, opts: { stat?: LiveStat; rivalId?: string } = {}): Promise<SetRow> {
   const admin = createAdminClient();
-  const order = [...new Set<LiveStat>([statOfDay(gameDate()), "goals", "apps"])];
+  const order = [...new Set<LiveStat>([opts.stat ?? statOfDay(gameDate()), "goals", "apps"])];
   let stat: Stat | null = null;
   let items: Item[] = [];
   draw: for (const s of order) {
@@ -108,8 +111,8 @@ export async function createSet(userId: string): Promise<SetRow> {
   for (let i = 0; i < 5; i++) {
     const { data, error } = await admin
       .from("clash_sets")
-      .insert({ code: newCode(), stat, items, created_by: userId })
-      .select("id, code, stat, items, created_by")
+      .insert({ code: newCode(), stat, items, created_by: userId, rival_id: opts.rivalId ?? null })
+      .select(SET_COLUMNS)
       .single();
     if (!error) return data as SetRow;
     if (error.code !== "23505") throw error;
@@ -143,7 +146,7 @@ export type ClashView =
       next: Card;
       serverNow: number;
     }
-  | { kind: "fulltime"; set: SetRow; run: RunRow; table: Result[] };
+  | { kind: "fulltime"; set: SetRow; run: RunRow; table: Result[]; /** A rematch's mate. */ rival: string | null };
 
 /** Everyone's finished go at a set, best first: the challenge table. */
 async function setTable(set: SetRow, me: string | null): Promise<Result[]> {
@@ -182,8 +185,13 @@ export async function getClashView(code: string): Promise<ClashView> {
   if (isRunOpen(run) && run.answered + 1 < set.items.length) {
     return { kind: "play", set, run, shown: set.items[run.answered], next: cardOf(set.items[run.answered + 1]), serverNow: Date.now() };
   }
-  const table = await setTable(set, userId);
-  return { kind: "fulltime", set, run, table };
+  const mine = set.created_by === userId;
+  const [table, rival] = await Promise.all([
+    setTable(set, userId),
+    mine && set.rival_id ? playerName(set.rival_id) : null,
+    mine ? markSeen(set.id) : null,
+  ]);
+  return { kind: "fulltime", set, run, table, rival };
 }
 
 /** Whether a finished run is the player's best sprint of its matchweek (a tie counts). */
@@ -236,4 +244,52 @@ export async function getHomeClash(userId: string): Promise<HomeClash> {
   ]);
   if (sets.error) throw sets.error;
   return { three, lastCode: sets.data?.[0]?.code ?? null };
+}
+
+/** How far back your challenges list looks. */
+const CHALLENGE_DAYS = 14;
+const CHALLENGES_SHOWN = 5;
+
+/** Your challenges: the sets you started that someone else has played,
+ * newest first, plus your latest set while nobody has, so you can send it. */
+export async function getChallenges(userId: string): Promise<Challenge[]> {
+  const admin = createAdminClient();
+  const { data: sets, error } = await admin
+    .from("clash_sets")
+    .select("id, code, stat, created_at, seen_at, created_by")
+    .eq("created_by", userId)
+    .gte("created_at", new Date(Date.now() - CHALLENGE_DAYS * 86_400_000).toISOString())
+    .order("created_at", { ascending: false })
+    .limit(30);
+  if (error) throw error;
+  if (!sets?.length) return [];
+  const { data: runs, error: runsError } = await admin
+    .from("clash_runs")
+    .select("set_id, user_id, right_count, submitted_at, deadline_at, profiles(username)")
+    .in("set_id", sets.map((s) => s.id));
+  if (runsError) throw runsError;
+  const done = ((runs ?? []) as unknown as (Pick<RunRow, "set_id" | "user_id" | "right_count" | "submitted_at" | "deadline_at"> & { profiles: { username: string | null } | null })[])
+    .map((r) => ({ ...r, finishedAt: r.submitted_at ?? (Date.parse(r.deadline_at) + GRACE_MS < Date.now() ? r.deadline_at : null) }))
+    .filter((r): r is typeof r & { finishedAt: string } => r.finishedAt !== null);
+  const all = sets.map((s) =>
+    challengeOf(
+      { code: s.code, stat: s.stat as Stat, createdAt: s.created_at, seenAt: s.seen_at, createdBy: userId },
+      done.filter((r) => r.set_id === s.id).map((r) => ({ userId: r.user_id, name: r.profiles?.username ?? guestName(r.user_id), right: r.right_count, finishedAt: r.finishedAt })),
+    ),
+  );
+  const played = all.filter((c) => c.state !== "waiting");
+  const latest = all[0].state === "waiting" ? [all[0]] : [];
+  return [...latest, ...played].slice(0, CHALLENGES_SHOWN);
+}
+
+/** The setter has opened the challenge's table: its beats are no longer news. */
+export async function markSeen(setId: number): Promise<void> {
+  const { error } = await createAdminClient().from("clash_sets").update({ seen_at: new Date().toISOString() }).eq("id", setId);
+  if (error) throw error;
+}
+
+/** A player's name as the tables show it. */
+export async function playerName(userId: string): Promise<string> {
+  const { data } = await createAdminClient().from("profiles").select("username").eq("id", userId).maybeSingle();
+  return data?.username ?? guestName(userId);
 }

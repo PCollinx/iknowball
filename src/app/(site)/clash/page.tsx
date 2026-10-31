@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { BestCell } from "@/components/clash/Board";
+import { ChallengeList } from "@/components/clash/Challenges";
 import { ClashKickOff } from "@/components/clash/KickOff";
 import { YourThree } from "@/components/clash/YourThree";
 import { KeepyUppy } from "@/components/loading/KeepyUppy";
-import { getHomeClash, type HomeClash } from "@/lib/clash/data";
+import { getChallenges, getHomeClash, type HomeClash } from "@/lib/clash/data";
 import { statOfDay } from "@/lib/clash/rules";
 import { currentUserId } from "@/lib/daily/data";
 import { gameDate } from "@/lib/time";
@@ -24,10 +25,12 @@ export default function ClashPage() {
 }
 
 // Today's stat follows the clock, so the kick-off renders per request; your
-// best and your three this week stream in after it, from one read.
+// best, your three this week and your challenges stream in after it.
 async function KickOff() {
   await connection();
-  const clash = currentUserId().then((id) => (id ? getHomeClash(id) : null));
+  const me = currentUserId();
+  const clash = me.then((id) => (id ? getHomeClash(id) : null));
+  const challenges = me.then((id) => (id ? getChallenges(id) : []));
   return (
     <ClashKickOff
       stat={statOfDay(gameDate())}
@@ -37,9 +40,14 @@ async function KickOff() {
         </Suspense>
       }
       three={
-        <Suspense fallback={<YourThree three={[]} />}>
-          <Three clash={clash} />
-        </Suspense>
+        <>
+          <Suspense fallback={<YourThree three={[]} />}>
+            <Three clash={clash} />
+          </Suspense>
+          <Suspense>
+            <Challenges challenges={challenges} />
+          </Suspense>
+        </>
       }
     />
   );
@@ -48,6 +56,10 @@ async function KickOff() {
 async function Best({ clash }: { clash: Promise<HomeClash | null> }) {
   const c = await clash;
   return <BestCell best={c?.three[0] ?? null} lastCode={c?.lastCode ?? null} />;
+}
+
+async function Challenges({ challenges }: { challenges: Promise<Awaited<ReturnType<typeof getChallenges>>> }) {
+  return <ChallengeList challenges={await challenges} />;
 }
 
 async function Three({ clash }: { clash: Promise<HomeClash | null> }) {
