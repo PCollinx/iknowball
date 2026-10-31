@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { MiniThree } from "@/components/clash/YourThree";
 import { ClubPicker } from "@/components/profile/ClubPicker";
 import { SeasonTicket } from "@/components/pwa/SeasonTicket";
 import { APP_ICON_SRC } from "@/lib/og/logo";
@@ -8,6 +9,7 @@ import type { Club } from "@/lib/profile/club";
 import { gameDate, gameDateClosesAt, seasonLabel, seasonOf } from "@/lib/time";
 import type { OrderReveal, RecallReveal, TableRow } from "@/lib/daily/data";
 import { halfRating } from "@/lib/daily/score";
+import { handoffHeading, STATS, type Stat } from "@/lib/clash/rules";
 import { clock } from "./clock";
 import { headlineFixture } from "./fixture";
 import { Masthead, shortDate } from "./Masthead";
@@ -31,6 +33,8 @@ import { ShirtBack, shirtName, type Kit } from "./ShirtBack";
 
 type Props = {
   issue: number;
+  /** Your three Clash sprints this week (best first) and today's stat, for the hand-off to Clash. */
+  clash: { three: number[]; stat: Stat };
   playDate: string;
   recall: RecallReveal | null;
   order: OrderReveal | null;
@@ -188,12 +192,14 @@ export function FullTime(props: Props) {
           <TodaysTable top={props.top} me={props.me} position={position} players={players} />
 
           <section className="order-8 mt-5 grid gap-2.5 lg:grid-cols-2 lg:gap-3">
+            {/* The hand-off to Clash (Collins, 31 Oct 2026): your three and what they still need. */}
             <Link href="/clash" className="btn-white btn-press group grid grid-cols-[minmax(0,1fr)_74px] lg:grid-cols-1">
-              <span className="px-3 py-2.5">
-                <span className="block font-display text-[26px] leading-[0.9] uppercase lg:text-[24px]">
-                  Try a <span className="sash-mark">sprint</span>
+              <span className="grid gap-1.5 px-3 py-2.5">
+                <span className="block font-display text-[26px] leading-[0.9] uppercase lg:text-[24px]">{handoffHeading(props.clash.three)}</span>
+                <MiniThree three={props.clash.three} />
+                <span className="block text-[13px] text-navy/80">
+                  Today&apos;s stat is <b>{STATS[props.clash.stat].short.toLowerCase()}</b>. Try a sprint →
                 </span>
-                <span className="block text-[13px] text-navy/80">60 seconds of Higher or Lower in Clash.</span>
               </span>
               <span className="grid place-items-center border-l-[2.5px] border-dashed border-navy bg-navy font-display text-xl text-sky uppercase lg:hidden">
                 60s

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { afterAnswer, afterSprint, buildChain, isRight, newCode, sprintLine, statOfDay, threeLine, threeTotal, yourThree } from "./rules";
+import { afterAnswer, afterSprint, buildChain, handoffHeading, isRight, newCode, sprintLine, statOfDay, threeLine, threeTotal, yourThree } from "./rules";
 
 describe("isRight", () => {
   it("checks more and fewer, and lets a tie through", () => {
@@ -100,5 +100,15 @@ describe("sprintLine", () => {
     expect(sprintLine(12, afterSprint([], 12))).toBe("+12 this week. It fills a slot.");
     expect(sprintLine(7, afterSprint([18, 14, 9], 7))).toBe("Your three stay 18 · 14 · 9. Beat 9 next time.");
     expect(sprintLine(20, afterSprint([40, 38, 30], 20))).toBe("Full marks this week already.");
+  });
+});
+
+describe("handoffHeading", () => {
+  it("says what your three still need", () => {
+    expect(handoffHeading([])).toBe("Three sprints still to count");
+    expect(handoffHeading([12])).toBe("Two sprints still to count");
+    expect(handoffHeading([12, 8])).toBe("One sprint still to count");
+    expect(handoffHeading([18, 14, 9])).toBe("Beat 9 to add points");
+    expect(handoffHeading([40, 38, 30])).toBe("Full marks this week");
   });
 });

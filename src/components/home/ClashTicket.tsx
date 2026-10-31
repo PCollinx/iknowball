@@ -15,6 +15,8 @@ const SHIRT = "M50 9 Q45 9 41 5 L29 9 L7 23 L15 41 L25 36 L25 95 L75 95 L75 36 L
 export function ClashTicket({ clash, stat }: { clash: HomeClash | null; stat: Stat }) {
   const { first, second } = SOLO_CALLS[stat];
   const surname = (name: string) => name.split(" ").at(-1)!;
+  // The Monday reset: a new week before your first sprint of it.
+  const lastWeek = clash?.lastWeek ?? null;
   return (
     <article className="relative grid rotate-[0.8deg] grid-cols-[minmax(0,1fr)_80px] min-[380px]:grid-cols-[minmax(0,1fr)_96px] border-[3px] border-navy bg-white shadow-[5px_5px_0_var(--color-navy)] [animation-delay:150ms] motion-safe:animate-deal-sticker lg:grid-cols-[minmax(0,1fr)_120px] lg:shadow-[7px_7px_0_var(--color-navy)]">
       <div className="p-3 pl-3.5 lg:p-4 lg:pl-[18px]">
@@ -23,7 +25,15 @@ export function ClashTicket({ clash, stat }: { clash: HomeClash | null; stat: St
           <span className="text-royal">Today: {STATS[stat].short}</span>
         </div>
         <h2 className="mt-1 mb-2 font-display text-[30px] leading-[0.9] uppercase lg:mt-1.5 lg:mb-2.5 lg:text-[40px]">
-          Higher <span className="sash-mark">or</span> lower
+          {lastWeek ? (
+            <>
+              Your three are <span className="sash-mark">empty</span>
+            </>
+          ) : (
+            <>
+              Higher <span className="sash-mark">or</span> lower
+            </>
+          )}
         </h2>
         {/* Each player is a stack (shirt, number, name) on small phones and a row from 380px, so nothing is squeezed. */}
         <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 border-[1.5px] border-navy bg-mist px-2 py-1.5 min-[400px]:gap-2 lg:gap-2.5 lg:px-2.5 lg:py-2">
@@ -43,13 +53,17 @@ export function ClashTicket({ clash, stat }: { clash: HomeClash | null; stat: St
             </span>
           </div>
         </div>
-        {clash && clash.three.length > 0 && (
+        {clash && (clash.three.length > 0 || lastWeek) && (
           <div className="mt-2">
             <MiniThree three={clash.three} />
           </div>
         )}
         <p className="mt-2 mb-2.5 text-[13px] lg:mt-2.5 lg:mb-3 lg:text-[15px]">
-          {clash && clash.three.length > 0 ? (
+          {lastWeek ? (
+            <>
+              Last week: <b>{lastWeek.join(" · ")}</b>, {threeTotal(lastWeek)}/{CLASH_MAX}. Any score counts.
+            </>
+          ) : clash && clash.three.length > 0 ? (
             <>
               Your three: <b>{threeTotal(clash.three)}</b>/{CLASH_MAX}. {threeLine(clash.three)}
             </>
@@ -79,6 +93,12 @@ export function ClashTicket({ clash, stat }: { clash: HomeClash | null; stat: St
           <span className="text-center font-display text-base leading-tight uppercase lg:text-[19px]">Then dare a mate</span>
         )}
       </div>
+
+      {lastWeek && (
+        <span className="absolute -top-3 left-3.5 -rotate-4 border-2 border-navy bg-red-card px-2 pt-0.5 pb-1 font-display text-base leading-none text-white uppercase lg:text-lg">
+          New week
+        </span>
+      )}
 
       {/* The notches where the stub tears off. */}
       <span aria-hidden="true" className="absolute -top-3 right-[69px] min-[380px]:right-[85px] h-5 w-5 rounded-full border-[3px] border-navy bg-white [clip-path:inset(50%_0_0_0)] lg:right-[109px]" />

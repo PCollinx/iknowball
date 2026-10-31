@@ -123,3 +123,11 @@ export function sprintLine(right: number, after: { three: number[]; added: numbe
   if (threeTotal(after.three) >= CLASH_MAX) return "Full marks this week already.";
   return `Your three stay ${after.three.join(" · ")}. Beat ${after.three[COUNTED_SPRINTS - 1]} next time.`;
 }
+
+/** The Daily's hand-off to Clash at full time: what your three still need. */
+export function handoffHeading(three: number[]): string {
+  const empty = COUNTED_SPRINTS - three.length;
+  if (threeTotal(three) >= CLASH_MAX) return "Full marks this week";
+  if (empty > 0) return `${["One", "Two", "Three"][empty - 1]} ${empty === 1 ? "sprint" : "sprints"} still to count`;
+  return `Beat ${three[COUNTED_SPRINTS - 1]} to add points`;
+}

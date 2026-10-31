@@ -2,9 +2,14 @@
 // 26 Oct 2026): the top three on a podium, everyone else in a table with
 // their week as a form guide.
 
-type Line = { name: string; points: number; mine: boolean };
+import { CLASH_MAX } from "./week";
 
-/** "28 behind tunde", "40 clear of dad", or where you stand when it's level or you haven't played. Rows best first. */
+type Line = { name: string; points: number; mine: boolean; /** The week's Clash points, when known. */ clash?: number };
+
+/** "28 behind tunde", "40 clear of dad", or where you stand when it's level or
+ * you haven't played. When the Clash points you still have room for would take
+ * you past the player above, it says so instead: "Win 12 more on Clash to pass
+ * tunde" (Collins, 31 Oct 2026). Rows best first. */
 export function gapLine(rows: Line[]): string {
   const mine = rows.find((r) => r.mine);
   if (!mine || mine.points === 0) return "Not played this week";
@@ -15,6 +20,9 @@ export function gapLine(rows: Line[]): string {
     const clear = mine.points - next.points;
     return clear > 0 ? `${clear} clear of ${next.name}` : `Level with ${next.name}`;
   }
+  const above = rows[rows.indexOf(mine) - 1];
+  const need = above.points - mine.points + 1;
+  if (mine.clash !== undefined && need > 0 && need <= CLASH_MAX - mine.clash) return `Win ${need} more on Clash to pass ${above.name}`;
   const behind = lead.points - mine.points;
   return behind > 0 ? `${behind} behind ${lead.name}` : `Level with ${lead.name}`;
 }

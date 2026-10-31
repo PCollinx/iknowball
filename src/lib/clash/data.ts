@@ -234,16 +234,23 @@ export async function weekAfter(run: RunRow) {
 }
 
 /** Clash on the home page and the kick-off: your three this matchweek (best
- * first) and your latest challenge code. */
-export type HomeClash = { three: number[]; lastCode: string | null };
+ * first), your latest challenge code, and on Monday and Tuesday before your
+ * first sprint, last week's three (the Monday reset). */
+export type HomeClash = { three: number[]; lastCode: string | null; lastWeek: number[] | null };
+
+/** Days into the week the Monday reset shows: Monday and Tuesday. */
+const RESET_DAYS = 2;
 
 export async function getHomeClash(userId: string): Promise<HomeClash> {
-  const [three, sets] = await Promise.all([
-    weekBests(userId, gameDate()),
+  const today = gameDate();
+  const fresh = addDays(matchweekBounds(today).startsOn, RESET_DAYS) > today;
+  const [three, lastWeek, sets] = await Promise.all([
+    weekBests(userId, today),
+    fresh ? weekBests(userId, addDays(today, -7)) : null,
     createAdminClient().from("clash_sets").select("code").eq("created_by", userId).order("created_at", { ascending: false }).limit(1),
   ]);
   if (sets.error) throw sets.error;
-  return { three, lastCode: sets.data?.[0]?.code ?? null };
+  return { three, lastCode: sets.data?.[0]?.code ?? null, lastWeek: three.length === 0 && lastWeek?.length ? lastWeek : null };
 }
 
 /** How far back your challenges list looks. */
