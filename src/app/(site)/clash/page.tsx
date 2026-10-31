@@ -7,6 +7,7 @@ import { ClashKickOff } from "@/components/clash/KickOff";
 import { YourThree } from "@/components/clash/YourThree";
 import { KeepyUppy } from "@/components/loading/KeepyUppy";
 import { getChallenges, getHomeClash, type HomeClash } from "@/lib/clash/data";
+import { clashSample, SAMPLE_CHALLENGES } from "@/lib/clash/sample";
 import { statOfDay } from "@/lib/clash/rules";
 import { currentUserId } from "@/lib/daily/data";
 import { gameDate } from "@/lib/time";
@@ -16,21 +17,25 @@ export const metadata: Metadata = {
   description: "Sixty seconds of Higher or Lower. Send the link and settle it.",
 };
 
-export default function ClashPage() {
+type SearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+export default function ClashPage({ searchParams }: { searchParams: SearchParams }) {
   return (
     <Suspense fallback={<KeepyUppy label="Clash" caption="Lining up the players…" />}>
-      <KickOff />
+      <KickOff searchParams={searchParams} />
     </Suspense>
   );
 }
 
 // Today's stat follows the clock, so the kick-off renders per request; your
 // best, your three this week and your challenges stream in after it.
-async function KickOff() {
+async function KickOff({ searchParams }: { searchParams: SearchParams }) {
   await connection();
+  // Test sites: ?sample=challenges lists every state (see src/lib/clash/sample.ts).
+  const sample = clashSample((await searchParams).sample);
   const me = currentUserId();
   const clash = me.then((id) => (id ? getHomeClash(id) : null));
-  const challenges = me.then((id) => (id ? getChallenges(id) : []));
+  const challenges = sample ? Promise.resolve(SAMPLE_CHALLENGES) : me.then((id) => (id ? getChallenges(id) : []));
   return (
     <ClashKickOff
       stat={statOfDay(gameDate())}
