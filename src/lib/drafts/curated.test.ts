@@ -138,7 +138,7 @@ describe("build C templates", () => {
     const arsenal = lines.filter((l) => l.question!.startsWith("Arsenal"));
     expect(arsenal.length).toBeGreaterThan(0);
     for (const l of arsenal) expect(l.wrong.some((w) => ["1997/98", "2001/02", "2003/04"].includes(w))).toBe(false);
-    expect(lines.map((l) => l.question)).toContain("Leicester's title");
+    expect(lines.map((l) => l.question)).toContain("Leicester's Premier League title");
     expect(titleSeasons(standings, ["Wolves", "Spurs"], 2, TODAY)).toEqual([]);
   });
 

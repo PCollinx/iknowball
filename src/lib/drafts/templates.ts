@@ -34,6 +34,9 @@ const surname = (name: string) => {
 };
 const byFame = <T extends { fame?: number }>(a: T, b: T) => (b.fame ?? 0) - (a.fame ?? 0);
 
+/** "Arsenal's", but "Spurs'". */
+export const possessive = (name: string) => (name.endsWith("s") ? `${name}'` : `${name}'s`);
+
 /** Rotates a list by a seed, so a rerun picks the same items. */
 export function rotate<T>(items: T[], seed: number): T[] {
   if (!items.length) return items;
