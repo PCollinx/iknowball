@@ -19,6 +19,7 @@ import {
 } from "./generate";
 import {
   allThereTogether,
+  possessive,
   biggestGround,
   careerPathOrder,
   careerPathPicks,
@@ -217,7 +218,7 @@ export function draftDay(
           return recallPart(
             "dressing-room",
             title,
-            (n) => `Name the ${n} players who shared ${club.name}'s dressing room with ${room.player.name} for a season or more.`,
+            (n) => `Name the ${n} players who shared ${possessive(club.name)} dressing room with ${room.player.name} for a season or more.`,
             room.teammates,
           );
       }
@@ -410,7 +411,7 @@ export function draftDay(
             template: "career-path",
             title: "In order",
             // "These clubs": we import only the clubs we track, and loans are left out.
-            prompt: `Put these clubs of ${path.player}'s in the order he joined them. First at the top.`,
+            prompt: `Put these clubs of ${possessive(path.player)} in the order he joined them. First at the top.`,
             time: ORDER_SECONDS,
             answers: path.lines.map((a, i) => ({ answer_text: a.text, extra_aliases: [], position: i + 1, reveal_note: a.note })),
           }
@@ -475,7 +476,7 @@ export function draftDay(
         const found = md && matchRatings(md, club.id);
         if (found)
           return {
-            ...orderPart("match-rating", `${club.name}'s starters in ${scoreline(found.match, md!.clubName)} (${dayLabel(found.match.date)}): order them by match rating. Best at the top.`, found.lines),
+            ...orderPart("match-rating", `${possessive(club.name)} starters in ${scoreline(found.match, md!.clubName)} (${dayLabel(found.match.date)}): order them by match rating. Best at the top.`, found.lines),
             source: FROM_MATCHES,
           };
       }
@@ -483,7 +484,7 @@ export function draftDay(
     },
 
     "title-season": () =>
-      picks && lists ? eraPart("title-season", "When did they win the league? Tap the season.", titleSeasons(lists.standings, dayClubs, templateSeed(date, "title-season"), date)) : null,
+      picks && lists ? eraPart("title-season", "When did they win the Premier League? Tap the season.", titleSeasons(lists.standings, dayClubs, templateSeed(date, "title-season"), date)) : null,
 
     "golden-boot-season": () =>
       picks && lists

@@ -2,7 +2,7 @@ import { seasonOfDate, type Captain, type FamousResult, type GoldenBoot, type Mo
 import { pickIssues, type OrderLine, type PickLine } from "@/lib/maker/parse";
 import { seasonLabel, seasonOf } from "@/lib/time";
 import { eraDecoys, ERA_SIZE, MAX_SHARED, MIN_ERAS, MIN_PICKS, MIN_SHARED, ORDER_SIZE, PICK_SIZE, type SharedPlayer } from "./generate";
-import { rotate } from "./templates";
+import { possessive, rotate } from "./templates";
 
 // Template build C (Collins, 30 Oct 2026): the templates answered from the
 // lists kept by hand in the maker (src/lib/curated/lists.ts). Pure, like
@@ -30,13 +30,13 @@ export function seasonDecoys(season: string, avoid: Set<string>, seed: number, t
   return near.length >= 3 ? rotate(near, seed).slice(0, 3) : null;
 }
 
-/** Each title in a club's run, "Man United's 7th title", or "Leicester's title" for an only one. */
+/** Each title in a club's run, "Man United's 7th Premier League title", or "Leicester's Premier League title" for an only one. */
 const countLabel = <T>(rows: T[], key: (r: T) => string, when: (r: T) => string, noun: string) => {
   const all = new Map<string, string[]>();
   for (const r of rows) all.set(key(r), [...(all.get(key(r)) ?? []), when(r)].sort());
   return (r: T) => {
     const list = all.get(key(r))!;
-    return list.length > 1 ? `${key(r)}'s ${ordinal(list.indexOf(when(r)) + 1)} ${noun}` : `${key(r)}'s ${noun}`;
+    return list.length > 1 ? `${possessive(key(r))} ${ordinal(list.indexOf(when(r)) + 1)} ${noun}` : `${possessive(key(r))} ${noun}`;
   };
 };
 
@@ -112,7 +112,7 @@ export function whereTheyFinished(standings: Standing[], dayClubs: string[], see
 export function titleSeasons(standings: Standing[], dayClubs: string[], seed: number, today: string): PickLine[] {
   const titles = standings.filter((s) => s.position === 1 && finished(s.season, today));
   if (!titles.some((t) => dayClubs.includes(t.club))) return [];
-  const label = countLabel(titles, (t) => t.club, (t) => t.season, "title");
+  const label = countLabel(titles, (t) => t.club, (t) => t.season, "Premier League title");
   const lines: PickLine[] = [];
   const per = new Map<string, number>();
   for (const [i, t] of oursFirst(titles, (r) => dayClubs.includes(r.club), seed).entries()) {
@@ -194,7 +194,7 @@ export function howOld(moments: Moment[], dayClubs: string[], seed: number): Pic
     if (wrong.length < 3) continue;
     seen.add(m.player);
     const what = m.moment === "debut" ? "PL debut" : "first PL goal";
-    lines.push({ question: `${m.player}'s ${what} at ${m.club}`, answer: String(age), wrong });
+    lines.push({ question: `${possessive(m.player)} ${what} at ${m.club}`, answer: String(age), wrong });
   }
   return lines.length >= MIN_ERAS && !pickIssues(lines, "era").errors.length ? lines : [];
 }
