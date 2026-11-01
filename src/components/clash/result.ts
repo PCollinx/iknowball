@@ -23,7 +23,7 @@ export function calledLine(answered: number, setSize: number): string {
   return answered >= setSize - 1 ? "Every call made before the whistle" : `${answered} called before the whistle`;
 }
 
-/** The challenge answered, as a heading whose last word carries the sash: ["tunde's 14", "beaten"]. */
+/** The challenge answered, as a heading whose last word carries the sash: ["collinsCFC's 14", "beaten"]. */
 export function verdict(setter: { name: string; right: number }, o: Outcome): [string, string] {
   const theirs = `${setter.name}'s ${setter.right}`;
   if (o.kind === "won") return [theirs, "beaten"];
@@ -31,7 +31,7 @@ export function verdict(setter: { name: string; right: number }, o: Outcome): [s
   return [`${o.by} short of ${setter.name}'s`, String(setter.right)];
 }
 
-/** The same verdict as a sentence for the screen: "tunde's 14 is beaten." */
+/** The same verdict as a sentence for the screen: "collinsCFC's 14 is beaten." */
 export function verdictLine(setter: { name: string; right: number }, o: Outcome): string {
   if (o.kind === "won") return `${setter.name}'s ${setter.right} is beaten.`;
   const [lead, tail] = verdict(setter, o);

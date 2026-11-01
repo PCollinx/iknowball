@@ -12,12 +12,12 @@ describe("the challenge's verdict", () => {
   });
 
   it("puts the sash on the last word", () => {
-    const tunde = { name: "tunde", right: 14 };
-    expect(verdict(tunde, outcomeOf(16, 14))).toEqual(["tunde's 14", "beaten"]);
-    expect(verdict(tunde, outcomeOf(14, 14))).toEqual(["Level with tunde's", "14"]);
-    expect(verdict(tunde, outcomeOf(12, 14))).toEqual(["2 short of tunde's", "14"]);
-    expect(verdictLine(tunde, outcomeOf(16, 14))).toBe("tunde's 14 is beaten.");
-    expect(verdictLine(tunde, outcomeOf(12, 14))).toBe("2 short of tunde's 14.");
+    const collinsCFC = { name: "collinsCFC", right: 14 };
+    expect(verdict(collinsCFC, outcomeOf(16, 14))).toEqual(["collinsCFC's 14", "beaten"]);
+    expect(verdict(collinsCFC, outcomeOf(14, 14))).toEqual(["Level with collinsCFC's", "14"]);
+    expect(verdict(collinsCFC, outcomeOf(12, 14))).toEqual(["2 short of collinsCFC's", "14"]);
+    expect(verdictLine(collinsCFC, outcomeOf(16, 14))).toBe("collinsCFC's 14 is beaten.");
+    expect(verdictLine(collinsCFC, outcomeOf(12, 14))).toBe("2 short of collinsCFC's 14.");
   });
 });
 
@@ -40,7 +40,7 @@ describe("the album page", () => {
 
 describe("the score to beat", () => {
   it("is yours when you top the table", () => {
-    expect(toBeat([row("You", 16, { mine: true }), row("tunde", 14)], 16)).toEqual({ right: 16, name: "You" });
+    expect(toBeat([row("You", 16, { mine: true }), row("collinsCFC", 14)], 16)).toEqual({ right: 16, name: "You" });
   });
 
   it("is the leader's when someone beat you", () => {

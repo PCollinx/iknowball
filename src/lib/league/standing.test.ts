@@ -5,14 +5,14 @@ const row = (name: string, points: number, mine = false) => ({ name, points, min
 
 describe("gapLine", () => {
   it("measures you against the leader", () => {
-    expect(gapLine([row("tunde", 340), row("You", 312, true)])).toBe("28 behind tunde");
+    expect(gapLine([row("collinsCFC", 340), row("You", 312, true)])).toBe("28 behind collinsCFC");
   });
   it("measures the leader against second", () => {
     expect(gapLine([row("You", 312, true), row("dad", 272)])).toBe("40 clear of dad");
   });
   it("says when it's level", () => {
     expect(gapLine([row("You", 300, true), row("dad", 300)])).toBe("Level with dad");
-    expect(gapLine([row("tunde", 300), row("You", 300, true)])).toBe("Level with tunde");
+    expect(gapLine([row("collinsCFC", 300), row("You", 300, true)])).toBe("Level with collinsCFC");
   });
   it("tops a table nobody else has scored on", () => {
     expect(gapLine([row("You", 50, true), row("dad", 0)])).toBe("Top of the table");
@@ -20,14 +20,14 @@ describe("gapLine", () => {
   });
   it("points to Clash when it could take you past the player above", () => {
     const clash = (name: string, points: number, c: number, mine = false) => ({ name, points, mine, clash: c });
-    expect(gapLine([clash("tunde", 480, 78), clash("You", 469, 41, true)])).toBe("Win 12 more on Clash to pass tunde");
-    expect(gapLine([clash("ada", 520, 90), clash("tunde", 480, 78), clash("You", 469, 41, true)])).toBe("Win 12 more on Clash to pass tunde");
-    expect(gapLine([clash("tunde", 480, 78), clash("You", 400, 41, true)])).toBe("80 behind tunde");
-    expect(gapLine([clash("tunde", 480, 78), clash("You", 469, 95, true)])).toBe("11 behind tunde");
+    expect(gapLine([clash("collinsCFC", 480, 78), clash("You", 469, 41, true)])).toBe("Win 12 more on Clash to pass collinsCFC");
+    expect(gapLine([clash("ada", 520, 90), clash("collinsCFC", 480, 78), clash("You", 469, 41, true)])).toBe("Win 12 more on Clash to pass collinsCFC");
+    expect(gapLine([clash("collinsCFC", 480, 78), clash("You", 400, 41, true)])).toBe("80 behind collinsCFC");
+    expect(gapLine([clash("collinsCFC", 480, 78), clash("You", 469, 95, true)])).toBe("11 behind collinsCFC");
   });
   it("waits for you to play", () => {
-    expect(gapLine([row("tunde", 340), row("You", 0, true)])).toBe("Not played this week");
-    expect(gapLine([row("tunde", 340)])).toBe("Not played this week");
+    expect(gapLine([row("collinsCFC", 340), row("You", 0, true)])).toBe("Not played this week");
+    expect(gapLine([row("collinsCFC", 340)])).toBe("Not played this week");
   });
 });
 
@@ -82,10 +82,10 @@ describe("yourSpot", () => {
   });
   it("points to Clash when it could take you past the player above", () => {
     const clash = (name: string, points: number, c: number, mine = false) => ({ name, points, mine, clash: c });
-    expect(gapLine([clash("tunde", 480, 78), clash("You", 469, 41, true)])).toBe("Win 12 more on Clash to pass tunde");
-    expect(gapLine([clash("ada", 520, 90), clash("tunde", 480, 78), clash("You", 469, 41, true)])).toBe("Win 12 more on Clash to pass tunde");
-    expect(gapLine([clash("tunde", 480, 78), clash("You", 400, 41, true)])).toBe("80 behind tunde");
-    expect(gapLine([clash("tunde", 480, 78), clash("You", 469, 95, true)])).toBe("11 behind tunde");
+    expect(gapLine([clash("collinsCFC", 480, 78), clash("You", 469, 41, true)])).toBe("Win 12 more on Clash to pass collinsCFC");
+    expect(gapLine([clash("ada", 520, 90), clash("collinsCFC", 480, 78), clash("You", 469, 41, true)])).toBe("Win 12 more on Clash to pass collinsCFC");
+    expect(gapLine([clash("collinsCFC", 480, 78), clash("You", 400, 41, true)])).toBe("80 behind collinsCFC");
+    expect(gapLine([clash("collinsCFC", 480, 78), clash("You", 469, 95, true)])).toBe("11 behind collinsCFC");
   });
   it("waits for you to play", () => {
     expect(yourSpot(null, 224).kind).toBe("idle");

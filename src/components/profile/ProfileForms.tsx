@@ -25,7 +25,7 @@ export function UsernameForm({ current }: { current: string | null }) {
           id="username"
           name="username"
           defaultValue={current ?? ""}
-          placeholder="e.g. Pitchside_Tunde"
+          placeholder="e.g. collinsCFC"
           autoComplete="nickname"
           minLength={3}
           maxLength={20}

@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { currentUserId } from "@/lib/daily/data";
 import type { DailyFormat } from "@/lib/daily/score";
+import type { WaitlistRow } from "./waitlist";
 
 // Data access for the Daily maker. Every read goes through requireAdmin first:
 // the maker shows answer keys, so a page or action that skips it leaks them.
@@ -94,4 +95,20 @@ export async function getDay(date: string): Promise<MakerDay> {
         })),
     })),
   };
+}
+
+/** Every waitlist row, a page of 1000 at a time (Supabase's cap). Callers have passed requireAdmin: the rows hold emails. */
+export async function waitlistRows(): Promise<WaitlistRow[]> {
+  const admin = createAdminClient();
+  const rows: WaitlistRow[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await admin
+      .from("waitlist")
+      .select("id, email, name, favourite_club, league_name, league_id, created_at")
+      .order("id")
+      .range(from, from + 999);
+    if (error) throw error;
+    rows.push(...data);
+    if (data.length < 1000) return rows;
+  }
 }
