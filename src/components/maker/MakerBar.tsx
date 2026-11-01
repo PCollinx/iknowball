@@ -12,46 +12,50 @@ export { Chip, MAKER_MAIN, MakerHead, type ChipKind } from "./ui";
 // https://claude.ai/artifact/7fYaL9vEK1xQvVEHgEUFW6): navy, the shirt mark and
 // a tab per page, the one you're on underlined in light teal. Days carries a
 // red count of the next seven days not yet scheduled; Jobs carries OK, or a red
-// count of jobs whose last run had problems. On phones the tabs sit behind a
-// Menu button.
+// count of jobs whose last run had problems; Waitlist carries the names down in
+// teal. On phones the tabs sit behind a Menu button.
 
 const PAGES = [
   ["days", "Days", "/maker"],
   ["lists", "Lists", "/maker/lists"],
   ["clash", "Clash", "/maker/clash"],
   ["jobs", "Jobs", "/maker/jobs"],
+  ["waitlist", "Waitlist", "/maker/waitlist"],
   ["teaser", "Teasers", "/maker/teaser"],
 ] as const;
 
 export type MakerPageName = (typeof PAGES)[number][0];
 
-/** Days in the next seven (today on) that aren't fully scheduled, and jobs whose last run had problems. */
-async function counts(): Promise<{ days: number; jobs: number }> {
+/** Days in the next seven (today on) that aren't fully scheduled, jobs whose last run had problems, and names on the waitlist. */
+async function counts(): Promise<{ days: number; jobs: number; waitlist: number }> {
   const admin = createAdminClient();
   const today = gameDate();
   const dates = Array.from({ length: 7 }, (_, i) => addDays(today, i));
-  const [dailies, runs] = await Promise.all([
+  const [dailies, runs, waitlist] = await Promise.all([
     admin.from("dailies").select("play_date, status").gte("play_date", dates[0]).lte("play_date", dates[6]),
     admin.from("job_runs").select("job, status").order("started_at", { ascending: false }).limit(60),
+    admin.from("waitlist").select("id", { count: "exact", head: true }),
   ]);
   if (dailies.error) throw dailies.error;
   if (runs.error) throw runs.error;
+  if (waitlist.error) throw waitlist.error;
   const ready = (date: string) => {
     const parts = (dailies.data ?? []).filter((d) => d.play_date === date);
     return parts.length > 0 && parts.every((p) => p.status === "scheduled");
   };
   const last = JOB_NAMES.map((job) => (runs.data ?? []).find((r) => r.job === job)?.status);
-  return { days: dates.filter((d) => !ready(d)).length, jobs: last.filter((s) => s === "warning" || s === "failed").length };
+  return { days: dates.filter((d) => !ready(d)).length, jobs: last.filter((s) => s === "warning" || s === "failed").length, waitlist: waitlist.count ?? 0 };
 }
 
-function Badge({ n, ok }: { n: number; ok?: string }) {
+/** Red for something to fix; `good` counts (the waitlist) are teal. */
+function Badge({ n, ok, good }: { n: number; ok?: string; good?: boolean }) {
   if (n === 0 && !ok) return null;
-  return <span className={`px-1.5 font-display text-[13px] leading-[1.35] ${n ? "bg-red-card text-white" : "bg-teal text-white"}`}>{n || ok}</span>;
+  return <span className={`px-1.5 font-display text-[13px] leading-[1.35] ${n && !good ? "bg-red-card text-white" : "bg-teal text-white"}`}>{n || ok}</span>;
 }
 
 export async function MakerBar({ active }: { active?: MakerPageName }) {
-  const { days, jobs } = await counts();
-  const badge = { days: <Badge n={days} />, jobs: <Badge n={jobs} ok="OK" /> } as Partial<Record<MakerPageName, React.ReactNode>>;
+  const { days, jobs, waitlist } = await counts();
+  const badge = { days: <Badge n={days} />, jobs: <Badge n={jobs} ok="OK" />, waitlist: <Badge n={waitlist} good /> } as Partial<Record<MakerPageName, React.ReactNode>>;
   const tabs = (className: string) =>
     PAGES.map(([key, name, href]) => (
       <Link key={key} href={href} aria-current={key === active ? "page" : undefined} className={className}>
