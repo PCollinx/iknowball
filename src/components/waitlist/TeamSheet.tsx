@@ -45,7 +45,7 @@ export function TeamSheet({ clubs, count, siteUrl }: Props) {
           <input name="email" type="email" required autoComplete="email" placeholder="you@example.com" className={FIELD} />
         </Line>
         <Line n={2} label="Name on your shirt">
-          <input name="name" maxLength={30} autoComplete="nickname" placeholder="Tunde" value={name} onChange={(e) => setName(e.target.value)} className={FIELD} />
+          <input name="name" maxLength={30} autoComplete="nickname" placeholder="collinsCFC" value={name} onChange={(e) => setName(e.target.value)} className={FIELD} />
         </Line>
         <Line n={3} label="Who do you support?" className="col-span-2 lg:col-span-1">
           <select name="club" value={clubId} onChange={(e) => setClubId(e.target.value)} className={`${FIELD} appearance-none`}>
