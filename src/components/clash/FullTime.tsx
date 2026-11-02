@@ -1,7 +1,6 @@
 import { startSprint } from "@/app/(site)/clash/actions";
 import { SubmitButton } from "@/components/daily/SubmitButton";
 import { ordinal } from "@/components/daily/formats";
-import { ShareButtons } from "@/components/daily/ShareButtons";
 import { RatingBadge } from "@/components/profile/RatingBadge";
 import type { Result } from "@/lib/clash/data";
 import { sprintLine } from "@/lib/clash/rules";
@@ -114,11 +113,6 @@ export function ClashFullTime({ code, statLabel, setSize, right, kicks, bestRun,
             </>
           )}
           <div className="grid gap-3">
-            <ShareButtons
-              text={`I got ${right} right in 60 seconds of Higher or Lower on iKnowBall. Beat that: ${url}`}
-              image={{ url: `/clash/${code}/card`, name: `iknowball-clash-${code}.png` }}
-              className="mt-0"
-            />
             <form action={startSprint}>
               <SubmitButton tone="navy" pendingText="Picking…">
                 {setter ? "Your own sprint" : "New sprint"}
@@ -306,6 +300,7 @@ function Ticket({ code, url, setSize, right, table, challenge, rival }: { code: 
             text={`Think you know ball? Beat ${beat.right} in 60 seconds of Higher or Lower on iKnowBall.`}
             label={challenge ? "Pass it on" : rival ? `Send to ${rival}` : "Send it"}
             code={code}
+            image={{ url: `/clash/${code}/card`, name: `iknowball-clash-${code}.png` }}
           />
         </div>
       </div>
