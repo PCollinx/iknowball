@@ -315,3 +315,9 @@ body:has([data-match-live]:not([style*="display: none"], [style*="display: none"
 body:has([data-match-live]:not([style*="display: none"], [style*="display: none"] *)) [data-nav-brand] {
   display: inline-flex;
 }
+
+/* Extra time (2 Nov 2026): full time's Clash ticket is pinned to the foot of
+ * the screen, so the footer makes room for it at the end of the page. */
+body:has([data-extra-time]:not([style*="display: none"], [style*="display: none"] *)) [data-site-footer] {
+  padding-bottom: 96px;
+}

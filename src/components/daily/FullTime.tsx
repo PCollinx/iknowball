@@ -18,6 +18,7 @@ import { replayToday, switchTestRounds } from "@/app/(site)/daily/actions";
 import { Pitch } from "./InPlay";
 import { fullTimeLineup } from "./lineup";
 import { ShareButtons } from "./ShareButtons";
+import { ExtraTime } from "./ExtraTime";
 import { ShareCard } from "./ShareCard";
 import { FORMAT_NAME, ordinal } from "./formats";
 import type { PathClub } from "./KitTrail";
@@ -250,6 +251,7 @@ export function FullTime(props: Props) {
           )}
         </div>
       </div>
+      <ExtraTime three={props.clash.three} stat={props.clash.stat} />
     </main>
   );
 }
