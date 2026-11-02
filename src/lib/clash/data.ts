@@ -234,9 +234,10 @@ export async function weekAfter(run: RunRow) {
 }
 
 /** Clash on the home page and the kick-off: your three this matchweek (best
- * first), your latest challenge code, and on Monday and Tuesday before your
- * first sprint, last week's three (the Monday reset). */
-export type HomeClash = { three: number[]; lastCode: string | null; lastWeek: number[] | null };
+ * first), your latest challenge code, on Monday and Tuesday before your
+ * first sprint, last week's three (the Monday reset), and whether you've
+ * sprinted today (home leads with Clash after the Daily until you have). */
+export type HomeClash = { three: number[]; lastCode: string | null; lastWeek: number[] | null; playedToday: boolean };
 
 /** Days into the week the Monday reset shows: Monday and Tuesday. */
 const RESET_DAYS = 2;
@@ -244,13 +245,25 @@ const RESET_DAYS = 2;
 export async function getHomeClash(userId: string): Promise<HomeClash> {
   const today = gameDate();
   const fresh = addDays(matchweekBounds(today).startsOn, RESET_DAYS) > today;
-  const [three, lastWeek, sets] = await Promise.all([
+  const admin = createAdminClient();
+  const [three, lastWeek, sets, todays] = await Promise.all([
     weekBests(userId, today),
     fresh ? weekBests(userId, addDays(today, -7)) : null,
-    createAdminClient().from("clash_sets").select("code").eq("created_by", userId).order("created_at", { ascending: false }).limit(1),
+    admin.from("clash_sets").select("code").eq("created_by", userId).order("created_at", { ascending: false }).limit(1),
+    admin
+      .from("clash_runs")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("started_at", gameDateClosesAt(addDays(today, -1)).toISOString()),
   ]);
   if (sets.error) throw sets.error;
-  return { three, lastCode: sets.data?.[0]?.code ?? null, lastWeek: three.length === 0 && lastWeek?.length ? lastWeek : null };
+  if (todays.error) throw todays.error;
+  return {
+    three,
+    lastCode: sets.data?.[0]?.code ?? null,
+    lastWeek: three.length === 0 && lastWeek?.length ? lastWeek : null,
+    playedToday: (todays.count ?? 0) > 0,
+  };
 }
 
 /** How far back your challenges list looks. */

@@ -15,7 +15,9 @@ import { KeepyUppy } from "@/components/loading/KeepyUppy";
 
 // Home: "Matchday ticket" (picked 20 Oct 2026). The Daily as an album
 // sticker, Clash as a match ticket, the League as a scoreboard and your shirt
-// as a sticker, under the Programme navbar.
+// as a sticker, under the Programme navbar. Once today's Daily is done and you
+// haven't sprinted today, Clash takes the Daily's place at the top (Collins,
+// 2 Nov 2026, option D of the "Clash after the Daily" mocks).
 
 export default function Home() {
   return (
@@ -46,6 +48,9 @@ async function HomeScreen() {
   // A challenge of yours that a mate beat since you last looked: the banner at the top.
   const beaten = challenges.find((c) => c.news);
   const kits = await kitsForFixture(daily?.parts.find((p) => p.part === 1)?.title ?? null);
+  const clashFirst = daily?.status === "done" && clash !== null && !clash.playedToday;
+  const dailySticker = <DailySticker daily={daily} kits={kits} closesAt={closesAt} serverNow={serverNow} />;
+  const clashTicket = <ClashTicket clash={clash} stat={statOfDay(today)} />;
   const day = new Date(`${today}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
 
   return (
@@ -54,7 +59,12 @@ async function HomeScreen() {
         <div className="pt-4 lg:pt-6">
           <span className="label text-royal">{day}</span>
           <h1 className="mt-1 font-display text-[40px] leading-[0.9] uppercase lg:text-[60px] lg:leading-[0.86]">
-            {daily ? (
+            {clashFirst ? (
+              <>
+                Daily done.{" "}
+                <span className="btn-teal ml-1 inline-block -rotate-2 px-2.5 pb-1 lg:ml-2 lg:px-3.5 lg:pb-1.5">Clash is on</span>
+              </>
+            ) : daily ? (
               <>
                 Matchday{" "}
                 <span className="btn-teal ml-1 inline-block -rotate-2 px-2.5 pb-1 lg:ml-2 lg:px-3.5 lg:pb-1.5">is on</span>
@@ -76,10 +86,10 @@ async function HomeScreen() {
 
         <div className="mt-5 grid gap-7 lg:mt-6 lg:grid-cols-12 lg:gap-9">
           <div className="min-w-0 lg:col-span-7">
-            <DailySticker daily={daily} kits={kits} closesAt={closesAt} serverNow={serverNow} />
+            {clashFirst ? clashTicket : dailySticker}
           </div>
           <div className="flex min-w-0 flex-col gap-7 lg:col-span-5 lg:gap-8">
-            <ClashTicket clash={clash} stat={statOfDay(today)} />
+            {clashFirst ? dailySticker : clashTicket}
             <LeagueBoard tabs={board.tabs} club={board.club} />
           </div>
           <div className="px-1 lg:col-span-12 lg:px-0">
