@@ -11,7 +11,8 @@ import { ChallengeBoard, SoloBoard } from "./Board";
 // (option D, 28 Oct 2026, Board.tsx): solo, the board carries the call and your
 // best this week; on a challenge link it's the setter's score against yours,
 // then "Beat 14.". Then a page from the album showing what a call looks like,
-// the referee's notes, and the button.
+// the referee's notes and the button, then (solo) your three this week and
+// your challenges (moved under the button, Collins, 2 Nov 2026).
 
 /** The first call of a set: the opening player with their number, the next one hidden. */
 export type FirstCall = { first: { name: string; kit?: Kit; value: number }; second: { name: string; kit?: Kit } };
@@ -44,7 +45,7 @@ type Props = {
   firstCall?: FirstCall;
   /** Your best this week and last challenge (solo only), streamed into the board's last cell. */
   best?: ReactNode;
-  /** Your three this week and your challenges (solo only), streamed in above the referee's notes. */
+  /** Your three this week and your challenges (solo only), streamed in under the button. */
   three?: ReactNode;
 };
 
@@ -84,7 +85,6 @@ export function ClashKickOff({ code, stat, setter, firstCall, best, three }: Pro
         </div>
 
         <div className="mt-7 grid gap-6 lg:mt-0 lg:gap-7 lg:pt-8">
-          {three}
           <RefereesNotes />
           <form action={startSprint}>
             {code && <input type="hidden" name="code" value={code} />}
@@ -92,6 +92,7 @@ export function ClashKickOff({ code, stat, setter, firstCall, best, three }: Pro
               {challenge ? "Take it on" : "Kick off"}
             </SubmitButton>
           </form>
+          {three}
         </div>
       </div>
     </main>
