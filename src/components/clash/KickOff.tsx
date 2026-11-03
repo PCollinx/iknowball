@@ -78,7 +78,7 @@ export function ClashKickOff({ code, stat, setter, firstCall, best, three }: Pro
                 <PlayerSticker name={call.second.name} kit={call.second.kit} value={null} side="right" />
               </Slot>
             </Pair>
-            <p className="mt-3 text-center text-[13px] lg:mt-4 lg:text-sm">
+            <p className="mt-2 text-center text-[13px] lg:mt-4 lg:text-sm">
               {firstCall ? `Your first call. ${ask}` : `How a call looks. ${ask}`}
             </p>
           </AlbumPage>

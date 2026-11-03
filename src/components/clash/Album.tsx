@@ -9,7 +9,7 @@ import { PENALTY_SECONDS, SPRINT_SECONDS } from "@/lib/clash/rules";
 /** A mist album page with the stat as a tilted label sticker across its top edge. */
 export function AlbumPage({ label, children, className = "" }: { label: string; children: ReactNode; className?: string }) {
   return (
-    <section className={`relative border-2 border-navy bg-mist px-3 pt-7 pb-3.5 lg:px-7 lg:pt-9 lg:pb-5 ${className}`}>
+    <section className={`relative border-2 border-navy bg-mist px-3 pt-6 pb-3 lg:px-7 lg:pt-9 lg:pb-5 ${className}`}>
       <span className="absolute -top-3 left-1/2 max-w-[92%] -translate-x-1/2 -rotate-2 truncate border-2 border-navy bg-teal-light px-2.5 py-0.5 font-display text-[17px] whitespace-nowrap uppercase shadow-[3px_3px_0_var(--color-navy)] lg:-top-4 lg:text-[22px]">
         {label}
       </span>
@@ -50,13 +50,13 @@ export function PlayerSticker({ name, kit, value, side, state = "idle", pop = fa
   const shown = value === null ? "?" : String(value);
   return (
     <span
-      className={`relative grid min-w-0 justify-items-center gap-2 border-[2.5px] bg-white px-1.5 py-2.5 transition-[translate,box-shadow,opacity] duration-150 lg:gap-2.5 lg:border-[3px] lg:px-2.5 lg:py-3.5 ${ring} ${shadow} ${tilt} ${called ? "-translate-y-1.5 lg:-translate-y-2" : ""} ${state === "faded" ? "opacity-60" : ""}`}
+      className={`relative grid min-w-0 justify-items-center gap-1.5 border-[2.5px] bg-white px-1.5 py-1.5 transition-[translate,box-shadow,opacity] duration-150 lg:gap-2.5 lg:border-[3px] lg:px-2.5 lg:py-3.5 ${ring} ${shadow} ${tilt} ${called ? "-translate-y-1.5 lg:-translate-y-2" : ""} ${state === "faded" ? "opacity-60" : ""}`}
     >
-      <span className="block w-29 max-w-full lg:w-42.5">
+      <span className="block w-22 max-w-full lg:w-42.5">
         <ShirtBack kit={kit} name={shirtName(name)} num={shown} pop={pop} />
       </span>
       <span
-        className={`min-w-14.5 border-2 border-navy px-3 text-center font-display text-[42px] leading-[1.05] tabular-nums lg:min-w-21 lg:border-[2.5px] lg:px-3.5 lg:text-[58px] ${value === null ? "bg-white" : "bg-teal-light"} ${side === "left" ? "rotate-2" : "-rotate-2"}`}
+        className={`min-w-12 border-2 border-navy px-3 text-center font-display text-[32px] leading-[1.05] tabular-nums lg:min-w-21 lg:border-[2.5px] lg:px-3.5 lg:text-[58px] ${value === null ? "bg-white" : "bg-teal-light"} ${side === "left" ? "rotate-2" : "-rotate-2"}`}
       >
         {shown}
       </span>
@@ -89,15 +89,15 @@ export function RefereesNotes() {
   return (
     <section>
       <h2 className="label mb-2.5 text-[10px] lg:mb-3.5 lg:text-[11px]">The referee&apos;s notes</h2>
-      <ol className="grid gap-2.5 lg:gap-4">
+      <ol className="grid gap-2 lg:gap-4">
         {NOTES.map((n, i) => (
           <li
             key={n.title}
-            className={`grid grid-cols-[32px_minmax(0,1fr)] items-center gap-2.5 border-[2.5px] border-navy px-2.5 py-2 shadow-[3px_3px_0_var(--color-navy)] lg:grid-cols-[44px_minmax(0,1fr)] lg:gap-3 lg:px-3.5 lg:py-3 lg:shadow-[4px_4px_0_var(--color-navy)] ${n.tilt}`}
+            className={`grid grid-cols-[28px_minmax(0,1fr)] items-center gap-2.5 border-[2.5px] border-navy px-2.5 py-1.5 shadow-[3px_3px_0_var(--color-navy)] lg:grid-cols-[44px_minmax(0,1fr)] lg:gap-3 lg:px-3.5 lg:py-3 lg:shadow-[4px_4px_0_var(--color-navy)] ${n.tilt}`}
           >
-            <span className={`grid size-7.5 place-items-center rounded-full border-2 border-navy font-display text-lg lg:size-10.5 lg:text-2xl ${n.tone}`}>{i + 1}</span>
-            <span className="text-sm lg:text-base">
-              <b className="block font-display text-lg leading-none uppercase lg:text-[26px]">{n.title}</b>
+            <span className={`grid size-6.5 place-items-center rounded-full border-2 border-navy font-display text-base lg:size-10.5 lg:text-2xl ${n.tone}`}>{i + 1}</span>
+            <span className="text-[13px] leading-snug lg:text-base">
+              <b className="block font-display text-base leading-none uppercase lg:text-[26px]">{n.title}</b>
               {n.line}
             </span>
           </li>
