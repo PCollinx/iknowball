@@ -16,3 +16,15 @@ describe("waitlistLeagueName", () => {
     expect(waitlistLeagueName(null)).toBeNull();
   });
 });
+
+describe("waitlistLeaguesOpen", () => {
+  const before = new Date("2026-11-03T12:00:00+01:00");
+  it("waits for launch day, except for a beta tester", async () => {
+    const { waitlistLeaguesOpen } = await import("./waitlist");
+    vi.stubEnv("VERCEL_ENV", "production");
+    expect(waitlistLeaguesOpen(before)).toBe(false);
+    expect(waitlistLeaguesOpen(before, true)).toBe(true);
+    expect(waitlistLeaguesOpen(new Date("2026-11-20T00:00:00+01:00"))).toBe(true);
+    vi.unstubAllEnvs();
+  });
+});
