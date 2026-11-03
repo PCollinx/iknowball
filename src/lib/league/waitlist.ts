@@ -1,16 +1,19 @@
 import "server-only";
+import { cookies } from "next/headers";
 import { cache } from "react";
 import { newLeagueCode } from "@/components/league/format";
 import { currentEmail, currentUserId } from "@/lib/daily/data";
 import { isTestSite } from "@/lib/daily/sample";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { GATES_OPEN } from "@/lib/waitlist";
+import { BETA_COOKIE, betaPass, GATES_OPEN } from "@/lib/waitlist";
 
 // Waitlist leagues (Collins, 31 Oct 2026, step 18 of the launch plan): the
 // waitlist's "Bring your league" starts on launch day. The league is made the
 // first time that email signs in from Fri 20 Nov (test sites any time), with
-// them as captain: the signed-in email is what proves it's theirs. Called on
-// sign-in, on home and on the League page; each row is claimed once.
+// them as captain: the signed-in email is what proves it's theirs. Beta testers
+// (the invite's cookie) get theirs now, so the beta can play real leagues
+// (Collins, 3 Nov 2026). Called on sign-in, on home and on the League page;
+// each row is claimed once.
 
 /** The name a waitlist league gets: tidied to the League's 2 to 40 letters, or null. */
 export function waitlistLeagueName(raw: string | null): string | null {
@@ -18,14 +21,19 @@ export function waitlistLeagueName(raw: string | null): string | null {
   return name.length >= 2 ? name : null;
 }
 
-/** Whether waitlist leagues can be made yet. */
-export function waitlistLeaguesOpen(now = new Date()): boolean {
-  return isTestSite() || now >= GATES_OPEN;
+/** Whether waitlist leagues can be made yet: early for a beta tester. */
+export function waitlistLeaguesOpen(now = new Date(), beta = false): boolean {
+  return beta || isTestSite() || now >= GATES_OPEN;
+}
+
+/** Whether this browser holds the beta invite's cookie. */
+async function betaTester(): Promise<boolean> {
+  return betaPass((await cookies()).get(BETA_COOKIE)?.value, process.env.BETA_CODE);
 }
 
 /** Makes the league this email named on the waitlist, once. Returns its invite code when made now. */
 export async function claimWaitlistLeague(userId: string, email: string | null | undefined): Promise<string | null> {
-  if (!email || !waitlistLeaguesOpen()) return null;
+  if (!email || !waitlistLeaguesOpen(new Date(), await betaTester())) return null;
   const admin = createAdminClient();
   const { data: row, error } = await admin.from("waitlist").select("id, league_name").eq("email", email.trim().toLowerCase()).is("league_claimed_at", null).maybeSingle();
   if (error) throw error;
@@ -59,7 +67,7 @@ export async function claimWaitlistLeague(userId: string, email: string | null |
 
 /** The signed-in player's waitlist league, made if it's due: once a request, before the League reads their leagues. */
 export const claimMine = cache(async (): Promise<string | null> => {
-  if (!waitlistLeaguesOpen()) return null;
+  if (!waitlistLeaguesOpen(new Date(), await betaTester())) return null;
   const [me, email] = await Promise.all([currentUserId(), currentEmail()]);
   return me ? claimWaitlistLeague(me, email) : null;
 });

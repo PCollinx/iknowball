@@ -89,15 +89,15 @@ export function RefereesNotes() {
   return (
     <section>
       <h2 className="label mb-2.5 text-[10px] lg:mb-3.5 lg:text-[11px]">The referee&apos;s notes</h2>
-      <ol className="grid gap-2.5 lg:gap-4">
+      <ol className="grid gap-2 lg:gap-4">
         {NOTES.map((n, i) => (
           <li
             key={n.title}
-            className={`grid grid-cols-[32px_minmax(0,1fr)] items-center gap-2.5 border-[2.5px] border-navy px-2.5 py-2 shadow-[3px_3px_0_var(--color-navy)] lg:grid-cols-[44px_minmax(0,1fr)] lg:gap-3 lg:px-3.5 lg:py-3 lg:shadow-[4px_4px_0_var(--color-navy)] ${n.tilt}`}
+            className={`grid grid-cols-[28px_minmax(0,1fr)] items-center gap-2.5 border-[2.5px] border-navy px-2.5 py-1.5 shadow-[3px_3px_0_var(--color-navy)] lg:grid-cols-[44px_minmax(0,1fr)] lg:gap-3 lg:px-3.5 lg:py-3 lg:shadow-[4px_4px_0_var(--color-navy)] ${n.tilt}`}
           >
-            <span className={`grid size-7.5 place-items-center rounded-full border-2 border-navy font-display text-lg lg:size-10.5 lg:text-2xl ${n.tone}`}>{i + 1}</span>
-            <span className="text-sm lg:text-base">
-              <b className="block font-display text-lg leading-none uppercase lg:text-[26px]">{n.title}</b>
+            <span className={`grid size-6.5 place-items-center rounded-full border-2 border-navy font-display text-base lg:size-10.5 lg:text-2xl ${n.tone}`}>{i + 1}</span>
+            <span className="text-[13px] leading-snug lg:text-base">
+              <b className="block font-display text-base leading-none uppercase lg:text-[26px]">{n.title}</b>
               {n.line}
             </span>
           </li>

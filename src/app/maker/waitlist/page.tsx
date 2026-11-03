@@ -53,7 +53,7 @@ async function MakerWaitlist() {
           <div className={panel}>
             <p className="label">Leagues named</p>
             <p className="font-display text-[40px] leading-[0.9] tabular-nums">{s.leagues}</p>
-            <p className="mt-1 text-[13px] text-slate">Each starts the first time its email signs in from {GATES_OPEN_LABEL}.</p>
+            <p className="mt-1 text-[13px] text-slate">Each starts the first time its email signs in from {GATES_OPEN_LABEL}, or now with the beta invite.</p>
           </div>
         </section>
 

@@ -11,7 +11,7 @@ import { SET_SIZE, SPRINT_SECONDS, STATS, type Stat } from "@/lib/clash/rules";
 // against your "?".
 
 const BOARD = "mt-4 border-[3px] border-navy bg-navy text-white shadow-[5px_5px_0_var(--color-teal-light)] lg:mt-6 lg:shadow-[6px_6px_0_var(--color-teal-light)]";
-const ROW = "flex items-center justify-between gap-3 px-3.5 py-2.5 lg:px-5 lg:py-3";
+const ROW = "flex items-center justify-between gap-3 px-3.5 py-2 lg:px-5 lg:py-3";
 const SPLIT = "relative overflow-hidden border-y-2 border-slate lg:h-[170px]";
 // Higher must stay on the light-teal end at every width: the size follows the
 // board's width up to 56px on phones, 88px from 1024px and 104px from 1280px.
@@ -36,8 +36,8 @@ function Burst({ children }: { children: string }) {
 /** A lit number on the board with its label, label first from 1024px. */
 function Cell({ value, label, className = "", children }: { value: ReactNode; label: string; className?: string; children?: ReactNode }) {
   return (
-    <div className={`flex min-w-0 flex-col gap-1 px-3 py-2 lg:flex-row-reverse lg:items-baseline lg:justify-between lg:gap-3 lg:px-[18px] lg:py-3 ${className}`}>
-      <span className="font-display text-[28px] leading-[0.85] uppercase lg:text-4xl">{value}</span>
+    <div className={`flex min-w-0 flex-col gap-0.5 px-3 py-1.5 lg:flex-row-reverse lg:items-baseline lg:justify-between lg:gap-3 lg:px-[18px] lg:py-3 ${className}`}>
+      <span className="font-display text-2xl leading-[0.85] uppercase lg:text-4xl">{value}</span>
       <span className="label min-w-0 text-[9px] text-track lg:text-[10px]">
         {label}
         {children}
@@ -59,11 +59,11 @@ export function SoloBoard({ stat, best, label = "Clash · Sprint" }: { stat: Sta
             {clock}
           </span>
         </div>
-        <h1 className={`${SPLIT} h-40 lg:border-b-0`}>
+        <h1 className={`${SPLIT} h-29 lg:border-b-0`}>
           <End />
-          <span className={`${CALL} top-4 left-3.5 text-navy lg:left-7`}>Higher</span>
+          <span className={`${CALL} top-3 left-3.5 text-navy lg:left-7`}>Higher</span>
           <Burst>or</Burst>
-          <span className={`${CALL} right-3.5 bottom-4 text-teal-light lg:right-7 lg:bottom-auto`}>Lower</span>
+          <span className={`${CALL} right-3.5 bottom-3 text-teal-light lg:right-7 lg:bottom-auto`}>Lower</span>
         </h1>
       </div>
       <div className="grid grid-cols-3 divide-x-2 divide-slate lg:grid-cols-1 lg:grid-rows-3 lg:divide-x-0 lg:divide-y-2 lg:border-l-2 lg:border-slate">
@@ -80,7 +80,7 @@ export function BestCell({ best, lastCode }: { best: number | null; lastCode: st
   return (
     <Cell value={best ?? "–"} label="Your best" className="bg-slate">
       {lastCode && (
-        <Link href={`/clash/${lastCode}`} className="mt-1 block font-display text-[13px] tracking-[0.06em] text-white normal-case lg:mt-0 lg:ml-1.5 lg:inline">
+        <Link href={`/clash/${lastCode}`} className="mt-0.5 block font-display text-[13px] tracking-[0.06em] text-white normal-case lg:mt-0 lg:ml-1.5 lg:inline">
           {lastCode} ↗
         </Link>
       )}
