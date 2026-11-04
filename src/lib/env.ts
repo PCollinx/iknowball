@@ -18,6 +18,10 @@ const serverSchema = z.object({
   HIGHLIGHTLY_PL_LEAGUE_ID: z.coerce.number().int().default(33973),
   HIGHLIGHTLY_SEASON: z.coerce.number().int().default(2026),
   CRON_SECRET: z.string().min(16),
+  // The launch email (step 17). Optional, so a missing key stops only that job.
+  RESEND_API_KEY: z.string().min(1).optional(),
+  // Resend's free plan sends 100 a day; raise this on a paid plan.
+  LAUNCH_EMAIL_DAILY_CAP: z.coerce.number().int().positive().default(100),
 });
 
 // A Vercel preview serves on its branch URL, so sign-in links and share links

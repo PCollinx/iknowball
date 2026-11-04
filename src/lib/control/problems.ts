@@ -7,7 +7,7 @@ import { dayLabel } from "@/lib/drafts/matchday";
 // The control room (Collins, 30 Oct 2026): what counts as a problem in each
 // scheduled job's result, and in the runs themselves. Pure, so it's tested.
 
-export const JOB_NAMES = ["fixtures", "match-data", "import-wikidata", "drafts"] as const;
+export const JOB_NAMES = ["fixtures", "match-data", "import-wikidata", "drafts", "launch-email"] as const;
 export type JobName = (typeof JOB_NAMES)[number];
 
 /** Times are WAT, as vercel.json has them in UTC. On Vercel Hobby a job runs any time within its hour. */
@@ -16,6 +16,12 @@ export const JOBS: Record<JobName, { label: string; at: string; does: string; ma
   "match-data": { label: "Match data", at: "01:00", does: "The table, the coming pairs' last meetings, and finished matches' goals, cards and box scores.", maxSeconds: 300 },
   "import-wikidata": { label: "Wikidata import", at: "04:00", does: "A few clubs' player histories, managers and grounds; each club weekly.", maxSeconds: 300 },
   drafts: { label: "Drafts", at: "20:00", does: "Drafts empty days 8 ahead and schedules the drafts due today and tomorrow.", maxSeconds: 120 },
+  "launch-email": {
+    label: "Launch email",
+    at: "07:00",
+    does: "From Fri 20 Nov: the launch email to everyone on the waitlist, up to the day's cap, until all have had it.",
+    maxSeconds: 120,
+  },
 };
 
 /** A job whose last run started longer ago than this has missed a night (a day plus the hour Hobby may run it in, and some). */

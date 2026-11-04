@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description: "What iKnowBall collects, why, who it's shared with, and how to get it deleted.",
 };
 
-const UPDATED = "27 Oct 2026";
+const UPDATED = "4 Nov 2026";
 
 const SECTIONS = [
   ["collect", "What we collect"],
@@ -32,7 +32,7 @@ const HELPERS = [
   ["Vercel", "Hosting"],
   ["PostHog (EU)", "Usage analytics"],
   ["Sentry", "Error reports"],
-  ["Resend", "Sign-in emails"],
+  ["Resend", "Sign-in emails and the launch email"],
   ["Google", "Sign-in, if you choose it"],
 ] as const;
 
@@ -90,7 +90,7 @@ export default function PrivacyPage() {
             Clash: your sprints and the challenge links you make. For the League: the leagues you start or join, and their names.
           </Item>
           <Item name="If you join the waitlist">
-            Your email, plus your name, club, league name and how many mates you&apos;d bring, if you fill those in.
+            Your email, plus your name, club, league name and how many mates you&apos;d bring, if you fill those in. We use the email to send you one email when the games open, with a link to unsubscribe.
           </Item>
           <Item name="How the app is used">
             Pages visited, buttons pressed and your device and browser type, through PostHog analytics. This uses an anonymous
