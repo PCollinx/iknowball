@@ -2,6 +2,7 @@ import "server-only";
 import * as Sentry from "@sentry/nextjs";
 import { draftEmptyDays, publishDueDrafts } from "@/lib/drafts/draft-job";
 import { importDueClubs } from "@/lib/drafts/import-job";
+import { sendLaunchEmails } from "@/lib/launch/send";
 import { syncFixtures } from "@/lib/fixtures/sync";
 import { syncMatchData } from "@/lib/matchdata/sync";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -52,6 +53,8 @@ const WORK: Record<JobName, () => Promise<Outcome>> = {
     if (error) throw error;
     return { summary: { ...drafts, published }, problems: [...draftProblems(drafts), ...dailyProblems(data ?? [], [today, addDays(today, 1)])] };
   },
+  // A Resend failure throws, so it's reported as a failed run; rows sent before it stay marked.
+  "launch-email": async () => ({ summary: await sendLaunchEmails(), problems: [] }),
 };
 
 export type JobRun = { job: JobName; status: "ok" | "warning" | "failed"; summary: unknown; problems: string[] };

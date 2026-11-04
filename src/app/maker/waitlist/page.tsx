@@ -2,7 +2,9 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { Chip, MAKER_MAIN, MakerBar, MakerHead } from "@/components/maker/MakerBar";
 import { dayLabel } from "@/lib/drafts/matchday";
+import { TestEmail } from "@/components/maker/TestEmail";
 import { requireAdmin, waitlistRows } from "@/lib/maker/data";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { summarise } from "@/lib/maker/waitlist";
 import { GATES_OPEN_LABEL } from "@/lib/waitlist";
 
@@ -27,7 +29,8 @@ const TOP_CLUBS = 10;
 async function MakerWaitlist() {
   await connection();
   await requireAdmin();
-  const s = summarise(await waitlistRows());
+  const [rows, mail] = await Promise.all([waitlistRows(), launchCounts()]);
+  const s = summarise(rows);
   const days = s.days.slice(-CHART_DAYS);
   const most = Math.max(1, ...days.map((d) => d.count));
   const leagues = s.entries.filter((e) => e.league_name);
@@ -55,6 +58,24 @@ async function MakerWaitlist() {
             <p className="font-display text-[40px] leading-[0.9] tabular-nums">{s.leagues}</p>
             <p className="mt-1 text-[13px] text-slate">Each starts the first time its email signs in from {GATES_OPEN_LABEL}, or now with the beta invite.</p>
           </div>
+        </section>
+
+        <section className="mt-4 grid gap-3 border-2 border-navy p-3 sm:grid-cols-[minmax(0,1fr)_260px] sm:items-start">
+          <div className="min-w-0">
+            <p className="label">Launch email</p>
+            <p className="mt-1 font-display text-[28px] leading-[0.95] uppercase tabular-nums">
+              {mail.sent} sent · {Math.max(0, s.total - mail.sent - mail.unsubscribed)} to go
+              {mail.unsubscribed > 0 && <span className="text-slate"> · {mail.unsubscribed} unsubscribed</span>}
+            </p>
+            <p className="mt-1 text-[13px] text-slate">
+              Goes out by itself from 07:00 WAT {GATES_OPEN_LABEL}, up to 100 a day on Resend&apos;s free plan; the rest go the next morning.{" "}
+              <a href="/maker/waitlist/email" target="_blank" className="font-semibold text-royal underline underline-offset-2">
+                See it as yours
+              </a>
+              .
+            </p>
+          </div>
+          <TestEmail />
         </section>
 
         <section className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -136,4 +157,14 @@ async function MakerWaitlist() {
       </main>
     </>
   );
+}
+
+/** How many have had the launch email, and how many unsubscribed. */
+async function launchCounts(): Promise<{ sent: number; unsubscribed: number }> {
+  const admin = createAdminClient();
+  const [sent, unsubscribed] = await Promise.all([
+    admin.from("waitlist").select("id", { head: true, count: "exact" }).not("launch_emailed_at", "is", null),
+    admin.from("waitlist").select("id", { head: true, count: "exact" }).not("unsubscribed_at", "is", null),
+  ]);
+  return { sent: sent.count ?? 0, unsubscribed: unsubscribed.count ?? 0 };
 }
