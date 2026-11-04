@@ -112,3 +112,21 @@ export async function waitlistRows(): Promise<WaitlistRow[]> {
     if (data.length < 1000) return rows;
   }
 }
+
+/** A drafted part as the drafts job saved it in draft_options. */
+export type OptionSpec = {
+  format: DailyFormat;
+  template: string;
+  title: string;
+  prompt: string;
+  time_limit_seconds: number;
+  source_note: string | null;
+  answers: { answer_text: string; extra_aliases?: string[]; reveal_note?: string | null; question?: string | null; choices?: string[] }[];
+};
+
+/** The other templates the drafts job filled for a day, by part. */
+export async function getOptions(date: string): Promise<{ part1: OptionSpec[]; part2: OptionSpec[] }> {
+  const { data, error } = await createAdminClient().from("draft_options").select("part1, part2").eq("play_date", date).maybeSingle();
+  if (error) throw error;
+  return { part1: (data?.part1 ?? []) as OptionSpec[], part2: (data?.part2 ?? []) as OptionSpec[] };
+}

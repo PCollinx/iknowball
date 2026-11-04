@@ -80,6 +80,8 @@ export async function saveDay(_prev: SaveState, formData: FormData): Promise<Sav
       continue;
     }
     const { title, prompt, time, source } = parsed.data;
+    // The template that drafted the part in the form (an option swapped in keeps its own), so the rotation still sees it.
+    const template = /^[a-z-]{1,40}$/.test(field(formData, part, "template")) ? field(formData, part, "template") : null;
     const asked = field(formData, part, "format");
     const format = part === 1 ? (asked === "pick" ? "pick" : "free_recall") : asked === "era" ? "era" : "in_order";
     if (format === "pick" || format === "era") {
@@ -87,6 +89,7 @@ export async function saveDay(_prev: SaveState, formData: FormData): Promise<Sav
       errors.push(...pickIssues(lines, format).errors.map((e) => `${label}: ${e}`));
       specs.push({
         format,
+        template,
         title,
         prompt,
         time_limit_seconds: time,
@@ -97,6 +100,7 @@ export async function saveDay(_prev: SaveState, formData: FormData): Promise<Sav
       const answers = parseRecall(parsed.data.answers);
       errors.push(...recallIssues(answers).errors.map((e) => `${label}: ${e}`));
       specs.push({
+        template,
         title,
         prompt,
         time_limit_seconds: time,
@@ -107,6 +111,7 @@ export async function saveDay(_prev: SaveState, formData: FormData): Promise<Sav
       const answers = parseOrder(parsed.data.answers);
       errors.push(...orderIssues(answers).errors.map((e) => `${label}: ${e}`));
       specs.push({
+        template,
         title,
         prompt,
         time_limit_seconds: time,
