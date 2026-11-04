@@ -231,6 +231,6 @@ After launch: step 14 (Support, with Vercel Pro), Rate mode (18 Dec), whether to
 - [x] 15. Popular games only (PR #58)
 - [x] 16. The installable app (PRs #66, #67; real installs on Android and iPhone still to check)
 - [x] Extra: Clash every day (today's stat, your three, beaten challenges) and the maker redesigned (31 Oct, `claude/clash-maker`)
-- [ ] 17. The launch email (by 19 Nov)
+- [x] 17. The launch email (built 4 Nov, `claude/launch-email`; sends itself from 07:00 WAT 20 Nov once `RESEND_API_KEY` is set in Vercel Production)
 - [x] 18. Waitlist leagues on day one (built 31 Oct)
 - [ ] 19. The demo video on the waitlist (by 18 Nov)

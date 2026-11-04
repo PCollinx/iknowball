@@ -10,6 +10,8 @@ import { orderIssues, parseOrder, parsePicks, parseRecall, pickIssues, recallIss
 import { clubsIn, LIST_KINDS, parseList } from "@/lib/curated/lists";
 import { JOB_NAMES } from "@/lib/control/problems";
 import { runJob } from "@/lib/control/runs";
+import { currentEmail } from "@/lib/daily/data";
+import { sendTestLaunchEmail } from "@/lib/launch/send";
 import { PER_PLAYER, WEEK_STATS } from "@/lib/clash/rules";
 
 export type SignInState = { error: string; email: string } | null;
@@ -189,4 +191,19 @@ export async function strikeClash(formData: FormData): Promise<void> {
     if (error && error.code !== "23505") throw error;
   }
   refresh();
+}
+
+export type TestEmailState = { ok: true; to: string } | { ok: false; error: string } | null;
+
+/** Sends the launch email to the signed-in admin, marked [Test] and not counted as sent. */
+export async function sendTestEmail(): Promise<TestEmailState> {
+  await requireAdmin();
+  const to = await currentEmail();
+  if (!to) return { ok: false, error: "Your account has no email to send to." };
+  try {
+    await sendTestLaunchEmail(to);
+    return { ok: true, to };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Couldn't send it." };
+  }
 }
