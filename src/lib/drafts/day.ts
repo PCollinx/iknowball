@@ -67,7 +67,12 @@ export type DraftPart = {
   /** Where the answers came from, for the maker; Wikidata when left out. */
   source?: string;
 };
-export type DraftDay = { part1: DraftPart; part2: DraftPart | null };
+export type DraftDay = {
+  part1: DraftPart;
+  part2: DraftPart | null;
+  /** The other templates that filled for each part, for the maker to swap in. */
+  options: { part1: DraftPart[]; part2: DraftPart[] };
+};
 
 /** What the picks rounds are built from. Without it, a day gets the typed rounds. */
 export type PickData = { decoys: Decoy[]; spells: Map<number, DatedSpell[]>; nowYear: number };
@@ -540,16 +545,28 @@ export function draftDay(
       return null;
     },
   };
-  const first = (templates: Template[]) => {
-    for (const t of templates) {
-      if (LONG_REST.has(t) && more?.restedTemplates?.has(t)) continue;
+  // Every template that fills, in the order they're tried: the first is the
+  // draft, the rest are the maker's options.
+  const filled = (templates: Template[]) =>
+    templates.flatMap((t) => {
+      if (LONG_REST.has(t) && more?.restedTemplates?.has(t)) return [];
       const part = build[t]();
-      if (part) return part;
-    }
-    return null;
-  };
+      return part ? [part] : [];
+    });
 
-  const part1 = (pairing.rapid && first(order(TEMPLATES.pick))) || first(order(TEMPLATES.free_recall)) || build["played-for-both"]()!;
-  const part2 = (pairing.era && first(order(TEMPLATES.era))) || first(order(TEMPLATES.in_order));
-  return { part1, part2 };
+  const picks1 = picks ? filled(order(TEMPLATES.pick)) : [];
+  const recall1 = filled(order(TEMPLATES.free_recall));
+  const era2 = picks ? filled(order(TEMPLATES.era)) : [];
+  const order2 = filled(order(TEMPLATES.in_order));
+  const part1 = (pairing.rapid && picks1[0]) || recall1[0] || build["played-for-both"]()!;
+  const part2 = (pairing.era && era2[0]) || order2[0] || null;
+  const others = (all: DraftPart[], chosen: DraftPart | null) => all.filter((p) => p.template !== chosen?.template);
+  return {
+    part1,
+    part2,
+    options: {
+      part1: others(pairing.rapid ? [...picks1, ...recall1] : [...recall1, ...picks1], part1),
+      part2: others(pairing.era ? [...era2, ...order2] : [...order2, ...era2], part2),
+    },
+  };
 }

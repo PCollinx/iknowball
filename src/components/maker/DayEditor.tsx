@@ -25,14 +25,53 @@ export type EditorPart = {
   template: string | null;
 };
 
-type Props = { date: string; today: string; status: "draft" | "scheduled"; parts: EditorPart[] };
+/** Another template the drafts job filled for a part, ready to load into the form. */
+export type EditorOption = {
+  template: string;
+  format: DailyFormat;
+  title: string;
+  prompt: string;
+  time: number;
+  source: string;
+  answers: string;
+  count: number;
+  /** The first few answers, so the list says who it's about. */
+  sample: string;
+};
 
-export function DayEditor({ date, today, status, parts }: Props) {
+type Props = { date: string; today: string; status: "draft" | "scheduled"; parts: EditorPart[]; options: [EditorOption[], EditorOption[]] };
+
+/** The part as saved, as an option, so a swap can be undone. */
+const SAVED = "saved";
+function savedOption(part: EditorPart): EditorOption | null {
+  if (!part.exists) return null;
+  return { ...part, template: part.template ?? "", count: part.answers.split("\n").filter((l) => l.trim()).length, sample: "" };
+}
+
+export function DayEditor({ date, today, status, parts, options }: Props) {
   const [state, action, saving] = useActionState(saveDay, null);
   const [recall, setRecall] = useState(parts[0].answers);
   const [order, setOrder] = useState(parts[1].answers);
   const [format1, setFormat1] = useState(parts[0].format);
   const [format2, setFormat2] = useState(parts[1].format);
+  // What's in each part's form: the saved part, or a drafted option loaded over it.
+  const [loaded, setLoaded] = useState<[EditorPart, EditorPart]>([parts[0], parts[1]]);
+  const [inForm, setInForm] = useState<[string, string]>([SAVED, SAVED]);
+  const [version, setVersion] = useState(0);
+  const use = (i: 0 | 1, key: string, o: EditorOption) => {
+    const next = { ...parts[i], ...o, template: o.template || null };
+    setLoaded((l) => (i === 0 ? [next, l[1]] : [l[0], next]));
+    setInForm((f) => (i === 0 ? [key, f[1]] : [f[0], key]));
+    if (i === 0) {
+      setRecall(o.answers);
+      setFormat1(o.format);
+    } else {
+      setOrder(o.answers);
+      setFormat2(o.format);
+    }
+    // Remounts the part's fields, so the title, prompt and time take the option's.
+    setVersion((v) => v + 1);
+  };
   const issues1 = useMemo(
     () => (format1 === "pick" ? pickIssues(parsePicks(recall), "pick") : recallIssues(parseRecall(recall))),
     [format1, recall],
@@ -86,7 +125,9 @@ export function DayEditor({ date, today, status, parts }: Props) {
         </MakerHead>
 
         <PartSection
-          part={parts[0]}
+          key={`1-${version}`}
+          part={loaded[0]}
+          options={<Options saved={savedOption(parts[0])} options={options[0]} inForm={inForm[0]} onUse={(k, o) => use(0, k, o)} />}
           format={format1}
           formats={["free_recall", "pick"]}
           onFormat={setFormat1}
@@ -102,7 +143,9 @@ export function DayEditor({ date, today, status, parts }: Props) {
           issues={issues1}
         />
         <PartSection
-          part={parts[1]}
+          key={`2-${version}`}
+          part={loaded[1]}
+          options={<Options saved={savedOption(parts[1])} options={options[1]} inForm={inForm[1]} onUse={(k, o) => use(1, k, o)} />}
           format={format2}
           formats={["in_order", "era"]}
           onFormat={setFormat2}
@@ -156,6 +199,8 @@ export function DayEditor({ date, today, status, parts }: Props) {
 
 type SectionProps = {
   part: EditorPart;
+  /** The other drafts for this part. */
+  options: React.ReactNode;
   format: DailyFormat;
   formats: [DailyFormat, DailyFormat];
   onFormat: (f: DailyFormat) => void;
@@ -169,7 +214,7 @@ type SectionProps = {
 
 const input = "w-full border-2 border-navy bg-white px-2 py-1.5 text-sm disabled:border-track disabled:bg-mist";
 
-function PartSection({ part, format, formats, onFormat, titleHint, answersHint, answers, onAnswers, preview, issues }: SectionProps) {
+function PartSection({ part, options, format, formats, onFormat, titleHint, answersHint, answers, onAnswers, preview, issues }: SectionProps) {
   const locked = part.plays > 0;
   const id = (name: string) => `p${part.part}_${name}`;
   return (
@@ -188,7 +233,9 @@ function PartSection({ part, format, formats, onFormat, titleHint, answersHint, 
             </span>
           )}
         </div>
+        {!locked && options}
         <div className="grid content-start gap-3 border-2 border-t-0 border-navy p-3">
+          <input type="hidden" name={id("template")} value={part.template ?? ""} />
           {locked && <p className="text-sm text-slate">Players have started this part, so its answers can&apos;t change.</p>}
           <fieldset className="flex border-2 border-navy" disabled={locked}>
             <legend className="sr-only">Round</legend>
@@ -272,6 +319,52 @@ function PartSection({ part, format, formats, onFormat, titleHint, answersHint, 
       </div>
       <aside className="grid content-start gap-3 self-start border-2 border-navy bg-mist p-3 lg:sticky lg:top-3">{preview}</aside>
     </section>
+  );
+}
+
+type OptionsProps = { saved: EditorOption | null; options: EditorOption[]; inForm: string; onUse: (key: string, o: EditorOption) => void };
+
+/** The templates the drafts job also filled for this part: one tap loads one into the form. */
+function Options({ saved, options, inForm, onUse }: OptionsProps) {
+  if (!options.length) return null;
+  const list = [...(saved ? [{ key: SAVED, o: saved }] : []), ...options.map((o) => ({ key: o.template, o }))];
+  return (
+    <details className="group border-2 border-t-0 border-navy bg-mist">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-3 py-2 [&::-webkit-details-marker]:hidden">
+        <span>
+          <span className="label">Other drafts</span> <span className="font-display text-lg leading-none">{options.length}</span>
+        </span>
+        <span aria-hidden="true" className="font-display text-lg leading-none group-open:rotate-180">
+          ▾
+        </span>
+      </summary>
+      <ul className="grid gap-0.5 border-t-2 border-navy bg-track">
+        {list.map(({ key, o }) => (
+          <li key={key} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 bg-white px-3 py-2">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                <span className="label">{FORMAT_NAME[o.format]}</span>
+                {o.template && <span className="font-mono text-[11px] text-slate">{o.template}</span>}
+                {key === SAVED && <Chip kind="plain">Saved</Chip>}
+              </div>
+              <p className="mt-0.5 line-clamp-2 text-sm">{o.prompt}</p>
+              <p className="truncate text-[12px] text-slate">
+                {o.count} {o.format === "pick" || o.format === "era" ? "questions" : "answers"}
+                {o.sample && ` · ${o.sample}`}
+              </p>
+            </div>
+            {inForm === key ? (
+              <Chip kind="ok">In the form</Chip>
+            ) : (
+              <button type="button" onClick={() => onUse(key, o)} className="btn-white btn-press flex items-center gap-2 px-2.5 py-1 font-display text-[15px] uppercase">
+                Use <span aria-hidden="true">→</span>
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
+      <p className="border-t-2 border-navy px-3 py-1.5 text-[12px] text-slate">Use fills the form below. Nothing changes until you save the day.</p>
+    </details>
   );
 }
 

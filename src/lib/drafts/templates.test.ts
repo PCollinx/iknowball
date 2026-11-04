@@ -256,4 +256,15 @@ describe("draftDay with templates", () => {
     expect(day.part1.template).toBe("played-for-both");
     expect(day.part2?.template).toBe("joined-first");
   });
+
+  it("keeps the other templates that filled as options, without the drafted one", () => {
+    const players = Array.from({ length: 8 }, (_, i) => ({ ...shared(i + 1, `Both ${i + 1}`), joinedA: `${1995 + i}-07-01`, joinedB: `${1996 + i}-07-01` }));
+    const more: TemplateData = { clubs, spellsAt: new Map(), careers: new Map(), recentTemplates: new Set(), managers: [], famous: [], grounds: [] };
+    const day = draftDay("2026-10-25", ARS, CHE, players, new Set(), { decoys: [], spells: new Map(), nowYear: 2026 }, more);
+    const templates = (parts: { template: string }[]) => parts.map((p) => p.template);
+    expect(templates(day.options.part1)).not.toContain(day.part1.template);
+    expect(templates(day.options.part2)).not.toContain(day.part2?.template);
+    // With so little data, nothing else fills.
+    expect(day.options.part1).toEqual([]);
+  });
 });

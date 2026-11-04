@@ -3,7 +3,7 @@ import { getLists } from "@/lib/curated/data";
 import { normalizeName } from "@/lib/daily/match";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addDays, gameDate, matchweekBounds, seasonOf } from "@/lib/time";
-import { draftDay, LONG_REST_DAYS, type PickData, type TemplateData } from "./day";
+import { draftDay, LONG_REST_DAYS, type DraftPart, type PickData, type TemplateData } from "./day";
 import { pairKey, pickPair, type Club, type PairRules, type SharedPlayer } from "./generate";
 import type { MatchData, MatchPlayer, PlayedMatch } from "./matchday";
 import type { CareerSpell, ClubSpell, FamousPlayer, Ground, ManagerStay } from "./templates";
@@ -22,7 +22,12 @@ const TEMPLATE_COOLDOWN_DAYS = 6;
 const PAGE = 1000;
 const SOURCE = "Drafted from Wikidata. Check before scheduling.";
 
-export type DraftResult = { drafted: { date: string; title: string; answers: number }[]; skipped: { date: string; reason: string }[] };
+export type DraftResult = {
+  drafted: { date: string; title: string; answers: number }[];
+  skipped: { date: string; reason: string }[];
+  /** Drafts made before options were kept, given their options. */
+  optioned?: string[];
+};
 
 /** Fills every empty day from today to DRAFT_DAYS_AHEAD with a draft. */
 export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
@@ -32,13 +37,15 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
 
   const { data: existing, error } = await admin
     .from("dailies")
-    .select("play_date, part, title, template")
+    .select("id, play_date, part, title, template, status")
     .gte("play_date", addDays(today, -PAIR_COOLDOWN_DAYS))
     .lte("play_date", last);
   if (error) throw error;
   const filled = new Set((existing ?? []).filter((d) => d.part === 1).map((d) => d.play_date as string));
-  const empty = Array.from({ length: DRAFT_DAYS_AHEAD + 1 }, (_, i) => addDays(today, i)).filter((d) => !filled.has(d));
-  if (!empty.length) return result;
+  const ahead = Array.from({ length: DRAFT_DAYS_AHEAD + 1 }, (_, i) => addDays(today, i));
+  const empty = ahead.filter((d) => !filled.has(d));
+  const needOptions = await draftsWithoutOptions(ahead.filter((d) => filled.has(d)), existing ?? []);
+  if (!empty.length && !needOptions.length) return result;
 
   const [{ data: clubRows }, { data: candidates, error: pairError }, managers, famous, lists] = await Promise.all([
     admin.from("clubs").select("id, name, top, in_premier_league, ground, ground_capacity"),
@@ -85,7 +92,8 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
   const recent = await recentAnswerNames(addDays(today, -PLAYER_COOLDOWN_DAYS), last);
   const fixtures = await fixturePairs(matchweekBounds(today).startsOn, addDays(last, 7));
 
-  for (const date of empty) {
+  for (const date of [...empty, ...needOptions].sort()) {
+    const optionsOnly = filled.has(date);
     const week = matchweekBounds(date);
     const sameWeek = fixtures.filter(([d, , c]) => c === "PL" && d >= week.startsOn && d <= week.endsOn);
     const preferred = [...sameWeek.filter(([d]) => d === date), ...sameWeek.filter(([d]) => d !== date)].map(([, pair]) => pair);
@@ -93,8 +101,10 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
     // the big six counts like a Champions League tie.
     const cup = fixtures.filter(([d, [h, a], c]) => (c === "FAC" || c === "EFL") && d === date && (rules.bigSix.has(h) || rules.bigSix.has(a)));
     const ucl = [...fixtures.filter(([d, , c]) => c === "UCL" && d === date), ...cup].map(([, pair]) => pair);
-    const pair = pickPair(date, pairs, preferred, used, restedNear(date), rules, ucl);
+    // A day drafted before options were kept keeps its clubs: only its options are made.
+    const pair = optionsOnly ? (clubsOn.get(date) as [number, number] | undefined) : pickPair(date, pairs, preferred, used, restedNear(date), rules, ucl);
     if (!pair) {
+      if (optionsOnly) continue;
       result.skipped.push({ date, reason: "No club pair with one of the big six and a good list. Import more clubs." });
       continue;
     }
@@ -120,14 +130,23 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
       matchday: await withMeetings(season, home.id, away.id, spellsAt, clubs),
     };
     const day = draftDay(date, home, away, players, recent, picks, more);
+    const { error: optionsError } = await admin.from("draft_options").upsert({
+      play_date: date,
+      part1: day.options.part1.map(saved),
+      part2: day.options.part2.map(saved),
+      made_at: new Date().toISOString(),
+    });
+    if (optionsError) result.skipped.push({ date, reason: `Options not saved: ${optionsError.message}` });
+    if (optionsOnly) {
+      (result.optioned ??= []).push(date);
+      continue;
+    }
 
     const { error: saveError } = await admin.rpc("maker_save_day", {
       p_play_date: date,
       p_status: "draft",
       p_checked_by: null,
-      p_parts: [day.part1, day.part2].map(
-        (p) => p && { format: p.format, template: p.template, title: p.title, prompt: p.prompt, time_limit_seconds: p.time, source_note: p.source ?? SOURCE, answers: p.answers },
-      ),
+      p_parts: [day.part1, day.part2].map((p) => p && saved(p)),
     });
     if (saveError) {
       result.skipped.push({ date, reason: saveError.message });
@@ -140,6 +159,36 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
     result.drafted.push({ date, title: day.part1.title, answers: day.part1.answers.length });
   }
   return result;
+}
+
+/** A drafted part as maker_save_day takes it. */
+const saved = (p: DraftPart) => ({
+  format: p.format,
+  template: p.template,
+  title: p.title,
+  prompt: p.prompt,
+  time_limit_seconds: p.time,
+  source_note: p.source ?? SOURCE,
+  answers: p.answers,
+});
+
+/** Days still all draft and unplayed, drafted before the job kept options for them. */
+async function draftsWithoutOptions(dates: string[], parts: { id: number; play_date: string; status: string }[]): Promise<string[]> {
+  if (!dates.length) return [];
+  const admin = createAdminClient();
+  const ids = parts.filter((p) => dates.includes(p.play_date)).map((p) => p.id);
+  const [{ data: have, error }, { data: played, error: playError }] = await Promise.all([
+    admin.from("draft_options").select("play_date").in("play_date", dates),
+    admin.from("attempts").select("daily_id").in("daily_id", ids).limit(1000),
+  ]);
+  if (error) throw error;
+  if (playError) throw playError;
+  const done = new Set((have ?? []).map((r) => r.play_date));
+  const started = new Set((played ?? []).map((r) => r.daily_id));
+  return dates.filter((d) => {
+    const day = parts.filter((p) => p.play_date === d);
+    return !done.has(d) && day.every((p) => p.status === "draft" && !started.has(p.id));
+  });
 }
 
 /** Publishes every draft part for today and tomorrow, so no day goes out empty. */
