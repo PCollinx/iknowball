@@ -114,9 +114,9 @@ async function ProfileScreen({ searchParams }: { searchParams: SearchParams }) {
           <LeagueStickers leagues={leagues} />
         </Section>
 
-        <WhistleSection guest={guest} />
-
         <OnYourPhone guest={guest} icon={APP_ICON_SRC} />
+
+        <WhistleSection guest={guest} />
 
         <Section title={guest ? "Keep your shirt" : "Account"}>
           {guest ? (
