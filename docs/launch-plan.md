@@ -205,6 +205,9 @@ Production, a pair each), the live migration, and a real buzz on an Android phon
 - [ ] **Thu 19 Nov:** publish the demo video on X and WhatsApp.
 - [ ] **Fri 20 Nov:** the waitlist comes down at midnight WAT by itself; send the launch email (step 17).
 
+The posts outside the app (LinkedIn, Product Hunt on Tue 1 Dec, Show HN on Thu 3 Dec, the short videos) have
+their own plan: `docs/launch-posts.md`.
+
 After launch: step 14 (Support, with Vercel Pro), Rate mode (18 Dec).
 
 ## Also on the list
