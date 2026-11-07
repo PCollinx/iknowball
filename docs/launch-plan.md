@@ -201,8 +201,10 @@ Production, a pair each), the live migration, and a real buzz on an Android phon
 - [ ] **Sun 8 Nov checkpoint:** Collins and three friends trade Clash challenge links.
 - [ ] **9 to 15 Nov checkpoint** (international break): a real league plays a full week of Dailies and the
   table is right.
-- [ ] **During the beta:** tune the tier cut-offs on real ratings; record the demo video.
-- [ ] **Thu 19 Nov:** publish the demo video on X and WhatsApp.
+- [ ] **During the beta:** tune the tier cut-offs on real ratings; make the demo video (Remotion, `LaunchDemo` in
+  `video/`, by Wed 18 Nov; see `docs/launch-posts.md`).
+- [ ] **Thu 19 Nov:** publish the demo video on X, WhatsApp, TikTok, Reels and Shorts, and pin it on the waitlist
+  page (step 19).
 - [ ] **Fri 20 Nov:** the waitlist comes down at midnight WAT by itself; send the launch email (step 17).
 
 The launch day posts (LinkedIn, X and WhatsApp) and the ones after (Product Hunt on Tue 1 Dec, Show HN on

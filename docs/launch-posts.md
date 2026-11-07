@@ -16,7 +16,7 @@ Rules that hold for every post:
 | When | What | Where |
 | --- | --- | --- |
 | Mon 16 Nov | Build story: "I'm launching on Friday" | LinkedIn |
-| Thu 19 Nov | Demo video | X, WhatsApp, TikTok, Reels, Shorts |
+| Thu 19 Nov | Demo video, and pinned on the waitlist page for its last day (step 19 of the launch plan) | X, WhatsApp, TikTok, Reels, Shorts, waitlist |
 | Fri 20 Nov | Launch day, all three at 07:00, when the gates open and the launch email goes | LinkedIn, X, WhatsApp |
 | From Sat 21 Nov | Short videos, three a week | TikTok, Reels, Shorts, X, WhatsApp Status |
 | Tue 1 Dec | Product Hunt launch (09:01 WAT, when PH's day starts) | Product Hunt, LinkedIn, X |
@@ -30,8 +30,10 @@ properly.
 
 ## Launch day: Fri 20 Nov
 
-The waitlist comes down at midnight and the launch email goes at 07:00 (`docs/launch-plan.md`). Post on all
-three at 07:00 so the email, the posts and the first Daily land together, then play the Daily yourself and
+The waitlist comes down at midnight and the launch email job runs at 07:00 (`docs/launch-plan.md`). On Vercel
+Hobby it starts any time between 07:00 and 07:59, and Resend's free plan sends 100 a day, so a waitlist over
+100 gets the email over more than one morning; check the maker's Jobs page once it has run. Post on all
+three at 07:00 so the email, the posts and the first Daily land around the same time, then play the Daily yourself and
 post your score at lunchtime. Each post links with its own `utm_source` (`linkedin`, `x`, `whatsapp`).
 
 ### LinkedIn
