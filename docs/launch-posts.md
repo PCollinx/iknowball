@@ -38,7 +38,7 @@ first comment, not the post: LinkedIn shows posts with links to fewer people.
 
 Image: the logo canvas with three screens (home, a Daily, a Clash sprint), or a 20 s screen capture.
 
-> On Friday I'm launching iKnowBall, a football knowledge game I've built on my own over the last six weeks.
+> On Friday I'm launching iKnowBall, a football knowledge game I've built on my own in about six weeks.
 >
 > One Daily a day: name the players, put them in order, beat the clock. Then Clash, 60 seconds of higher
 > or lower you can send to a mate. Then leagues with your friends, scored every Premier League week.
@@ -136,8 +136,8 @@ HN rewards plain titles, no sign-up, and the interesting technical bits. Post on
 > - Wikidata files women's team players under the men's club, so the import filters by sex or gender, and
 >   a re-import never deletes more than a quarter of a club's spells at once.
 > - The timer starts on the server when the round is on screen, not when you press start, and every
->   answer is one Postgres function call. Most players are in Nigeria, where each extra round trip costs
->   about half a second.
+>   answer is one Postgres function call. It's built for players in Nigeria first, where each extra round
+>   trip to the servers costs about half a second.
 > - Every shirt is drawn in SVG from a club's colours, pattern and collar. No crests or photos, and clubs
 >   that share colours have to differ by pattern.
 >
