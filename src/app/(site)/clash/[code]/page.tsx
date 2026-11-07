@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { connection } from "next/server";
+import { after, connection } from "next/server";
 import { ClashFullTime } from "@/components/clash/FullTime";
 import { ClashKickOff } from "@/components/clash/KickOff";
 import { ClashMasthead } from "@/components/clash/Masthead";
@@ -14,6 +14,7 @@ import { kitOf } from "@/lib/profile/club";
 import { clubsByIds, getRating } from "@/lib/profile/data";
 import { KeepyUppy } from "@/components/loading/KeepyUppy";
 import { MatchLive } from "@/components/nav/MatchLive";
+import { whistleChallenge } from "@/lib/push/challenge";
 
 export const metadata: Metadata = {
   title: "Clash · iKnowBall",
@@ -66,6 +67,9 @@ async function ClashScreen({ params }: { params: Params }) {
       const ids = [...new Set(view.set.items.map((i) => i.club_id).filter((id): id is number => id !== null))];
       const clubs = await clubsByIds(ids);
       const kits: Record<number, Kit> = Object.fromEntries([...clubs].map(([id, club]) => [id, kitOf(club)]));
+      const clubNames: Record<number, string> = Object.fromEntries([...clubs].map(([id, club]) => [id, club.name]));
+      // The players already called, with their numbers: the chain (only what's been shown).
+      const history = view.set.items.slice(0, view.run.answered + 1).map((i) => ({ name: i.name, clubId: i.club_id, value: i.value }));
       return (
         <>
           <MatchLive />
@@ -77,6 +81,9 @@ async function ClashScreen({ params }: { params: Params }) {
             begun={view.run.begun_at !== null}
             statLabel={STATS[view.set.stat].label}
             ask={STATS[view.set.stat].ask}
+            statShort={STATS[view.set.stat].short}
+            history={history}
+            clubNames={clubNames}
             shown={{ name: view.shown.name, clubId: view.shown.club_id, value: view.shown.value }}
             next={view.next}
             deadlineAt={view.run.deadline_at}
@@ -90,6 +97,9 @@ async function ClashScreen({ params }: { params: Params }) {
       );
     }
     case "fulltime": {
+      // A mate's full time tells the setter (once per mate per set), after the page is served.
+      const { set, run } = view;
+      after(() => whistleChallenge(set, run));
       const [rating, weekBest, week] = await Promise.all([getRating(view.run.user_id), isWeekBest(view.run), weekAfter(view.run)]);
       return (
         <ClashFullTime

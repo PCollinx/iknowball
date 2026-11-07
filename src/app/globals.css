@@ -321,3 +321,13 @@ body:has([data-match-live]:not([style*="display: none"], [style*="display: none"
 body:has([data-extra-time]:not([style*="display: none"], [style*="display: none"] *)) [data-site-footer] {
   padding-bottom: 96px;
 }
+
+/* A Clash sprint is one screen tall (Collins, 7 Nov 2026): the frame stops at
+ * the viewport, so the chain and the call share the height left under the
+ * navbar and nothing scrolls. */
+body:has([data-full-screen]) [data-site-frame] {
+  height: 100dvh;
+}
+body:has([data-full-screen]) [data-site-body] {
+  min-height: 0;
+}

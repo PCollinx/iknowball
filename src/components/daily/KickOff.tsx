@@ -4,6 +4,7 @@ import type { DailyRow, RecallReveal } from "@/lib/daily/data";
 import { PART_MAX } from "@/lib/daily/score";
 import { clubInTitle, type Club } from "@/lib/profile/club";
 import { clock } from "./clock";
+import { TeamSheet, type SheetRow } from "@/components/sheet/TeamSheet";
 import { headlineFixture } from "./fixture";
 import { FORMAT_NAME } from "./formats";
 import { Masthead } from "./Masthead";
@@ -14,7 +15,8 @@ import { SubmitButton } from "./SubmitButton";
 // The Daily's kick-off (step 1 of docs/launch-plan.md, picked 21 Oct 2026):
 // before Part 1, the home page's Daily sticker with the gaffer's instructions
 // and a teal Kick off; between parts, the half-time block and your shirts with
-// the team talk for the 2nd half. Desktop puts the two side by side.
+// the team talk for the 2nd half. Desktop puts the two side by side. Both
+// notes are team sheets since 7 Nov 2026 (TeamSheet), with no numbers.
 
 type Props = {
   issue: number;
@@ -34,7 +36,6 @@ type Props = {
   serverNow: number;
 };
 
-type Note = { big: string; title: string; text: string };
 
 export function KickOff({ issue, dateLabel, daily, parts, total, before, club, kit, kits, closesAt, serverNow }: Props) {
   const fixture = before ? before.daily.title : daily.title;
@@ -66,10 +67,10 @@ export function KickOff({ issue, dateLabel, daily, parts, total, before, club, k
             </div>
           )}
 
-          <Notes
-            title={before ? "Team talk" : "The gaffer's instructions"}
-            notes={before ? teamTalk(daily) : gafferNotes(daily, second)}
-            stackOnDesktop={!before}
+          <TeamSheet
+            name={before ? "Team talk" : "The gaffer's instructions"}
+            tag={`Part ${daily.part}`}
+            rows={before ? teamTalk(daily) : gafferNotes(daily, second)}
           />
 
           {yourLot && (
@@ -132,50 +133,23 @@ function HalfTime({ before, kit }: { before: RecallReveal; kit: Kit | null }) {
   );
 }
 
-function gafferNotes(daily: DailyRow, second: DailyRow | undefined): Note[] {
-  const quick =
-    daily.format === "free_recall"
-      ? { big: "1", title: "Be quick", text: "Type the names. Typos are forgiven." }
-      : { big: "1", title: "Be quick", text: "One tap per question." };
-  const after = second
-    ? { big: "3", title: "Then the 2nd half", text: `${FORMAT_NAME[second.format]} straight after. 100 on the day.` }
-    : { big: "3", title: "Up to 100", text: "Every right answer counts." };
-  return [quick, { big: "2", title: "One go", text: "Leave and the clock runs on." }, after];
-}
-
-function teamTalk(daily: DailyRow): Note[] {
+function gafferNotes(daily: DailyRow, second: DailyRow | undefined): SheetRow[] {
   return [
-    daily.format === "era"
-      ? { big: String(daily.answer_count), title: "Players", text: "One era each." }
-      : { big: String(daily.answer_count), title: "To order", text: "Earliest at the top." },
-    { big: clock(daily.time_limit_seconds), title: "On the clock", text: "Starts on kick-off." },
-    { big: String(PART_MAX[daily.part] ?? 0), title: "Points", text: "Still to play for." },
+    { title: "Be quick", text: daily.format === "free_recall" ? "Type the names. Typos are forgiven." : "One tap per question." },
+    { title: "One go", text: "Leave and the clock runs on." },
+    second
+      ? { title: "Then the 2nd half", text: `${FORMAT_NAME[second.format]} straight after. 100 on the day.` }
+      : { title: "Up to 100", text: "Every right answer counts." },
   ];
 }
 
-const TILT = ["-rotate-[1.5deg]", "rotate-1", "-rotate-[0.8deg]"];
-
-/** Three tilted stickers. Before Part 1 they stack into rows on desktop. */
-function Notes({ title, notes, stackOnDesktop }: { title: string; notes: Note[]; stackOnDesktop: boolean }) {
-  return (
-    <section>
-      <h2 className="label border-b-2 border-navy pb-1.5">{title}</h2>
-      <ol className={`mt-3.5 grid grid-cols-3 gap-2.5 lg:mt-4 ${stackOnDesktop ? "lg:grid-cols-1 lg:gap-3.5" : "lg:gap-3.5"}`}>
-        {notes.map((n, i) => (
-          <li
-            key={n.title}
-            className={`border-[2.5px] border-navy bg-white p-2 shadow-[3px_3px_0_var(--color-navy)] lg:p-3 lg:shadow-[4px_4px_0_var(--color-navy)] ${TILT[i]} ${
-              stackOnDesktop ? "lg:grid lg:grid-cols-[44px_minmax(0,1fr)] lg:items-center lg:gap-3 lg:px-3.5 lg:py-2.5" : ""
-            }`}
-          >
-            <span className="block font-display text-[26px] leading-none text-royal tabular-nums lg:text-[34px]">{n.big}</span>
-            <span className="block">
-              <span className="mt-1 block font-display text-[17px] leading-none uppercase lg:mt-1.5 lg:text-[22px]">{n.title}</span>
-              <span className="mt-1 block text-xs leading-snug lg:mt-1.5 lg:text-sm">{n.text}</span>
-            </span>
-          </li>
-        ))}
-      </ol>
-    </section>
-  );
+/** The team talk's numbers sit in its titles (no number column on the sheet). */
+function teamTalk(daily: DailyRow): SheetRow[] {
+  return [
+    daily.format === "era"
+      ? { title: `${daily.answer_count} players`, text: "One era each." }
+      : { title: `${daily.answer_count} to order`, text: "Earliest at the top." },
+    { title: `${clock(daily.time_limit_seconds)} on the clock`, text: "Starts on kick-off." },
+    { title: `${PART_MAX[daily.part] ?? 0} points`, text: "Still to play for." },
+  ];
 }

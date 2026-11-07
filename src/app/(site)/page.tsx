@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { WhistleStrip } from "@/components/push/WhistleStrip";
 import { connection } from "next/server";
 import { ClashTicket } from "@/components/home/ClashTicket";
 import { DailySticker } from "@/components/home/DailySticker";
@@ -83,6 +84,9 @@ async function HomeScreen() {
             <BeatenBanner challenge={beaten} />
           </div>
         )}
+
+        {/* The installed app's first opens: one tap to the whistle (option A). */}
+        <WhistleStrip guest={false} installedOnly className="mt-5 lg:mt-6 lg:max-w-[560px]" />
 
         <div className="mt-5 grid gap-7 lg:mt-6 lg:grid-cols-12 lg:gap-9">
           <div className="min-w-0 lg:col-span-7">

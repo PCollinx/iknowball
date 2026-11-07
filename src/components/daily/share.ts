@@ -1,7 +1,7 @@
 import type { OrderReveal, RecallReveal } from "@/lib/daily/data";
 import { fitWidth } from "./FixtureTitle";
 import type { Kit } from "./ShirtBack";
-import { clock } from "./clock";
+import { duration } from "./clock";
 import { FORMAT_NAME } from "./formats";
 
 // The share card's content and sizing, shared by the card on the full-time
@@ -101,7 +101,7 @@ export function shareCardData({ issue, playDate, recall, order, points, topPerce
     points,
     found,
     total,
-    timeUsed: clock(seconds ?? recall.timeUsedSeconds),
+    timeUsed: duration(seconds ?? recall.timeUsedSeconds),
     // Each half, then where the day sits (the full-time mix, 22 Oct 2026).
     stats: [
       { value: `${found}/${total}`, key: FORMAT_NAME[recall.daily.format] },

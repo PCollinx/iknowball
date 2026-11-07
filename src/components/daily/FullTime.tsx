@@ -2,15 +2,17 @@ import Link from "next/link";
 import { MiniThree } from "@/components/clash/YourThree";
 import { ClubPicker } from "@/components/profile/ClubPicker";
 import { SeasonTicket } from "@/components/pwa/SeasonTicket";
+import { WhistleStrip } from "@/components/push/WhistleStrip";
 import { APP_ICON_SRC } from "@/lib/og/logo";
 import { RatingBadge } from "@/components/profile/RatingBadge";
+import { TeamSheet } from "@/components/sheet/TeamSheet";
 import { scoreInk } from "@/lib/profile/rating";
 import type { Club } from "@/lib/profile/club";
 import { gameDate, gameDateClosesAt, seasonLabel, seasonOf } from "@/lib/time";
 import type { OrderReveal, RecallReveal, TableRow } from "@/lib/daily/data";
 import { halfRating } from "@/lib/daily/score";
 import { handoffHeading, STATS, type Stat } from "@/lib/clash/rules";
-import { clock } from "./clock";
+import { duration } from "./clock";
 import { headlineFixture } from "./fixture";
 import { Masthead, shortDate } from "./Masthead";
 import { NextDaily } from "./NextDaily";
@@ -130,7 +132,7 @@ export function FullTime(props: Props) {
                   {seconds !== null && (
                     <>
                       <br />
-                      {clock(seconds)} used
+                      {duration(seconds)} used
                     </>
                   )}
                 </span>
@@ -146,19 +148,19 @@ export function FullTime(props: Props) {
           </section>
 
           <section className="order-2 pt-3 lg:pt-4">
-            <h2 className="label mb-2 lg:hidden">Your ratings</h2>
-            <div className="grid grid-cols-3 gap-2 lg:gap-3.5">
-              {recall && <RatingSticker n={halfRating(1, recall.score)} title="1st half" note={`${FORMAT_NAME[recall.daily.format]} ${found}/${total}`} tilt="-rotate-1" />}
-              {order && (
-                <RatingSticker
-                  n={halfRating(2, order.score)}
-                  title="2nd half"
-                  note={`${FORMAT_NAME[order.daily.format]} ${order.correct}/${order.slots.length}`}
-                  tilt="rotate-1"
-                />
-              )}
-              <RatingSticker n={rating} title="Overall" note="Last 30 days" tilt="-rotate-[0.6deg]" dark />
-            </div>
+            <TeamSheet
+              name="Player ratings"
+              tag="Out of 10"
+              rows={[
+                ...(recall
+                  ? [{ title: "1st half", text: `${FORMAT_NAME[recall.daily.format]} ${found}/${total}`, value: <SheetBadge rating={halfRating(1, recall.score)} /> }]
+                  : []),
+                ...(order
+                  ? [{ title: "2nd half", text: `${FORMAT_NAME[order.daily.format]} ${order.correct}/${order.slots.length}`, value: <SheetBadge rating={halfRating(2, order.score)} /> }]
+                  : []),
+                { title: "Overall", text: "Last 30 days", value: <SheetBadge rating={rating} dark />, dark: true },
+              ]}
+            />
           </section>
 
           {recall && <Squad recall={recall} kit={kit} />}
@@ -188,6 +190,7 @@ export function FullTime(props: Props) {
             <ShareButtons text={shareText} image={card ? { url: "/daily/card", name: `iknowball-daily-${String(issue).padStart(3, "0")}.png` } : null} />
             {/* Not on a first full time, which asks "Who do you support?" instead. */}
             {!props.clubChoices && <SeasonTicket guest={props.guest} icon={APP_ICON_SRC} season={seasonLabel(seasonOf(gameDate()))} />}
+            {!props.clubChoices && <WhistleStrip guest={props.guest} className="mt-6" />}
           </aside>
 
           <TodaysTable top={props.top} me={props.me} position={position} players={players} />
@@ -285,18 +288,9 @@ function DayScore({ points }: { points: number }) {
   );
 }
 
-function RatingSticker({ n, title, note, tilt, dark = false }: { n: number | null; title: string; note: string; tilt: string; dark?: boolean }) {
-  return (
-    <div
-      className={`grid justify-items-center gap-1 border-[2.5px] border-navy p-2 shadow-[3px_3px_0_var(--color-navy)] lg:flex lg:items-center lg:gap-3 lg:px-3 lg:py-2.5 lg:shadow-[4px_4px_0_var(--color-navy)] ${tilt} ${dark ? "bg-navy text-white" : "bg-white"}`}
-    >
-      <RatingBadge rating={n} className={`w-[46px] shrink-0 text-[22px] lg:w-[52px] lg:text-2xl ${dark ? "border-2 border-white" : ""}`} />
-      <span className="grid justify-items-center gap-1 lg:justify-items-start">
-        <span className="font-display text-[15px] leading-none uppercase lg:text-xl">{title}</span>
-        <span className={`label text-center text-[9px] lg:text-left lg:text-[11px] ${dark ? "text-white/80" : "text-navy/80"}`}>{note}</span>
-      </span>
-    </div>
-  );
+/** A rating on the team sheet: square, with a navy edge (white on the dark row). */
+function SheetBadge({ rating, dark = false }: { rating: number | null; dark?: boolean }) {
+  return <RatingBadge rating={rating} square className={`size-10 border-2 text-[19px] lg:size-12 lg:text-[22px] ${dark ? "border-white" : ""}`} />;
 }
 
 /** Part 1's squad (22 Oct 2026): found players on the pitch by position, then

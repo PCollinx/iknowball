@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { answerClash, beginSprint, endSprint } from "@/app/(site)/clash/actions";
 import type { Card } from "@/lib/clash/data";
 import { PENALTY_SECONDS, SPRINT_SECONDS, type Guess } from "@/lib/clash/rules";
 import type { Kit } from "@/components/daily/ShirtBack";
-import { clock } from "@/components/daily/clock";
+import { ClockFace } from "@/components/daily/InPlay";
 import { useRoundClock } from "@/components/daily/useRoundClock";
-import { AlbumPage, Pair, PlayerSticker, Slot, type StickerState } from "./Album";
-import { KickRow } from "./KickRow";
+import { ShirtBack, shirtName } from "@/components/daily/ShirtBack";
+import type { StickerState } from "./Album";
 
 const RIGHT = ["Ball knowledge.", "Sharp.", "You know ball.", "Oya, next.", "Clinical."];
 const WRONG = [
@@ -32,6 +32,12 @@ type Props = {
   statLabel: string;
   /** The stat's question while nothing is called: "Who's taller?". */
   ask: string;
+  /** The stat in a word or two, over the call: "Goals". */
+  statShort: string;
+  /** The players so far with their numbers, the last man last. */
+  history: Shown[];
+  /** Club names by id, for the chain. */
+  clubNames: Record<number, string>;
   shown: Shown;
   next: Card;
   deadlineAt: string;
@@ -43,11 +49,22 @@ type Props = {
   kits: Record<number, Kit>;
 };
 
-/** The sprint, option E (picked 23 Oct 2026): the score bug and the shootout row
- * on top, the two players as shirt stickers on an album page, tap the one with
- * more or Level. A call stamps the sticker "Goal" or "Missed". */
+/** The sprint, one screen tall (Collins, 7 Nov 2026, option B2 of
+ * https://claude.ai/artifact/K9hKzwrfPyrqc2ipUDErWT): the score bug, the chain
+ * of players so far (filling up from the call, scrolling once full), then the
+ * call at a fixed height on a navy slant, the last man against the
+ * next, Level on the line. Tap the half with more; a call stamps it "Goal" or
+ * "Missed" and the new player joins the chain. */
 export function Sprint(props: Props) {
   const [shown, setShown] = useState(props.shown);
+  // Every player so far with his number, up to the last man: the chain.
+  const [chain, setChain] = useState<Shown[]>(props.history);
+  const chainBox = useRef<HTMLDivElement>(null);
+  // The newest player stays in view as the chain grows past its box.
+  useEffect(() => {
+    const box = chainBox.current;
+    if (box) box.scrollTop = box.scrollHeight;
+  }, [chain.length]);
   const [next, setNext] = useState<Card | null>(props.next);
   const [at, setAt] = useState(props.at);
   const [kicks, setKicks] = useState(props.kicks);
@@ -86,6 +103,7 @@ export function Sprint(props: Props) {
       await new Promise((ok) => setTimeout(ok, SHOW_MS));
       if (r.done || !r.upcoming) return close();
       setShown({ ...next, value: r.value });
+      setChain((c) => [...c, { ...next, value: r.value }]);
       setNext(r.upcoming);
       setAt((i) => i + 1);
       setCall(null);
@@ -118,31 +136,48 @@ export function Sprint(props: Props) {
   };
 
   return (
-    <main className="mx-auto w-full max-w-295 flex-1 px-4 pb-6 lg:px-12">
-      {/* The score bug (option C's, kept by Collins) with the shootout row beside it. */}
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5 pt-3.5 lg:pt-6">
-        <div className="flex items-stretch border-[2.5px] border-navy shadow-[3px_3px_0_var(--color-navy)] max-lg:w-full lg:shadow-[4px_4px_0_var(--color-navy)]">
-          <span className="grid place-items-center bg-royal px-2.5 font-display text-lg text-white uppercase lg:px-3.5 lg:text-[22px]">Clash</span>
-          <span
-            role="timer"
-            aria-label={`${left} seconds left`}
-            className={`px-3 pt-1 pb-0.5 font-display text-[40px] leading-none text-white tabular-nums lg:px-4 lg:text-[56px] ${low ? "bg-red-card" : "bg-teal"}`}
-          >
-            {clock(left)}
-          </span>
-          <span className="flex flex-1 items-center justify-between gap-3.5 bg-navy px-3 text-white lg:px-4">
-            <span className="label text-[10px] text-teal-light lg:text-[11px]">Right</span>
-            <span className="font-display text-[40px] leading-none tabular-nums lg:text-[56px]">{right}</span>
-          </span>
-        </div>
-        <KickRow kicks={kicks} placeholder size="size-4.5 lg:size-5.5" className="min-w-0 flex-1" />
-        <p aria-hidden="true" className={`hidden font-display text-[28px] uppercase lg:block ${ink || "text-royal"}`}>
-          {feedback}
-        </p>
+    <main data-full-screen className="mx-auto flex min-h-0 w-full max-w-[720px] flex-1 flex-col gap-2.5 px-4 pt-3 pb-3.5 lg:gap-4 lg:pt-5 lg:pb-6">
+      {/* The score bug (option C's, kept by Collins). */}
+      <div className="flex shrink-0 items-stretch border-[2.5px] border-navy shadow-[3px_3px_0_var(--color-navy)] lg:shadow-[4px_4px_0_var(--color-navy)]">
+        <span className="grid place-items-center bg-royal px-2.5 font-display text-lg text-white uppercase lg:px-3.5 lg:text-[22px]">Clash</span>
+        <span
+          role="timer"
+          aria-label={`${left} seconds left`}
+          className={`px-3 pt-1 pb-0.5 font-display text-[40px] leading-none text-white tabular-nums lg:px-4 lg:text-[52px] ${low ? "bg-red-card" : "bg-teal"}`}
+        >
+          <ClockFace left={left} />
+        </span>
+        <span className="flex flex-1 items-center justify-between gap-3.5 bg-navy px-3 text-white lg:px-4">
+          <span className="label text-[10px] text-teal-light lg:text-[11px]">Right</span>
+          <span className="font-display text-[40px] leading-none tabular-nums lg:text-[52px]">{right}</span>
+        </span>
       </div>
 
-      <AlbumPage label={props.statLabel} className="mx-auto mt-6 max-w-205 lg:mt-9">
-        <Pair>
+      {/* The chain (Collins, 7 Nov 2026, option B of the full-screen mocks): every player so far, filling up from
+          the call, newest at the foot; it scrolls once it's full, and keeps the newest in view. */}
+      <div ref={chainBox} className="min-h-0 flex-1 overflow-y-auto overscroll-contain border-[2.5px] border-b-0 border-navy">
+        <ol aria-label="Your run so far" className="flex min-h-full flex-col justify-end">
+          {chain.map((c, i) => (
+            <ChainRow key={i} name={c.name} club={c.clubId !== null ? props.clubNames[c.clubId] : undefined} kit={kit(c)} value={c.value} mark={i === 0 ? null : kicks[i - 1] === "1"} />
+          ))}
+        </ol>
+      </div>
+
+      {/* The call, B2 "The slant": the last man on the dark side, the new player on teal, Level on the line. */}
+      <section aria-label="The call" className="-mt-2.5 flex h-[min(340px,56dvh)] shrink-0 flex-col bg-navy text-white lg:-mt-4 lg:h-[400px]">
+        <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2 px-3 pt-3">
+          <span className="min-w-0">
+            <span className="label block text-[10px] text-teal-light">Last man</span>
+            <span className="block truncate font-display text-[22px] leading-[0.95] uppercase lg:text-3xl">{shown.name}</span>
+          </span>
+          <span className="label pb-0.5 text-center text-[9px] text-white/65 lg:text-[10px]">{props.statShort}</span>
+          <span className="min-w-0 text-right">
+            <span className="label block text-[10px] text-teal-light">Next up</span>
+            <span className="block truncate font-display text-[22px] leading-[0.95] uppercase lg:text-3xl">{next?.name ?? ""}</span>
+          </span>
+        </div>
+
+        <div className="relative mt-2 min-h-0 flex-1">
           {(
             [
               ["shown", shown, shown.value],
@@ -150,35 +185,73 @@ export function Sprint(props: Props) {
             ] as const
           ).map(([side, card, value]) =>
             card ? (
-              <Slot key={`${side}-${card.name}`}>
-                <button
-                  type="button"
-                  onClick={() => answer(side === "shown" ? "fewer" : "more")}
-                  disabled={over || Boolean(call)}
-                  aria-label={`${card.name} has more`}
-                  className="block w-full min-w-0 motion-safe:animate-deal-in disabled:cursor-default"
-                >
-                  <PlayerSticker name={card.name} kit={kit(card)} value={value} side={side === "shown" ? "left" : "right"} state={state(side)} pop={side === "next" && revealed} />
-                </button>
-              </Slot>
+              <button
+                key={`${side}-${card.name}-${at}`}
+                type="button"
+                onClick={() => answer(side === "shown" ? "fewer" : "more")}
+                disabled={over || Boolean(call)}
+                aria-label={`${card.name} has more`}
+                className={`absolute inset-y-0 flex items-center justify-center disabled:cursor-default ${
+                  side === "shown"
+                    ? "left-0 right-1/2 bg-[#19224a] pr-[9%] [clip-path:polygon(0_0,100%_0,82%_100%,0_100%)]"
+                    : "right-0 left-[46%] bg-teal pl-[11%] [clip-path:polygon(18%_0,100%_0,100%_100%,0_100%)]"
+                } ${state(side) === "faded" ? "opacity-55" : ""}`}
+              >
+                <span className={`block h-[72%] max-h-56 motion-safe:animate-deal-in ${state(side) === "right" || state(side) === "wrong" ? "-translate-y-1.5" : ""}`}>
+                  <span className="block aspect-[100/104] h-full">
+                    <ShirtBack kit={kit(card)} name={shirtName(card.name)} num={value === null ? "?" : String(value)} pop={side === "next" && revealed} />
+                  </span>
+                </span>
+                {(state(side) === "right" || state(side) === "wrong") && (
+                  <span
+                    aria-hidden="true"
+                    className={`absolute top-[28%] left-1/2 -translate-x-1/2 -rotate-12 border-[3px] bg-white/90 px-2 font-display text-[28px] whitespace-nowrap uppercase lg:text-[40px] ${state(side) === "right" ? "border-royal text-royal" : "border-red-card text-red-card"}`}
+                  >
+                    {state(side) === "right" ? "Goal" : "Missed"}
+                  </span>
+                )}
+              </button>
             ) : null,
           )}
-        </Pair>
-        <p role="status" className={`mt-3 text-center font-display text-[22px] leading-none uppercase lg:sr-only ${ink}`}>
-          {feedback}
-        </p>
-      </AlbumPage>
+          <span aria-hidden="true" className="burst pointer-events-none absolute top-[36%] left-1/2 z-10 grid size-14 -translate-x-1/2 -translate-y-1/2 place-items-center bg-red-card font-display text-xl text-white lg:size-18 lg:text-2xl">
+            VS
+          </span>
+          <button
+            type="button"
+            onClick={() => answer("level")}
+            disabled={over || Boolean(call)}
+            className="btn-press absolute bottom-2.5 left-1/2 z-20 flex -translate-x-1/2 flex-col items-center border-[2.5px] border-navy bg-white px-3 pt-0.5 pb-1 text-navy shadow-[3px_3px_0_var(--color-sky)] disabled:opacity-60"
+          >
+            <span className="font-display text-[34px] leading-[0.8]">=</span>
+            <span className="label text-[10px]">Level</span>
+          </button>
+        </div>
 
-      <div className="mx-auto mt-4.5 max-w-205 lg:mt-5 lg:flex lg:justify-center">
-        <button
-          type="button"
-          onClick={() => answer("level")}
-          disabled={over || Boolean(call)}
-          className="btn-white btn-press flex w-full items-baseline justify-center gap-2.5 p-2.5 font-display text-3xl leading-none uppercase disabled:translate-0 disabled:opacity-60 disabled:shadow-none lg:w-80 lg:text-[32px]"
-        >
-          = Level <span className="font-sans text-[13px] font-semibold text-slate normal-case lg:text-sm">same number</span>
-        </button>
-      </div>
+        <p role="status" className={`m-3 border-[2.5px] border-navy bg-white px-2 pt-2 pb-1.5 text-center font-display text-[22px] leading-none uppercase shadow-[3px_3px_0_var(--color-sky)] lg:text-[26px] ${ink || "text-navy"}`}>
+          {call || over || runs.current > 1 ? feedback : "↑ Tap who has more ↑"}
+        </p>
+      </section>
     </main>
+  );
+}
+
+/** One player in the chain: shirt, name and club, his number, and whether the call that brought him on was right. */
+function ChainRow({ name, club, kit, value, mark }: { name: string; club?: string; kit?: Kit; value: number; mark: boolean | null }) {
+  return (
+    <li
+      className={`grid shrink-0 grid-cols-[30px_minmax(0,1fr)_auto_22px] items-center gap-2.5 border-b border-l-[6px] border-track px-2.5 py-1.5 motion-safe:animate-deal-in lg:py-2 ${mark === false ? "border-l-red-card" : "border-l-royal"}`}
+    >
+      <span className="block">
+        <ShirtBack kit={kit} />
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate font-display text-lg leading-none uppercase">{name}</span>
+        {club && <span className="block truncate text-[11px] text-slate">{club}</span>}
+      </span>
+      <span className="font-display text-[26px] leading-none tabular-nums">{value}</span>
+      <span aria-label={mark === null ? "Kick-off" : mark ? "Right" : "Missed"} className={`text-center font-display text-lg ${mark === false ? "text-red-card" : "text-royal"}`}>
+        {mark === null ? "" : mark ? "✓" : "✕"}
+      </span>
+    </li>
   );
 }

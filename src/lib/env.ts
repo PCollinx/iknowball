@@ -9,6 +9,8 @@ const publicSchema = z.object({
   NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
   NEXT_PUBLIC_POSTHOG_HOST: z.url().optional(),
   NEXT_PUBLIC_SENTRY_DSN: z.string().optional(),
+  // The whistle's public key (push notifications). Without it the switches stay hidden.
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().optional(),
 });
 
 const serverSchema = z.object({
@@ -22,6 +24,8 @@ const serverSchema = z.object({
   RESEND_API_KEY: z.string().min(1).optional(),
   // Resend's free plan sends 100 a day; raise this on a paid plan.
   LAUNCH_EMAIL_DAILY_CAP: z.coerce.number().int().positive().default(100),
+  // The whistle's private key, the pair of NEXT_PUBLIC_VAPID_PUBLIC_KEY. Optional: without it nothing is sent.
+  VAPID_PRIVATE_KEY: z.string().min(1).optional(),
 });
 
 // A Vercel preview serves on its branch URL, so sign-in links and share links
@@ -40,6 +44,7 @@ export function publicEnv() {
     NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY || undefined,
     NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST || undefined,
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN || undefined,
+    NEXT_PUBLIC_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || undefined,
   });
 }
 

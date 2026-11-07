@@ -8,6 +8,7 @@ import { GoogleButton } from "@/components/profile/GoogleButton";
 import { EmptyPeg, LeagueStickers, Peg, Section, StatStickers } from "@/components/profile/Peg";
 import { EmailForm, UsernameForm } from "@/components/profile/ProfileForms";
 import { OnYourPhone } from "@/components/pwa/OnYourPhone";
+import { WhistleSection } from "@/components/push/WhistleSection";
 import { APP_ICON_SRC } from "@/lib/og/logo";
 import { currentUser } from "@/lib/daily/data";
 import { getHub } from "@/lib/league/data";
@@ -114,6 +115,8 @@ async function ProfileScreen({ searchParams }: { searchParams: SearchParams }) {
         </Section>
 
         <OnYourPhone guest={guest} icon={APP_ICON_SRC} />
+
+        <WhistleSection guest={guest} />
 
         <Section title={guest ? "Keep your shirt" : "Account"}>
           {guest ? (

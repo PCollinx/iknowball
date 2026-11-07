@@ -4,8 +4,9 @@ import { ShirtBack } from "@/components/daily/ShirtBack";
 import type { HubLine } from "@/lib/league/data";
 import { kitOf } from "@/lib/profile/club";
 import type { ProfileView } from "@/lib/profile/data";
-import { formatRating, RATING_DAYS } from "@/lib/profile/rating";
+import { RATING_DAYS } from "@/lib/profile/rating";
 import { nextTier, PLACEMENT_DAYS } from "@/lib/profile/stats";
+import { SheetValue, TeamSheet, type SheetRow } from "@/components/sheet/TeamSheet";
 import { RatingBadge } from "./RatingBadge";
 
 // Your shirt as "The dressing-room peg" (option A, picked 27 Oct 2026, with
@@ -46,52 +47,36 @@ export function EmptyPeg() {
   );
 }
 
-function Sticker({ label, value, sub, className }: { label: string; value: string; sub: string; className: string }) {
-  return (
-    <div className={`border-[3px] border-navy px-2.5 py-2 shadow-[4px_4px_0_var(--color-navy)] ${className}`}>
-      <span className="label block">{label}</span>
-      <span className="mt-0.5 block font-display text-[32px] leading-[0.95] uppercase tabular-nums">{value}</span>
-      <span className="mt-0.5 block text-xs opacity-80">{sub}</span>
-    </div>
-  );
-}
-
-/** Rating, tier (or placement), streak and this week, as four stickers. */
+/** Rating, tier (or placement), streak and this week, on a team sheet (Collins, 7 Nov 2026; were four stickers). */
 export function StatStickers({ view }: { view: ProfileView }) {
   const left = PLACEMENT_DAYS - view.daysPlayed;
   const next = view.rating !== null ? nextTier(view.rating) : null;
-  return (
-    <section aria-label="Your numbers" className="mt-5 grid grid-cols-2 gap-x-3 gap-y-3.5">
-      <Sticker label="Rating" value={formatRating(view.rating)} sub={`Out of 10, last ${RATING_DAYS} days`} className="-rotate-1 bg-white" />
-      {view.tier ? (
-        <Sticker
-          label="Tier"
-          value={view.tier}
-          sub={next && view.rating !== null ? `${next.name} at ${(view.rating + next.gap).toFixed(1)}` : "The top tier"}
-          className="rotate-[0.8deg] bg-teal text-white"
-        />
-      ) : (
-        <Sticker
-          label="Placement"
-          value={`${view.daysPlayed} of ${PLACEMENT_DAYS}`}
-          sub={`${left} more ${left === 1 ? "Daily" : "Dailies"}`}
-          className="rotate-[0.8deg] bg-white"
-        />
-      )}
-      <Sticker
-        label="Streak"
-        value={view.streak === 1 ? "1 day" : `${view.streak} days`}
-        sub={view.streak ? "Days in a row" : "Play today to start one"}
-        className="rotate-[0.5deg] bg-navy text-white"
-      />
-      <Sticker
-        label="This week"
-        value={String(view.weekScore)}
-        sub={`/ 600 · ${view.weekClash ? `+${view.weekClash} Clash` : `${view.weekDays} played`}`}
-        className="-rotate-[0.6deg] bg-teal-light"
-      />
-    </section>
-  );
+  const rows: SheetRow[] = [
+    {
+      title: "Rating",
+      text: `Out of 10, last ${RATING_DAYS} days`,
+      value: <RatingBadge rating={view.rating} square className="size-10 border-2 text-[19px] lg:size-12 lg:text-[22px]" />,
+    },
+    view.tier
+      ? {
+          title: "Tier",
+          text: next && view.rating !== null ? `${next.name} at ${(view.rating + next.gap).toFixed(1)}` : "The top tier",
+          value: <SheetValue className="text-teal">{view.tier}</SheetValue>,
+        }
+      : { title: "Placement", text: `${left} more ${left === 1 ? "Daily" : "Dailies"}`, value: <SheetValue>{`${view.daysPlayed} of ${PLACEMENT_DAYS}`}</SheetValue> },
+    {
+      title: "Streak",
+      text: view.streak ? "Days in a row" : "Play today to start one",
+      value: <SheetValue>{view.streak === 1 ? "1 day" : `${view.streak} days`}</SheetValue>,
+    },
+    {
+      title: "This week",
+      text: `Out of 600 · ${view.weekClash ? `+${view.weekClash} Clash` : `${view.weekDays} played`}`,
+      value: <SheetValue>{view.weekScore}</SheetValue>,
+      dark: true,
+    },
+  ];
+  return <TeamSheet name="Your numbers" rows={rows} className="mt-5" />;
 }
 
 const TILTS = ["-rotate-1", "rotate-[0.8deg]", "-rotate-[0.4deg]"];

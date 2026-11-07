@@ -51,6 +51,8 @@ export function SeasonTicket({ guest, icon, season }: Props) {
   const due = useSyncExternalStore(subscribeLater, () => ticketDue(readLater(), Date.now()), () => false);
   const [hidden, setHidden] = useState(false);
   if (hidden || !due || (way !== "prompt" && way !== "ios")) return null;
+  // On iPhone the whistle's strip carries the same steps (WhistleStrip), so full time asks once.
+  if (way === "ios" && process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY) return null;
 
   const phone = way === "ios" || /Android|Mobile/.test(navigator.userAgent);
   return (

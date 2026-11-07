@@ -7,7 +7,7 @@ import { dayLabel } from "@/lib/drafts/matchday";
 // The control room (Collins, 30 Oct 2026): what counts as a problem in each
 // scheduled job's result, and in the runs themselves. Pure, so it's tested.
 
-export const JOB_NAMES = ["fixtures", "match-data", "import-wikidata", "drafts", "launch-email"] as const;
+export const JOB_NAMES = ["fixtures", "match-data", "import-wikidata", "drafts", "launch-email", "whistle-morning", "whistle-evening"] as const;
 export type JobName = (typeof JOB_NAMES)[number];
 
 /** Times are WAT, as vercel.json has them in UTC. On Vercel Hobby a job runs any time within its hour. */
@@ -22,10 +22,24 @@ export const JOBS: Record<JobName, { label: string; at: string; does: string; ma
     does: "From Fri 20 Nov: the launch email to everyone on the waitlist, up to the day's cap, until all have had it.",
     maxSeconds: 120,
   },
+  "whistle-morning": {
+    label: "Whistle · morning",
+    at: "09:00",
+    does: "Push notifications: today's Daily is up; on Mondays, how last week finished in your league instead.",
+    maxSeconds: 120,
+  },
+  "whistle-evening": { label: "Whistle · evening", at: "20:00", does: "Push notifications: 4 hours left, for anyone yet to start today's Daily.", maxSeconds: 120 },
 };
 
 /** A job whose last run started longer ago than this has missed a night (a day plus the hour Hobby may run it in, and some). */
 export const MISSED_AFTER_HOURS = 26;
+
+/** A push service that refused a buzz (gone devices are routine: they're deleted). */
+export function whistleProblems(r: { skipped: string } | { daily: { failed: number }; league?: { failed: number } }): string[] {
+  if ("skipped" in r) return [];
+  const failed = r.daily.failed + (r.league?.failed ?? 0);
+  return failed ? [`${failed} ${failed === 1 ? "buzz" : "buzzes"} refused by the push service.`] : [];
+}
 
 export type ImportJobResult = { results: ImportResult[]; failed: number; left: string[] };
 

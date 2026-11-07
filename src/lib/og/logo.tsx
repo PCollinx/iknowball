@@ -76,3 +76,19 @@ export const APP_ICON_SRC = dataUri(
     </svg>,
   ),
 );
+
+/** The notification badge (the whistle): Android shows only its shape, so
+ * it's the shirt in white with the 10 cut out. Square, any size. */
+export const BADGE_SRC = dataUri(
+  toSvg(
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="-12 -10 124 124" width="96" height="96">
+      <defs>
+        <mask id="ikb-badge">
+          <path d={SHIRT} fill="#FFFFFF" />
+          <path d={TEN} fill="#000000" />
+        </mask>
+      </defs>
+      <rect x="-2" y="-2" width="104" height="108" fill="#FFFFFF" mask="url(#ikb-badge)" />
+    </svg>,
+  ),
+);
