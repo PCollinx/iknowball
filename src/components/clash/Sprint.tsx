@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { answerClash, beginSprint, endSprint } from "@/app/(site)/clash/actions";
 import type { Card } from "@/lib/clash/data";
 import { PENALTY_SECONDS, SPRINT_SECONDS, type Guess } from "@/lib/clash/rules";
@@ -51,13 +51,20 @@ type Props = {
 
 /** The sprint, one screen tall (Collins, 7 Nov 2026, option B2 of
  * https://claude.ai/artifact/K9hKzwrfPyrqc2ipUDErWT): the score bug, the chain
- * of players so far, then the call on a navy slant, the last man against the
+ * of players so far (filling up from the call, scrolling once full), then the
+ * call at a fixed height on a navy slant, the last man against the
  * next, Level on the line. Tap the half with more; a call stamps it "Goal" or
  * "Missed" and the new player joins the chain. */
 export function Sprint(props: Props) {
   const [shown, setShown] = useState(props.shown);
   // Every player so far with his number, up to the last man: the chain.
   const [chain, setChain] = useState<Shown[]>(props.history);
+  const chainBox = useRef<HTMLDivElement>(null);
+  // The newest player stays in view as the chain grows past its box.
+  useEffect(() => {
+    const box = chainBox.current;
+    if (box) box.scrollTop = box.scrollHeight;
+  }, [chain.length]);
   const [next, setNext] = useState<Card | null>(props.next);
   const [at, setAt] = useState(props.at);
   const [kicks, setKicks] = useState(props.kicks);
@@ -146,20 +153,18 @@ export function Sprint(props: Props) {
         </span>
       </div>
 
-      {/* The chain (Collins, 7 Nov 2026, option B of the full-screen mocks): every player so far, newest at the foot. */}
-      <ol
-        aria-label="Your run so far"
-        className={`relative flex max-h-[46%] min-h-0 shrink flex-col justify-end overflow-hidden border-[2.5px] border-b-0 border-navy ${
-          chain.length > 3 ? "before:pointer-events-none before:absolute before:inset-x-0 before:top-0 before:z-10 before:h-10 before:bg-linear-to-b before:from-white before:to-transparent" : ""
-        }`}
-      >
-        {chain.map((c, i) => (
-          <ChainRow key={i} name={c.name} club={c.clubId !== null ? props.clubNames[c.clubId] : undefined} kit={kit(c)} value={c.value} mark={i === 0 ? null : kicks[i - 1] === "1"} />
-        ))}
-      </ol>
+      {/* The chain (Collins, 7 Nov 2026, option B of the full-screen mocks): every player so far, filling up from
+          the call, newest at the foot; it scrolls once it's full, and keeps the newest in view. */}
+      <div ref={chainBox} className="min-h-0 flex-1 overflow-y-auto overscroll-contain border-[2.5px] border-b-0 border-navy">
+        <ol aria-label="Your run so far" className="flex min-h-full flex-col justify-end">
+          {chain.map((c, i) => (
+            <ChainRow key={i} name={c.name} club={c.clubId !== null ? props.clubNames[c.clubId] : undefined} kit={kit(c)} value={c.value} mark={i === 0 ? null : kicks[i - 1] === "1"} />
+          ))}
+        </ol>
+      </div>
 
       {/* The call, B2 "The slant": the last man on the dark side, the new player on teal, Level on the line. */}
-      <section aria-label="The call" className="-mt-2.5 flex min-h-[300px] flex-1 flex-col bg-navy text-white lg:-mt-4">
+      <section aria-label="The call" className="-mt-2.5 flex h-[min(340px,56dvh)] shrink-0 flex-col bg-navy text-white lg:-mt-4 lg:h-[400px]">
         <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2 px-3 pt-3">
           <span className="min-w-0">
             <span className="label block text-[10px] text-teal-light">Last man</span>
