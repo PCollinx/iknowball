@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { clock } from "@/components/daily/clock";
+import { duration } from "@/components/daily/clock";
 import { fanName, headlineFixture } from "@/components/daily/fixture";
 import { ordinal } from "@/components/daily/formats";
 import { Masthead, shortDate } from "@/components/daily/Masthead";
@@ -141,7 +141,7 @@ function Podium({ rows, me }: { rows: TableRow[]; me: string | null }) {
               </span>
               <span className={`flex w-full flex-col items-center bg-navy pt-1.5 text-white shadow-[4px_4px_0_var(--color-sky)] lg:pt-2 lg:shadow-[5px_5px_0_var(--color-sky)] ${step}`}>
                 <span className="font-display text-[30px] leading-[0.9] text-teal-light tabular-nums lg:text-[40px]">{row.score}</span>
-                <span className="label text-[9px] text-white/80 lg:text-[10px]">{clock(row.seconds)} used</span>
+                <span className="label text-[9px] text-white/80 lg:text-[10px]">{duration(row.seconds)} used</span>
               </span>
             </>
           )}
@@ -207,7 +207,7 @@ function YourLine({ view, rows, parts, tab }: { view: TableView<TableRow>; rows:
   );
 }
 
-const GRID = "grid grid-cols-[30px_30px_minmax(0,1fr)_40px_32px] items-center gap-2 lg:grid-cols-[44px_40px_minmax(0,1fr)_72px_80px_56px] lg:gap-3";
+const GRID = "grid grid-cols-[30px_30px_minmax(0,1fr)_52px_32px] items-center gap-2 lg:grid-cols-[44px_40px_minmax(0,1fr)_72px_80px_56px] lg:gap-3";
 
 /** 4th down to the cut, printed; then the gap and the rows around you. */
 function Programme({ view, me, parts }: { view: TableView<TableRow>; me: string | null; parts: number }) {
@@ -258,7 +258,7 @@ function Row({ row, me, parts }: { row: TableRow; me: boolean; parts: number }) 
         {row.parts < parts && <span className={`ml-1.5 text-[11px] font-normal lg:text-[13px] ${me ? "text-white/80" : "text-slate"}`}>Part 1 only</span>}
       </span>
       <span className={`hidden font-display text-[15px] uppercase lg:block ${me ? "text-white/80" : "text-slate"}`}>{row.club?.short_name ?? "–"}</span>
-      <span className={`text-right text-[13px] tabular-nums lg:text-[15px] ${me ? "text-white/80" : "text-slate"}`}>{clock(row.seconds)}</span>
+      <span className={`text-right text-[13px] tabular-nums lg:text-[15px] ${me ? "text-white/80" : "text-slate"}`}>{duration(row.seconds)}</span>
       <span className="text-right font-display text-[22px] leading-none tabular-nums lg:text-[28px]">{row.score}</span>
     </li>
   );

@@ -5,7 +5,7 @@ import { answerClash, beginSprint, endSprint } from "@/app/(site)/clash/actions"
 import type { Card } from "@/lib/clash/data";
 import { PENALTY_SECONDS, SPRINT_SECONDS, type Guess } from "@/lib/clash/rules";
 import type { Kit } from "@/components/daily/ShirtBack";
-import { clock } from "@/components/daily/clock";
+import { ClockFace } from "@/components/daily/InPlay";
 import { useRoundClock } from "@/components/daily/useRoundClock";
 import { AlbumPage, Pair, PlayerSticker, Slot, type StickerState } from "./Album";
 import { KickRow } from "./KickRow";
@@ -128,7 +128,7 @@ export function Sprint(props: Props) {
             aria-label={`${left} seconds left`}
             className={`px-3 pt-1 pb-0.5 font-display text-[40px] leading-none text-white tabular-nums lg:px-4 lg:text-[56px] ${low ? "bg-red-card" : "bg-teal"}`}
           >
-            {clock(left)}
+            <ClockFace left={left} />
           </span>
           <span className="flex flex-1 items-center justify-between gap-3.5 bg-navy px-3 text-white lg:px-4">
             <span className="label text-[10px] text-teal-light lg:text-[11px]">Right</span>

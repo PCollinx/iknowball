@@ -10,7 +10,7 @@ import { gameDate, gameDateClosesAt, seasonLabel, seasonOf } from "@/lib/time";
 import type { OrderReveal, RecallReveal, TableRow } from "@/lib/daily/data";
 import { halfRating } from "@/lib/daily/score";
 import { handoffHeading, STATS, type Stat } from "@/lib/clash/rules";
-import { clock } from "./clock";
+import { duration } from "./clock";
 import { headlineFixture } from "./fixture";
 import { Masthead, shortDate } from "./Masthead";
 import { NextDaily } from "./NextDaily";
@@ -130,7 +130,7 @@ export function FullTime(props: Props) {
                   {seconds !== null && (
                     <>
                       <br />
-                      {clock(seconds)} used
+                      {duration(seconds)} used
                     </>
                   )}
                 </span>

@@ -5,6 +5,26 @@ import { clock } from "./clock";
 // Pieces shared by the Daily's rounds in play (step 2 of docs/launch-plan.md,
 // Collins's mix of 21 Oct 2026): the clock box, the progress boxes and the pitch.
 
+/**
+ * The clock's digits, each in a slot as wide as a 0 (Big Shoulders' digits
+ * differ in width, so 1:11 and 0:58 resized the box and shifted the screen).
+ */
+export function ClockFace({ left }: { left: number }) {
+  return (
+    <>
+      {[...clock(left)].map((c, i) =>
+        c === ":" ? (
+          c
+        ) : (
+          <span key={i} className="inline-block w-[1ch] text-center">
+            {c}
+          </span>
+        ),
+      )}
+    </>
+  );
+}
+
 /** The clock: a teal box with a hard shadow, red near the end. */
 export function RoundClock({ left, low, className = "" }: { left: number; low: boolean; className?: string }) {
   return (
@@ -14,7 +34,9 @@ export function RoundClock({ left, low, className = "" }: { left: number; low: b
       className={`border-[2.5px] border-navy px-2.5 pt-0.5 pb-1 text-right text-white shadow-[3px_3px_0_var(--color-navy)] lg:px-4 lg:pb-1.5 ${low ? "bg-red-card" : "bg-teal"} ${className}`}
     >
       <span className="label block text-[9px] lg:text-[11px]">Time left</span>
-      <span className="block font-display text-[42px] leading-[0.9] tabular-nums lg:text-6xl">{clock(left)}</span>
+      <span className="block font-display text-[42px] leading-[0.9] tabular-nums lg:text-6xl">
+        <ClockFace left={left} />
+      </span>
     </div>
   );
 }
