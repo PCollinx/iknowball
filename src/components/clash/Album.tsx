@@ -1,10 +1,11 @@
 import type { ReactNode } from "react";
+import { TeamSheet } from "@/components/sheet/TeamSheet";
 import { ShirtBack, shirtName, type Kit } from "@/components/daily/ShirtBack";
 import { PENALTY_SECONDS, SPRINT_SECONDS } from "@/lib/clash/rules";
 
 // Clash's pieces from option E (picked 23 Oct 2026, docs/launch-plan.md step 5):
 // the head-to-head as two shirt stickers on an album page, the referee's notes
-// as tilted stickers. The heading is the scoreboard in Board.tsx.
+// as a team sheet (7 Nov 2026). The heading is the scoreboard in Board.tsx.
 
 /** A mist album page with the stat as a tilted label sticker across its top edge. */
 export function AlbumPage({ label, children, className = "" }: { label: string; children: ReactNode; className?: string }) {
@@ -78,32 +79,18 @@ export function Slot({ children }: { children: ReactNode }) {
   return <div className="grid min-w-0 border-2 border-dashed border-[#8E9BD6] bg-[#E3E8FF] p-1.5 lg:border-[2.5px] lg:p-2.5">{children}</div>;
 }
 
-const NOTES = [
-  { title: `${SPRINT_SECONDS} seconds`, line: "On our clock, not your phone's.", tone: "bg-teal-light", tilt: "-rotate-[1.2deg]" },
-  { title: "Tap who has more", line: "Or Level if it's the same number.", tone: "bg-teal-light", tilt: "rotate-1 ml-3.5 lg:ml-5.5" },
-  { title: `Miss, lose ${PENALTY_SECONDS} seconds`, line: "And your run starts again.", tone: "bg-red-card text-white", tilt: "-rotate-[0.6deg]" },
-];
-
-/** The rules as three tilted stickers (option B's, kept by Collins). */
+/** The rules as a team sheet (Collins, 7 Nov 2026; were three tilted stickers). A miss is the warning. */
 export function RefereesNotes() {
   return (
-    <section>
-      <h2 className="label mb-2.5 text-[10px] lg:mb-3.5 lg:text-[11px]">The referee&apos;s notes</h2>
-      <ol className="grid gap-2 lg:gap-4">
-        {NOTES.map((n, i) => (
-          <li
-            key={n.title}
-            className={`grid grid-cols-[28px_minmax(0,1fr)] items-center gap-2.5 border-[2.5px] border-navy px-2.5 py-1.5 shadow-[3px_3px_0_var(--color-navy)] lg:grid-cols-[44px_minmax(0,1fr)] lg:gap-3 lg:px-3.5 lg:py-3 lg:shadow-[4px_4px_0_var(--color-navy)] ${n.tilt}`}
-          >
-            <span className={`grid size-6.5 place-items-center rounded-full border-2 border-navy font-display text-base lg:size-10.5 lg:text-2xl ${n.tone}`}>{i + 1}</span>
-            <span className="text-[13px] leading-snug lg:text-base">
-              <b className="block font-display text-base leading-none uppercase lg:text-[26px]">{n.title}</b>
-              {n.line}
-            </span>
-          </li>
-        ))}
-      </ol>
-    </section>
+    <TeamSheet
+      name="The referee's notes"
+      tag="Clash"
+      rows={[
+        { title: `${SPRINT_SECONDS} seconds`, text: "On our clock, not your phone's." },
+        { title: "Tap who has more", text: "Or Level if it's the same number." },
+        { title: `Miss, lose ${PENALTY_SECONDS} seconds`, text: "And your run starts again.", warn: true },
+      ]}
+    />
   );
 }
 

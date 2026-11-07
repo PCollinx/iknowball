@@ -7,6 +7,7 @@ import { sprintLine } from "@/lib/clash/rules";
 import { AlbumPage } from "./Album";
 import { ChallengeButton } from "./ChallengeButton";
 import { TellMe } from "@/components/push/TellMe";
+import { SheetValue, TeamSheet, type SheetRow } from "@/components/sheet/TeamSheet";
 import { Kick } from "./KickRow";
 import { ClashMasthead } from "./Masthead";
 import { MiniThree } from "./YourThree";
@@ -189,30 +190,20 @@ function SidePage({ side, size, mine = false }: { side: Side; size: number; mine
   );
 }
 
-/** The result, the best run, the week and the rating, as small tilted stickers. */
+/** The result, the best run, the week and the rating, on a team sheet (Collins, 7 Nov 2026; were tilted stickers). */
 function Stickers({ outcome, bestRun, weekBest, rating }: { outcome: Outcome | null; bestRun: number; weekBest: boolean; rating: number | null }) {
-  const word = outcome ? outcomeLabel(outcome).split(" ") : null;
-  return (
-    <ul className="mt-4 flex flex-wrap items-center gap-2 text-sm lg:mt-5.5 lg:gap-2.5 lg:text-[15px]">
-      {word && (
-        <li className={`-rotate-[1.5deg] border-2 border-navy px-2.5 py-1 shadow-[3px_3px_0_var(--color-navy)] ${outcome?.kind === "lost" ? "bg-white" : "bg-teal-light"}`}>
-          <b className="font-display text-xl uppercase lg:text-2xl">{word[0]}</b> {word.slice(1).join(" ")}
-        </li>
-      )}
-      <li className="rotate-1 border-2 border-navy bg-white px-2.5 py-1 shadow-[3px_3px_0_var(--color-navy)]">
-        <b className="font-display text-xl lg:text-2xl">{bestRun}</b> best run
-      </li>
-      {weekBest && (
-        <li className="-rotate-1 border-2 border-navy bg-teal-light px-2.5 py-1 shadow-[3px_3px_0_var(--color-navy)]">
-          <b className="font-display text-xl uppercase lg:text-2xl">Best</b> this week
-        </li>
-      )}
-      <li className="flex -rotate-[0.6deg] items-center gap-1.5 border-2 border-navy bg-navy px-2.5 py-1 text-white shadow-[3px_3px_0_var(--color-sky)]">
-        <RatingBadge rating={rating} className="size-6 text-[13px] lg:size-7 lg:text-sm" />
-        rating
-      </li>
-    </ul>
-  );
+  const rows: SheetRow[] = [
+    ...(outcome ? [{ title: "Result", value: <SheetValue className={outcome.kind === "lost" ? "text-red-card" : "text-royal"}>{outcomeLabel(outcome)}</SheetValue> }] : []),
+    { title: "Best run", value: <SheetValue>{bestRun}</SheetValue> },
+    ...(weekBest ? [{ title: "This week", value: <SheetValue className="text-teal">Your best</SheetValue> }] : []),
+    {
+      title: "Rating",
+      text: "Last 30 days",
+      value: <RatingBadge rating={rating} square className="size-10 border-2 border-white text-[19px] lg:size-12 lg:text-[22px]" />,
+      dark: true,
+    },
+  ];
+  return <TeamSheet name="Your sprint" tag="Full time" rows={rows} className="mt-4 lg:mt-5.5" />;
 }
 
 const WAITING = 3;
