@@ -208,7 +208,7 @@ Production, a pair each), the live migration, and a real buzz on an Android phon
 - [ ] **Fri 20 Nov:** the waitlist comes down at midnight WAT by itself; send the launch email (step 17).
 
 The launch day posts (LinkedIn, X and WhatsApp) and the ones after (Product Hunt on Tue 1 Dec, Show HN on
-Thu 3 Dec, the short videos) have their own plan: `docs/launch-posts.md`.
+Thu 3 Dec, Nairaland, the short videos) have their own plan: `docs/launch-posts.md`.
 
 After launch: step 14 (Support, with Vercel Pro), Rate mode (18 Dec).
 
@@ -246,4 +246,4 @@ After launch: step 14 (Support, with Vercel Pro), Rate mode (18 Dec).
 - [x] 17. The launch email (built 4 Nov, `claude/launch-email`; sends itself from 07:00 WAT 20 Nov; test send passed on live)
 - [x] 18. Waitlist leagues on day one (built 31 Oct)
 - [ ] 19. The demo video on the waitlist (by 18 Nov)
-- [ ] 20. The whistle (built 7 Nov, `claude/push-notifications`; keys, live migration and phone checks to do)
+- [x] 20. The whistle (PR #77, merged 7 Nov; keys and live migration done, a test notification arrived on Collins's phone)

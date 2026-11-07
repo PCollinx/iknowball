@@ -1,12 +1,12 @@
 # Launch posts
 
 The plan for the posts outside the app: launch day on LinkedIn, X and WhatsApp, then Product Hunt, Hacker
-News and the short videos (Collins, 7 Nov 2026). Nairaland is still to be decided. Times are WAT.
+News, Nairaland and the short videos (Collins, 7 Nov 2026). Times are WAT.
 
 Rules that hold for every post:
 - Never post a question from an upcoming Daily. Videos and examples use past Dailies only.
 - Every link carries its source so PostHog can tell the channels apart:
-  `https://playiknowball.com/?utm_source=<linkedin|producthunt|hackernews|tiktok|instagram|youtube|x>`.
+  `https://playiknowball.com/?utm_source=<linkedin|producthunt|hackernews|nairaland|tiktok|instagram|youtube|x>`.
 - The site takes no money while it's on Vercel Hobby, so nothing says "support us", "donate" or "pro".
 - Use real numbers only. Anything in [brackets] below gets filled in on the day from the maker, PostHog or
   Supabase, or comes out.
@@ -15,10 +15,13 @@ Rules that hold for every post:
 
 | When | What | Where |
 | --- | --- | --- |
+| From Mon 9 Nov | Make a Nairaland account and take part in Sports threads (no links yet) | Nairaland |
 | Mon 16 Nov | Build story: "I'm launching on Friday" | LinkedIn |
 | Thu 19 Nov | Demo video, and pinned on the waitlist page for its last day (step 19 of the launch plan) | X, WhatsApp, TikTok, Reels, Shorts, waitlist |
 | Fri 20 Nov | Launch day, all three at 07:00, when the gates open and the launch email goes | LinkedIn, X, WhatsApp |
+| Fri 20 Nov, 12:00 | The launch thread | Nairaland |
 | From Sat 21 Nov | Short videos, three a week | TikTok, Reels, Shorts, X, WhatsApp Status |
+| Mondays from 23 Nov | The thread's weekly update: team of the week and the hardest Daily | Nairaland |
 | Tue 1 Dec | Product Hunt launch (09:01 WAT, when PH's day starts) | Product Hunt, LinkedIn, X |
 | Thu 3 Dec | Show HN (about 14:00 WAT, 8 am in New York) | Hacker News |
 | Tue 8 Dec | "Two weeks in": what the numbers say | LinkedIn |
@@ -197,6 +200,58 @@ HN rewards plain titles, no sign-up, and the interesting technical bits. Post on
 
 Be at the keyboard for the first three hours to answer comments. If it doesn't catch, HN allows one repost
 after a few days; don't repost sooner.
+
+## Nairaland
+
+Nigeria's biggest forum, and its Sports section is busy all week with Premier League talk: the right crowd
+for iKnowBall. Collins hasn't used it before, so this is step by step.
+
+### How it works
+- **Boards:** posts live in sections. Ours is **Sports** (football talk). Don't post in two sections: the
+  same thread twice looks like spam.
+- **Threads:** a post with a title starts a thread; replies go under it, newest last. A thread climbs back
+  up the board each time someone replies, so answering every reply keeps it seen.
+- **Front page:** moderators pick threads for the home page. A thread that's fun on its own, not an ad,
+  stands the best chance.
+- **New accounts:** the forum's anti-spam bot is strict with new accounts that post links, and can ban
+  them. So the first week is for joining in, not linking.
+
+### Week before launch (from Mon 9 Nov)
+1. Sign up at nairaland.com with your email. Pick a name people will connect to the app, like
+   `iKnowBallHQ`, or use your own name and say in your signature that you built it.
+2. Set a profile picture: the No. 10 shirt app icon.
+3. For a week, reply in Sports threads about the weekend's matches like any fan: an opinion, a stat. No
+   links. Five to ten good replies is plenty.
+
+### Fri 20 Nov, 12:00: the launch thread
+Lead with the quiz, not the app: a question people want to answer in the replies, then the link.
+
+- **Title:** `Can You Name Every Player Who Played For Both Arsenal And Chelsea Since 1992?`
+  (use a past Daily's pair, never an upcoming one; a big-six pair gets more replies).
+- **Body:**
+
+> Football fans, test yourself. How many can you name before checking? Drop your number below.
+>
+> [image: a Name them teaser from /maker/teaser, numbered shirts with "?" on the tags]
+>
+> I built a game around questions like this: **iKnowBall**. A new Daily every day, timed, one go. Then
+> Clash, 60 seconds of higher or lower you can send to your guy. Then leagues with your friends, scored
+> every Premier League week.
+>
+> Free, no sign-up to play, works on any phone: playiknowball.com/?utm_source=nairaland
+>
+> Post your score here. Answers to the question above on page 2 tomorrow.
+
+- Upload images through Nairaland's own image button so they show in the thread.
+- Answer every reply that day. Post the answers the next day (a second image with the names), which brings
+  everyone back to the thread.
+
+### After launch
+- Keep the one thread going rather than starting new ones: every Monday, reply with the team of the week
+  card and "this week's hardest Daily" (a past one).
+- If a reply asks for a feature or reports a bug, answer it there, so the thread shows a builder who
+  listens.
+- Nairaland sells ads, but nothing is planned there: the free thread comes first.
 
 ## Short videos
 
