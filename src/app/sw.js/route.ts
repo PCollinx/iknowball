@@ -1,7 +1,8 @@
-// The service worker (step 16). It does one thing: when a page can't load
-// because you're offline, it shows the "Lost the signal" screen (/offline).
-// Nothing else is cached and nothing is played offline: answers are checked
-// on the server. The build's commit is written into the script, so every
+// The service worker (step 16). When a page can't load because you're
+// offline, it shows the "Lost the signal" screen (/offline). Nothing else is
+// cached and nothing is played offline: answers are checked on the server.
+// It also blows the whistle (push notifications, Collins, 7 Nov 2026): shows
+// each buzz and opens its screen when tapped. The build's commit is written into the script, so every
 // deploy installs a fresh worker with that deploy's offline screen.
 
 const VERSION = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local";
@@ -63,6 +64,44 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.startsWith("/_next/static/")) {
     event.respondWith(fetch(request).catch(async () => (await caches.match(request)) ?? Response.error()));
   }
+});
+
+// A buzz: { title, body, url, tag } from src/lib/push/send.ts. A new one with
+// the same tag replaces the last (this morning's Daily by tonight's).
+self.addEventListener("push", (event) => {
+  let buzz = {};
+  try {
+    buzz = event.data ? event.data.json() : {};
+  } catch {
+    buzz = { body: event.data ? event.data.text() : "" };
+  }
+  event.waitUntil(
+    self.registration.showNotification(buzz.title || "iKnowBall", {
+      body: buzz.body || "",
+      tag: buzz.tag || undefined,
+      icon: "/icons/192.png",
+      badge: "/icons/badge.png",
+      data: { url: buzz.url || "/" },
+    }),
+  );
+});
+
+// Tapping it: the app's open window goes there, or a new one opens.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const to = new URL((event.notification.data && event.notification.data.url) || "/", self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then(async (list) => {
+      const same = list.find((c) => c.url === to);
+      if (same) return same.focus();
+      const open = list.find((c) => "navigate" in c);
+      if (open) {
+        const moved = await open.navigate(to).catch(() => null);
+        if (moved) return moved.focus();
+      }
+      return self.clients.openWindow(to);
+    }),
+  );
 });
 `;
 

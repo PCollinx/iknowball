@@ -6,6 +6,7 @@ import type { Result } from "@/lib/clash/data";
 import { sprintLine } from "@/lib/clash/rules";
 import { AlbumPage } from "./Album";
 import { ChallengeButton } from "./ChallengeButton";
+import { TellMe } from "@/components/push/TellMe";
 import { Kick } from "./KickRow";
 import { ClashMasthead } from "./Masthead";
 import { MiniThree } from "./YourThree";
@@ -108,7 +109,11 @@ export function ClashFullTime({ code, statLabel, setSize, right, kicks, bestRun,
             </>
           ) : (
             <>
-              {ticket}
+              <div className="grid gap-4">
+                {ticket}
+                {/* Your own set: "Tell me when they play" (the whistle, option B). */}
+                <TellMe />
+              </div>
               {board}
             </>
           )}

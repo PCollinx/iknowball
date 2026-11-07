@@ -178,6 +178,13 @@ The demo video goes out Thu 19 Nov and is pinned on the waitlist page for its la
 under the team sheet (a link to the post on X, or the video itself), switched on by a date or a setting.
 By Wed 18 Nov.
 
+### 20. The whistle (push notifications)
+Notifications for the Daily (09:00 when it's up, 20:00 if you haven't played), Clash challenges (the moment a
+mate finishes yours) and your league (Mondays). Asked at the Daily's full time, under your own challenge at
+Clash full time, and switched on Your shirt (options A, B and C of
+https://claude.ai/artifact/AGqN4hg5iztkWXatKnGwab). Before launch: VAPID keys in Vercel (Preview and
+Production, a pair each), the live migration, and a real buzz on an Android phone and an installed iPhone.
+
 ## Dates and Collins's to-dos
 
 - [x] **Before Sun 1 Nov:** set `BETA_CODE` (8+ characters) in Vercel Production and redeploy.
@@ -234,3 +241,4 @@ After launch: step 14 (Support, with Vercel Pro), Rate mode (18 Dec).
 - [x] 17. The launch email (built 4 Nov, `claude/launch-email`; sends itself from 07:00 WAT 20 Nov; test send passed on live)
 - [x] 18. Waitlist leagues on day one (built 31 Oct)
 - [ ] 19. The demo video on the waitlist (by 18 Nov)
+- [ ] 20. The whistle (built 7 Nov, `claude/push-notifications`; keys, live migration and phone checks to do)

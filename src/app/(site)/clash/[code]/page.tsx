@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { connection } from "next/server";
+import { after, connection } from "next/server";
 import { ClashFullTime } from "@/components/clash/FullTime";
 import { ClashKickOff } from "@/components/clash/KickOff";
 import { ClashMasthead } from "@/components/clash/Masthead";
@@ -14,6 +14,7 @@ import { kitOf } from "@/lib/profile/club";
 import { clubsByIds, getRating } from "@/lib/profile/data";
 import { KeepyUppy } from "@/components/loading/KeepyUppy";
 import { MatchLive } from "@/components/nav/MatchLive";
+import { whistleChallenge } from "@/lib/push/challenge";
 
 export const metadata: Metadata = {
   title: "Clash · iKnowBall",
@@ -90,6 +91,9 @@ async function ClashScreen({ params }: { params: Params }) {
       );
     }
     case "fulltime": {
+      // A mate's full time tells the setter (once per mate per set), after the page is served.
+      const { set, run } = view;
+      after(() => whistleChallenge(set, run));
       const [rating, weekBest, week] = await Promise.all([getRating(view.run.user_id), isWeekBest(view.run), weekAfter(view.run)]);
       return (
         <ClashFullTime

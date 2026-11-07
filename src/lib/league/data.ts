@@ -383,3 +383,42 @@ export async function weekRound(week: Week): Promise<number | null> {
   if (error) throw error;
   return data?.[0]?.pl_round ?? null;
 }
+
+/** A player's best finish in a league last week, for Monday's whistle. */
+export type LeagueFinish = { league: League; position: number; points: number; leader: { name: string; points: number } | null };
+
+/**
+ * Last week's finish in each of these players' leagues, the best one each
+ * (highest place, then the bigger league). Only players who scored count;
+ * the leader is whoever topped it, unless that's you.
+ */
+export async function lastWeekFinishes(userIds: string[]): Promise<Map<string, LeagueFinish>> {
+  const best = new Map<string, LeagueFinish & { members: number }>();
+  if (!userIds.length) return best;
+  const admin = createAdminClient();
+  const memberships: { league_id: number }[] = [];
+  for (let i = 0; i < userIds.length; i += 200) {
+    const { data, error } = await admin.from("league_members").select("league_id").in("user_id", userIds.slice(i, i + 200));
+    if (error) throw error;
+    memberships.push(...(data ?? []));
+  }
+  const ids = [...new Set(memberships.map((m) => m.league_id))];
+  if (!ids.length) return best;
+  const { data: leagues, error } = await admin.from("leagues").select("id, name, invite_code, owner_id").in("id", ids);
+  if (error) throw error;
+  const { startsOn } = currentWeek();
+  const last: Week = { startsOn: addDays(startsOn, -7), endsOn: addDays(startsOn, -1), today: addDays(startsOn, -1) };
+  const wanted = new Set(userIds);
+  for (const league of leagues ?? []) {
+    const rows = await membersTable(league.id, last, null);
+    const top = rows[0];
+    for (const r of rows) {
+      if (!wanted.has(r.userId) || r.points <= 0) continue;
+      const leader = top && top.userId !== r.userId && top.points > 0 ? { name: top.name, points: top.points } : null;
+      const line = { league, position: r.position, points: r.points, leader, members: rows.length };
+      const had = best.get(r.userId);
+      if (!had || line.position < had.position || (line.position === had.position && line.members > had.members)) best.set(r.userId, line);
+    }
+  }
+  return best;
+}

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { MiniThree } from "@/components/clash/YourThree";
 import { ClubPicker } from "@/components/profile/ClubPicker";
 import { SeasonTicket } from "@/components/pwa/SeasonTicket";
+import { WhistleStrip } from "@/components/push/WhistleStrip";
 import { APP_ICON_SRC } from "@/lib/og/logo";
 import { RatingBadge } from "@/components/profile/RatingBadge";
 import { scoreInk } from "@/lib/profile/rating";
@@ -188,6 +189,7 @@ export function FullTime(props: Props) {
             <ShareButtons text={shareText} image={card ? { url: "/daily/card", name: `iknowball-daily-${String(issue).padStart(3, "0")}.png` } : null} />
             {/* Not on a first full time, which asks "Who do you support?" instead. */}
             {!props.clubChoices && <SeasonTicket guest={props.guest} icon={APP_ICON_SRC} season={seasonLabel(seasonOf(gameDate()))} />}
+            {!props.clubChoices && <WhistleStrip guest={props.guest} className="mt-6" />}
           </aside>
 
           <TodaysTable top={props.top} me={props.me} position={position} players={players} />

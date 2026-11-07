@@ -3,6 +3,7 @@ import * as Sentry from "@sentry/nextjs";
 import { draftEmptyDays, publishDueDrafts } from "@/lib/drafts/draft-job";
 import { importDueClubs } from "@/lib/drafts/import-job";
 import { sendLaunchEmails } from "@/lib/launch/send";
+import { eveningWhistle, morningWhistle } from "@/lib/push/jobs";
 import { syncFixtures } from "@/lib/fixtures/sync";
 import { syncMatchData } from "@/lib/matchdata/sync";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -15,6 +16,7 @@ import {
   JOB_NAMES,
   matchDataProblems,
   staleRuns,
+  whistleProblems,
   type JobName,
   type RunRow,
 } from "./problems";
@@ -55,6 +57,14 @@ const WORK: Record<JobName, () => Promise<Outcome>> = {
   },
   // A Resend failure throws, so it's reported as a failed run; rows sent before it stay marked.
   "launch-email": async () => ({ summary: await sendLaunchEmails(), problems: [] }),
+  "whistle-morning": async () => {
+    const summary = await morningWhistle();
+    return { summary, problems: whistleProblems(summary) };
+  },
+  "whistle-evening": async () => {
+    const summary = await eveningWhistle();
+    return { summary, problems: whistleProblems(summary) };
+  },
 };
 
 export type JobRun = { job: JobName; status: "ok" | "warning" | "failed"; summary: unknown; problems: string[] };
