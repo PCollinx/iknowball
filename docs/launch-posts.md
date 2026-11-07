@@ -1,8 +1,7 @@
 # Launch posts
 
-The plan for the posts outside the app: LinkedIn, Product Hunt, Hacker News and the short videos
-(Collins, 7 Nov 2026). The player-facing launch is X and WhatsApp on Fri 20 Nov (`docs/launch-plan.md`);
-these follow it. Nairaland is still to be decided. Times are WAT.
+The plan for the posts outside the app: launch day on LinkedIn, X and WhatsApp, then Product Hunt, Hacker
+News and the short videos (Collins, 7 Nov 2026). Nairaland is still to be decided. Times are WAT.
 
 Rules that hold for every post:
 - Never post a question from an upcoming Daily. Videos and examples use past Dailies only.
@@ -18,7 +17,7 @@ Rules that hold for every post:
 | --- | --- | --- |
 | Mon 16 Nov | Build story: "I'm launching on Friday" | LinkedIn |
 | Thu 19 Nov | Demo video | X, WhatsApp, TikTok, Reels, Shorts |
-| Fri 20 Nov | Launch day post | LinkedIn |
+| Fri 20 Nov | Launch day, all three at 07:00, when the gates open and the launch email goes | LinkedIn, X, WhatsApp |
 | From Sat 21 Nov | Short videos, three a week | TikTok, Reels, Shorts, X, WhatsApp Status |
 | Tue 1 Dec | Product Hunt launch (09:01 WAT, when PH's day starts) | Product Hunt, LinkedIn, X |
 | Thu 3 Dec | Show HN (about 14:00 WAT, 8 am in New York) | Hacker News |
@@ -28,6 +27,54 @@ Rules that hold for every post:
 Product Hunt and Show HN come after launch on purpose: the beta bugs are gone by then, there's real data to
 show, and they don't split the attention of launch day. They're two days apart, so each one gets watched
 properly.
+
+## Launch day: Fri 20 Nov
+
+The waitlist comes down at midnight and the launch email goes at 07:00 (`docs/launch-plan.md`). Post on all
+three at 07:00 so the email, the posts and the first Daily land together, then play the Daily yourself and
+post your score at lunchtime. Each post links with its own `utm_source` (`linkedin`, `x`, `whatsapp`).
+
+### LinkedIn
+
+The launch post below (LinkedIn post 2), with the demo video's 16:9 cut.
+
+### X (@playiKnowBall)
+
+Pin the first post until Round 11 ends. Video: the demo video, 9:16 for the post itself.
+
+> iKnowBall is live. ⚽
+>
+> 🗓 The Daily: today it's [fixture]. One go.
+> ⚡ Clash: 60 seconds of higher or lower. Send it to a mate.
+> 🏆 The League: you and your friends, every Premier League week.
+>
+> Think you know ball? playiknowball.com
+
+Then, through the day, from @playiKnowBall:
+- 12:00: your own Daily score card, "Beat it."
+- 17:00: a Clash challenge link, "First to beat 14 gets a shout-out."
+- 21:00: today's table so far, top three with their names (only players who've chosen a name).
+
+Repost from your own account and ask the beta testers to quote it with their score.
+
+### WhatsApp
+
+Three pieces, all sent by you:
+
+1. **Status, 07:00:** the demo video (9:16), with the line "iKnowBall is live. Today's Daily is [fixture]. playiknowball.com".
+2. **Your groups (football and friends), 07:30:** one message, not a forward, and only to groups where it fits:
+
+> It's live 🙌 iKnowBall, the football game I've been building.
+>
+> Today's Daily is [fixture]. One go, timed. Play it and send me your score:
+> playiknowball.com/daily
+>
+> Or try this Clash and beat my [score]: [challenge link]
+
+3. **Status, after you play:** your Daily share card with "Beat it."
+
+Start a league before the day ("IKB…" code) and drop its invite link in the groups too: a league keeps a
+group coming back every week.
 
 ## LinkedIn
 
@@ -55,7 +102,7 @@ Image: the logo canvas with three screens (home, a Daily, a Clash sprint), or a 
 >
 > If you think you know ball, the waitlist is in the comments.
 
-### 2. Fri 20 Nov: launch day
+### 2. Fri 20 Nov: launch day (with X and WhatsApp, above)
 
 Video: the demo video (16:9 cut).
 
