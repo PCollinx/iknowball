@@ -7,9 +7,9 @@ import { SiteNav } from "@/components/nav/SiteNav";
 
 export default function SiteLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div data-site-frame className="flex min-h-dvh flex-col">
       <SiteNav />
-      <div className="flex flex-1 flex-col">{children}</div>
+      <div data-site-body className="flex flex-1 flex-col">{children}</div>
       <SiteFooter />
     </div>
   );
