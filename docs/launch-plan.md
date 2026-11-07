@@ -180,9 +180,9 @@ By Wed 18 Nov.
 
 ## Dates and Collins's to-dos
 
-- [ ] **Before Sun 1 Nov:** set `BETA_CODE` (8+ characters) in Vercel Production and redeploy.
-- [ ] **By Sat 31 Oct:** last teaser quizzes on X (no app name on them until 1 Nov).
-- [ ] **After template build D, before step 16 (Collins, 30 Oct):** teasers (`/maker/teaser`) for this
+- [x] **Before Sun 1 Nov:** set `BETA_CODE` (8+ characters) in Vercel Production and redeploy.
+- [x] **By Sat 31 Oct:** last teaser quizzes on X (no app name on them until 1 Nov).
+- [x] **After template build D, before step 16 (Collins, 30 Oct):** teasers (`/maker/teaser`) for this
   weekend's two big games: **Chelsea v Man United** (Sat 31 Oct, 13:30 WAT; no app name, it's before
   1 Nov) and **Liverpool v Arsenal** (Sun 1 Nov, 17:30 WAT; the name can go on from 1 Nov). Post each
   before kick-off; the teaser page warns if a club or player is in a Daily in the next 14 days.
@@ -198,7 +198,7 @@ By Wed 18 Nov.
 - [ ] **Thu 19 Nov:** publish the demo video on X and WhatsApp.
 - [ ] **Fri 20 Nov:** the waitlist comes down at midnight WAT by itself; send the launch email (step 17).
 
-After launch: step 14 (Support, with Vercel Pro), Rate mode (18 Dec), whether to buy iknowball.com.
+After launch: step 14 (Support, with Vercel Pro), Rate mode (18 Dec).
 
 ## Also on the list
 
@@ -229,8 +229,8 @@ After launch: step 14 (Support, with Vercel Pro), Rate mode (18 Dec), whether to
 - [x] 13. The waitlist (PR #56)
 - [ ] 14. Support iKnowBall (after launch, with Vercel Pro)
 - [x] 15. Popular games only (PR #58)
-- [x] 16. The installable app (PRs #66, #67; real installs on Android and iPhone still to check)
+- [x] 16. The installable app (PRs #66, #67; installs checked by Collins)
 - [x] Extra: Clash every day (today's stat, your three, beaten challenges) and the maker redesigned (31 Oct, `claude/clash-maker`)
-- [x] 17. The launch email (built 4 Nov, `claude/launch-email`; sends itself from 07:00 WAT 20 Nov once `RESEND_API_KEY` is set in Vercel Production)
+- [x] 17. The launch email (built 4 Nov, `claude/launch-email`; sends itself from 07:00 WAT 20 Nov; test send passed on live)
 - [x] 18. Waitlist leagues on day one (built 31 Oct)
 - [ ] 19. The demo video on the waitlist (by 18 Nov)

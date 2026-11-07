@@ -6,7 +6,7 @@ Project memory for Claude Code, carried over from the Claude project where the p
 
 ## Product
 
-- Name: **iKnowBall** (short form IKB, never "YKB"). Domain **playiknowball.com**. The domain lives only in `NEXT_PUBLIC_SITE_URL`; if it ever moves (e.g. to iknowball.com, which may be bought later), the old one must redirect forever.
+- Name: **iKnowBall** (short form IKB, never "YKB"). Domain **playiknowball.com**. The domain lives only in `NEXT_PUBLIC_SITE_URL`; if it ever moves, the old one must redirect forever.
 - A knowledge-first football app: one rating with tiers. Nigeria-first, plus UK and global football Twitter. Tone is confident banter, not British nostalgia. Inspired by futoteca.club.
 - Three pillars:
   - **The Daily**: one try per day in two parts, Part 1 Free Recall then Part 2 In Order (one `dailies` row per part), timed, themed on the Premier League fixtures. Lives at `/daily`. Written in the **Daily maker** at `/maker` (admins only: `profiles.is_admin`, email and password sign-in). It saves a whole day through `public.maker_save_day()` in one transaction, and a part locks once anyone has started it.
@@ -169,5 +169,4 @@ Replanned 16 Oct 2026, updated 19 Oct (plan doc: https://claude.ai/code/artifact
 
 ## Open items
 
-- Whether to buy iknowball.com.
 - **Hosting** (Collins, 27 Oct 2026): launch on Vercel Hobby, not Pro. Hobby allows only non-commercial use (no ads, payments or donations), so nothing on the site takes money: `SUPPORT_URL` stays unset ("Soon"). Switch to Pro ($20/mo) the day a support link, ads or a sponsor goes live. If we leave Vercel after launch, the pick is Cloudflare Workers Paid ($5/mo; the free plan's 10 ms CPU and 3 MB cap are too tight for our pages and PNG cards), moved after launch, never before. Netlify (site pauses when free credits run out), Render (sleeps, no cron), Railway ($1 credit) and Fly.io (no free tier) were ruled out.
