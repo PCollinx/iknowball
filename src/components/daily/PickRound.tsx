@@ -129,7 +129,7 @@ export function PickRound(props: Props) {
         />
       </section>
 
-      <section className="pt-3 pb-4 [grid-area:squad] lg:pt-6 lg:pb-10">
+      <section className="flex flex-col pt-3 pb-4 [grid-area:squad] lg:block lg:pt-6 lg:pb-10">
         {/* One line for the player: the next name replaces this one in place. */}
         {current && era && <EraQuestion question={current.question} />}
         {/* Any other question on a Rapid picks round (a Golden Boot season), in the same big line. */}
@@ -180,7 +180,11 @@ export function PickRound(props: Props) {
           // Era picks: four flat season tickets in a two-by-two grid, the A–D
           // stub torn across the top, the years on one line (Collins, 9 Nov
           // 2026, option C of https://claude.ai/artifact/W8WzfBiMFE3F6Lq31H8kec).
-          <div key={`tickets-${current.id}`} className="animate-deal-in mt-4 grid grid-cols-2 gap-2.5 pr-1 lg:mt-6 lg:gap-5">
+          // On phones the four fill the height between the question and the answer bar (Collins, 9 Nov 2026).
+          <div
+            key={`tickets-${current.id}`}
+            className="animate-deal-in mt-4 grid min-h-[230px] flex-1 grid-cols-2 grid-rows-2 gap-2.5 pr-1 lg:mt-6 lg:min-h-0 lg:flex-none lg:grid-rows-none lg:gap-5"
+          >
             {current.choices.map((choice, i) => {
               const state = stateOf(choice);
               const [from, to] = choice.split("–");
@@ -196,7 +200,7 @@ export function PickRound(props: Props) {
                     <span className="font-display text-[22px] leading-none lg:text-[30px]">{String.fromCharCode(65 + i)}</span>
                     <span className="label truncate text-[9px] lg:text-[11px]">{STUB_LABEL[state]}</span>
                   </span>
-                  <span className="px-2 pt-2 pb-2.5 font-display text-[clamp(21px,7.2vw,30px)] leading-none whitespace-nowrap tabular-nums lg:px-3 lg:pt-3 lg:pb-4 lg:text-[44px]">
+                  <span className="flex items-center px-2 pt-2 pb-2.5 font-display text-[clamp(21px,7.2vw,30px)] leading-none whitespace-nowrap tabular-nums lg:px-3 lg:pt-3 lg:pb-4 lg:text-[44px]">
                     {to !== undefined ? (
                       <>
                         {from} <span className={state === "idle" || state === "pending" ? "text-teal" : ""}>→</span> {to || "now"}

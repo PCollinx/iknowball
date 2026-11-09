@@ -52,7 +52,7 @@ export function InOrder(props: Props) {
       {/* The order is a team sheet (Collins, 9 Nov 2026, option A of
           https://claude.ai/artifact/W8WzfBiMFE3F6Lq31H8kec): numbered rows,
           the next one lit teal, the squad as flat name tags under it. */}
-      <section className="self-start">
+      <section className="flex flex-col lg:block lg:self-start">
         <RoundHead
           label={`${props.partLabel} · In Order`}
           title={
@@ -68,22 +68,23 @@ export function InOrder(props: Props) {
           <Steps steps={steps} label="Slots filled" />
         </div>
 
-        <div className="grid gap-4 pt-3 pb-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-8 lg:pt-5 lg:pb-6">
-          <section aria-label="Your order" className="border-[3px] border-navy bg-white">
+        {/* On phones the sheet's rows stretch to fill the screen down to the squad (Collins, 9 Nov 2026). */}
+        <div className="flex flex-1 flex-col gap-4 pt-3 pb-4 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:gap-8 lg:pt-5 lg:pb-6">
+          <section aria-label="Your order" className="flex flex-1 flex-col border-[3px] border-navy bg-white lg:block">
             <div className="flex items-center justify-between gap-3 border-b-[3px] border-navy bg-mist px-2.5 py-1.5">
               <h2 className="label text-[10px] lg:text-[11px]">Your order · earliest first</h2>
               <span className="label text-[10px] text-teal lg:text-[11px]">
                 {placed.length} of {total}
               </span>
             </div>
-            <ol>
+            <ol className="flex flex-1 flex-col lg:block">
               {Array.from({ length: total }, (_, k) => {
                 const id = placed[k];
                 const next = k === placed.length && !over;
                 return (
                   <li
                     key={k}
-                    className={`grid h-11 grid-cols-[40px_minmax(0,1fr)] border-b border-l-[6px] border-navy last:border-b-0 lg:h-12 lg:grid-cols-[48px_minmax(0,1fr)] ${
+                    className={`grid min-h-11 flex-1 grid-cols-[40px_minmax(0,1fr)] border-b border-l-[6px] border-navy last:border-b-0 lg:h-12 lg:min-h-0 lg:grid-cols-[48px_minmax(0,1fr)] ${
                       id ? "border-l-royal" : next ? "border-l-teal bg-mist" : "border-l-track"
                     }`}
                   >
