@@ -11,6 +11,7 @@ import { Masthead } from "./Masthead";
 import { RecallGrid } from "./RecallGrid";
 import type { Kit } from "./ShirtBack";
 import { SubmitButton } from "./SubmitButton";
+import { TapToKickOff } from "./TapToKickOff";
 
 // The Daily's kick-off (step 1 of docs/launch-plan.md, picked 21 Oct 2026):
 // before Part 1, the home page's Daily sticker with the gaffer's instructions
@@ -50,7 +51,9 @@ export function KickOff({ issue, dateLabel, daily, parts, total, before, club, k
           {before ? (
             <HalfTime before={before} kit={kit} />
           ) : (
-            <DailySticker variant="kickoff" daily={{ issue, parts, status: "fresh", points: 0 }} kits={kits} closesAt={closesAt} serverNow={serverNow} />
+            <TapToKickOff form="kick-off">
+              <DailySticker variant="kickoff" daily={{ issue, parts, status: "fresh", points: 0 }} kits={kits} closesAt={closesAt} serverNow={serverNow} />
+            </TapToKickOff>
           )}
         </div>
 
@@ -80,7 +83,7 @@ export function KickOff({ issue, dateLabel, daily, parts, total, before, club, k
             </p>
           )}
 
-          <form action={startPart}>
+          <form id="kick-off" action={startPart}>
             <input type="hidden" name="dailyId" value={daily.id} />
             <SubmitButton tone="teal" pendingText="Starting…">
               {before ? "Start the 2nd half" : "Kick off"}

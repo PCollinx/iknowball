@@ -112,17 +112,29 @@ export function InOrder(props: Props) {
           <div>
             <span className="label text-[10px] lg:text-xs">{squad.length ? "Still to place" : "All placed"}</span>
             <div className="mt-2 flex flex-wrap gap-2 lg:mt-3 lg:gap-3">
-              {squad.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  disabled={over}
-                  onClick={() => setPlaced((p) => (p.length < total && !p.includes(item.id) ? [...p, item.id] : p))}
-                  className="border-[2.5px] border-navy bg-white px-3 py-1.5 font-display text-xl uppercase shadow-[3px_3px_0_var(--color-navy)] transition-[translate,box-shadow] enabled:hover:-translate-0.5 enabled:hover:bg-mist enabled:active:translate-0.5 enabled:active:shadow-none lg:text-2xl"
-                >
-                  {item.text}
-                </button>
-              ))}
+              {/* Every name keeps its place, a placed one left as a dashed gap, so the box never
+                  changes size as it empties (Collins, 9 Nov 2026). */}
+              {props.items.map((item) =>
+                placed.includes(item.id) ? (
+                  <span
+                    key={item.id}
+                    aria-hidden="true"
+                    className="border-[2.5px] border-dashed border-track px-3 py-1.5 font-display text-xl text-transparent uppercase select-none lg:text-2xl"
+                  >
+                    {item.text}
+                  </span>
+                ) : (
+                  <button
+                    key={item.id}
+                    type="button"
+                    disabled={over}
+                    onClick={() => setPlaced((p) => (p.length < total && !p.includes(item.id) ? [...p, item.id] : p))}
+                    className="border-[2.5px] border-navy bg-white px-3 py-1.5 font-display text-xl uppercase shadow-[3px_3px_0_var(--color-navy)] transition-[translate,box-shadow] enabled:hover:-translate-0.5 enabled:hover:bg-mist enabled:active:translate-0.5 enabled:active:shadow-none lg:text-2xl"
+                  >
+                    {item.text}
+                  </button>
+                ),
+              )}
             </div>
           </div>
         </div>
