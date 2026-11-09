@@ -8,8 +8,8 @@ import type { WeekRow } from "./week";
 
 /** Monday of launch week (Fri 20 Nov 2026): the first season's table starts here. */
 export const LAUNCH_WEEK = "2026-11-16";
-/** Test sites count from the first Dailies on dev, so the table has weeks to show before launch. */
-export const TEST_LAUNCH_WEEK = "2026-10-12";
+/** Test sites start a week earlier, so the strip can be tried before launch: Wk 1 and Season, then a box a week (Collins, 9 Nov 2026). */
+export const TEST_LAUNCH_WEEK = "2026-11-09";
 
 /** The Monday a season's table starts on. */
 export function seasonStartsOn(season: number, testSite = false): string {
