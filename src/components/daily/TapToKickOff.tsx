@@ -7,7 +7,8 @@ export function TapToKickOff({ form, children }: { form: string; children: React
   return (
     <div
       onClick={() => (document.getElementById(form) as HTMLFormElement | null)?.requestSubmit()}
-      className="cursor-pointer transition-transform duration-150 hover:-translate-y-1 active:translate-y-0"
+      // Pressed, the sticker pushes into its shadow like the sticker buttons (btn-press).
+      className="cursor-pointer active:[&_[data-sticker]]:translate-x-[3px]! active:[&_[data-sticker]]:translate-y-[3px]! active:[&_[data-sticker]]:rotate-0! active:[&_[data-sticker]]:shadow-[2px_2px_0_var(--color-navy)]!"
     >
       {children}
     </div>

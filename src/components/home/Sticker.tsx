@@ -5,16 +5,18 @@ import Link from "next/link";
 // album space it's stuck in, with a caption underneath.
 
 const FRAME =
-  "block border-[3px] border-navy bg-white p-1.5 text-navy shadow-[5px_5px_0_var(--color-navy)] transition-[rotate,translate] duration-150 hover:translate-y-[-4px] hover:rotate-0 lg:p-2 lg:shadow-[7px_7px_0_var(--color-navy)]";
+  "block border-[3px] border-navy bg-white p-1.5 text-navy shadow-[5px_5px_0_var(--color-navy)] transition-[rotate,translate,box-shadow] duration-150 hover:translate-y-[-4px] hover:rotate-0 lg:p-2 lg:shadow-[7px_7px_0_var(--color-navy)]";
 
 export function Sticker({ href, className = "", children }: { href?: string; className?: string; children: React.ReactNode }) {
   const inner = <div className="flex h-full flex-col border-2 border-navy">{children}</div>;
   return href ? (
-    <Link href={href} className={`${FRAME} ${className}`}>
+    <Link href={href} data-sticker className={`${FRAME} ${className}`}>
       {inner}
     </Link>
   ) : (
-    <div className={`${FRAME} ${className}`}>{inner}</div>
+    <div data-sticker className={`${FRAME} ${className}`}>
+      {inner}
+    </div>
   );
 }
 
