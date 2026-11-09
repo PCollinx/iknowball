@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { JoinButton, JoinLeague } from "@/components/league/Forms";
-import { FormTable, Invite, Podium, Rules, TeamSheet, ThisWeek } from "@/components/league/LeaguePage";
+import { FormTable, Invite, Podium, Rules, SeasonTable, TeamSheet, ThisWeek } from "@/components/league/LeaguePage";
+import { WeekStrip } from "@/components/league/WeekStrip";
 import { LeagueLoading, LeagueMasthead } from "@/components/league/Masthead";
 import { cleanCode, weekLabel } from "@/components/league/format";
 import { getLeagueView, LEAGUE_MAX } from "@/lib/league/data";
+import { seasonLabel, seasonOf } from "@/lib/time";
 import { dayIndex, splitPodium } from "@/lib/league/standing";
 import { CLASH_MAX, COUNTED_DAYS } from "@/lib/league/week";
 import { kitOf } from "@/lib/profile/club";
@@ -20,7 +22,7 @@ const WEEK_MAX = COUNTED_DAYS * 100 + CLASH_MAX;
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 type Params = Promise<{ code: string }>;
-type Search = Promise<{ new?: string }>;
+type Search = Promise<{ new?: string; w?: string }>;
 
 export default function LeagueTablePage({ params, searchParams }: { params: Params; searchParams: Search }) {
   return (
@@ -46,13 +48,24 @@ function Title({ name, className }: { name: string; className: string }) {
   );
 }
 
+/** The top three on the podium, the rest on the table standing on its floor. */
+function PodiumAndTable<T extends { points: number } & Parameters<typeof Podium>[0]["rows"][number]>({ rows, table }: { rows: T[]; table: (rest: T[]) => React.ReactNode }) {
+  const { podium, rest } = splitPodium(rows);
+  return (
+    <>
+      <Podium rows={podium} />
+      {rest.length ? table(rest) : <div aria-hidden="true" className="h-2 bg-navy" />}
+    </>
+  );
+}
+
 const players = (n: number) => `${n} ${n === 1 ? "player" : "players"}`;
 
 // Reads the session and the week, so it renders per request.
 async function LeagueScreen({ params, searchParams }: { params: Params; searchParams: Search }) {
   await connection();
   const [{ code }, search] = await Promise.all([params, searchParams]);
-  const view = await getLeagueView(cleanCode(code));
+  const view = await getLeagueView(cleanCode(code), search.w);
 
   if (view.kind === "missing") {
     return (
@@ -112,11 +125,11 @@ async function LeagueScreen({ params, searchParams }: { params: Params; searchPa
     );
   }
 
-  const { league, week, rows, captain } = view;
+  const { league, week, rows, captain, strip, shown, seasonPlace } = view;
   const today = dayIndex(week.startsOn, week.today);
-  const { podium, rest } = splitPodium(rows);
   const fresh = search.new === "1";
   const mine = rows.find((r) => r.mine);
+  const season = shown.kind === "season";
   return (
     <main className="mx-auto w-full max-w-[560px] flex-1 px-4 pb-10 lg:max-w-[1040px]">
       <LeagueMasthead back right={fresh ? "New league" : weekLabel(week)} />
@@ -127,14 +140,31 @@ async function LeagueScreen({ params, searchParams }: { params: Params; searchPa
           </span>
           <Title name={league.name} className="mt-0.5 text-[56px] leading-[0.86] lg:text-[84px] lg:leading-[0.84]" />
           {fresh && <p className="mt-2">You&apos;re in. Send the invite to get your friends on the team sheet.</p>}
-          {podium.length > 0 && (
-            <div className="mt-[18px] lg:mt-7">
-              <Podium rows={podium} />
-            </div>
-          )}
-          <div className="mt-[18px] lg:mt-[22px]">
-            <FormTable rows={rest} today={today} captainId={league.owner_id} />
+          <WeekStrip code={league.invite_code} weeks={strip} selected={season ? "season" : (shown.n ?? 0)} seasonPlace={seasonPlace} />
+          <div className="mt-3.5 flex items-center justify-between gap-3 lg:mt-4">
+            <span className="label text-[10px] lg:text-[11px]">
+              {shown.kind === "season"
+                ? `Season ${seasonLabel(seasonOf(week.today))} · ${shown.weeks === 1 ? "Week 1" : `Weeks 1–${shown.weeks}`}`
+                : `${shown.n ? `Week ${shown.n} · ` : ""}${weekLabel(shown.week)}`}
+            </span>
+            {shown.kind === "week" && shown.final && (
+              <span className="-rotate-3 border-[3px] border-red-card px-2 pt-0.5 font-display text-lg leading-none text-red-card uppercase">Full time</span>
+            )}
+            {shown.kind === "week" && !shown.final && <span className="label text-[10px] text-teal lg:text-[11px]">Live</span>}
           </div>
+          {shown.rows.some((r) => r.points > 0) ? (
+            <div className="mt-2.5 lg:mt-3">
+              {shown.kind === "season" ? (
+                <PodiumAndTable rows={shown.rows} table={(rest) => <SeasonTable rows={rest} captainId={league.owner_id} />} />
+              ) : (
+                <PodiumAndTable rows={shown.rows} table={(rest) => <FormTable rows={rest} today={shown.final ? 6 : today} captainId={league.owner_id} />} />
+              )}
+            </div>
+          ) : (
+            <p className="mt-3 border-2 border-dashed border-track px-3 py-4 text-center text-sm text-slate">
+              {season ? "Nobody has scored this season yet." : "Nobody scored this week."}
+            </p>
+          )}
         </div>
 
         <aside className="mt-[30px] grid grid-cols-[minmax(0,1fr)] content-start gap-[26px] lg:mt-[34px]">

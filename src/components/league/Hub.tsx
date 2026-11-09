@@ -51,7 +51,7 @@ export function LeagueAlbum({ leagues }: { leagues: HubLine[] }) {
 }
 
 function LeagueSticker({ line, tilt }: { line: HubLine; tilt: string }) {
-  const { league, members, position, points, moved, top, gap } = line;
+  const { league, members, position, points, moved, top, gap, lastWeek, season } = line;
   return (
     <>
       <div className="border-2 border-dashed border-[#9AA6C8] p-1.5 lg:p-2">
@@ -81,6 +81,26 @@ function LeagueSticker({ line, tilt }: { line: HubLine; tilt: string }) {
               </span>
               <span className="font-display text-sm tabular-nums lg:text-base">{points} pts</span>
             </span>
+            {(lastWeek || season) && (
+              <span className="block border-t border-track px-1.5 py-1 text-[11px] font-semibold lg:px-2 lg:text-xs">
+                {lastWeek && (
+                  <span className="flex justify-between gap-1">
+                    <span>Last week</span>
+                    <span className="font-display text-sm tabular-nums lg:text-base">
+                      {ordinal(lastWeek.position)} · {lastWeek.points}
+                    </span>
+                  </span>
+                )}
+                {season && (
+                  <span className="flex justify-between gap-1">
+                    <span>Season</span>
+                    <span className="font-display text-sm text-royal tabular-nums lg:text-base">
+                      {ordinal(season.position)} · {season.points.toLocaleString("en-GB")}
+                    </span>
+                  </span>
+                )}
+              </span>
+            )}
           </span>
         </Link>
       </div>
