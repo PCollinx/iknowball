@@ -4,8 +4,7 @@ import { z } from "zod";
 import { currentUserId } from "@/lib/daily/data";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ensureUserId } from "@/lib/supabase/guest";
-import { testBuzz } from "./copy";
-import { push, whistleReady, type Device, type Pref } from "./send";
+import type { Pref } from "./send";
 
 // The whistle's switches (Collins, 7 Nov 2026). A device is known by its push
 // endpoint, which only that browser holds; each action re-reads the player
@@ -69,20 +68,4 @@ export async function setWhistle(device: string, which: Pref, on: boolean): Prom
     .maybeSingle();
   if (error) throw error;
   return (data as Prefs | null) ?? null;
-}
-
-/** "Send me a test": one buzz to this device only. */
-export async function testWhistle(device: string): Promise<"sent" | "failed"> {
-  const [userId, parsed] = [await currentUserId(), endpoint.safeParse(device)];
-  if (!userId || !parsed.success || !whistleReady()) return "failed";
-  const { data } = await createAdminClient()
-    .from("push_subscriptions")
-    .select("id, user_id, endpoint, p256dh, auth")
-    .eq("endpoint", parsed.data)
-    .eq("user_id", userId)
-    .maybeSingle();
-  if (!data) return "failed";
-  const outcome = await push(data as Device, testBuzz, 600);
-  if (outcome === "gone") await createAdminClient().from("push_subscriptions").delete().eq("id", (data as Device).id);
-  return outcome === "ok" ? "sent" : "failed";
 }

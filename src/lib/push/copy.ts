@@ -59,6 +59,3 @@ export function leagueWeek(l: { name: string; code: string; position: number; po
     tag: "daily",
   };
 }
-
-/** "Send me a test" on Your shirt. */
-export const testBuzz: Buzz = { title: "Peep peep", body: "The whistle works. We'll blow it when the Daily's on.", url: "/profile", tag: "test" };

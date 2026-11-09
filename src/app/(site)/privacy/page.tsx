@@ -41,7 +41,7 @@ const link = "font-semibold text-royal underline underline-offset-2";
 export default function PrivacyPage() {
   return (
     <main className="mx-auto grid w-full max-w-[560px] flex-1 content-start px-4 pt-5 pb-8 lg:max-w-[1200px] lg:grid-cols-[360px_minmax(0,1fr)] lg:items-start lg:gap-x-14 lg:px-10 lg:pt-8">
-      <aside className="[@media(min-width:1024px)_and_(min-height:940px)]:sticky [@media(min-width:1024px)_and_(min-height:940px)]:top-5">
+      <aside className="[@media(min-width:1024px)_and_(min-height:940px)]:sticky [@media(min-width:1024px)_and_(min-height:940px)]:top-[92px]">
         <div className="flex items-center justify-between gap-3">
           <span className="label">Privacy &amp; data</span>
           <span className="rotate-3 bg-navy px-2.5 py-0.5 font-display text-base whitespace-nowrap text-teal-light uppercase">Updated · {UPDATED}</span>

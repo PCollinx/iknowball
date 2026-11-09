@@ -19,10 +19,9 @@ const ROWS: { pref: Pref; title: string; line: string }[] = [
 ];
 
 export function WhistleSection({ guest }: { guest: boolean }) {
-  const { state, turnOn, flip, test } = useWhistle();
+  const { state, turnOn, flip } = useWhistle();
   const { inApp } = useInstall();
   const [busy, setBusy] = useState(false);
-  const [tested, setTested] = useState<"sent" | "failed" | null>(null);
   if (state.kind === "loading" || state.kind === "unsupported") return null;
 
   return (
@@ -73,14 +72,7 @@ export function WhistleSection({ guest }: { guest: boolean }) {
               </li>
             ))}
           </ul>
-          <p className="mt-2 text-[13px] text-slate">
-            On for this device only.{" "}
-            <button type="button" onClick={() => test().then(setTested)} className="font-semibold underline underline-offset-[3px]">
-              Send me a test
-            </button>
-            {tested === "sent" && <span className="ml-1.5 font-semibold text-teal">Sent.</span>}
-            {tested === "failed" && <span className="ml-1.5 font-semibold text-red-card">It didn&apos;t send. Try turning it off and on.</span>}
-          </p>
+          <p className="mt-2 text-[13px] text-slate">On for this device only.</p>
         </>
       )}
     </Section>

@@ -180,7 +180,7 @@ export function FullTime(props: Props) {
           )}
         </div>
 
-        <div className="contents lg:sticky lg:top-4 lg:block lg:pt-5">
+        <div className="contents lg:sticky lg:top-[88px] lg:block lg:pt-5">
           <aside className="order-3 mt-5 lg:mt-0">
             {card && (
               <div className="-rotate-1 shadow-[5px_5px_0_var(--color-navy)] lg:shadow-[7px_7px_0_var(--color-navy)]">
