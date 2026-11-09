@@ -177,8 +177,10 @@ export function PickRound(props: Props) {
         )}
 
         {current && era && (
-          // Era picks: four season tickets, tap the one he held.
-          <div key={`tickets-${current.id}`} className="animate-deal-in mt-4 grid gap-3 pr-1 lg:mt-6 lg:gap-4 xl:grid-cols-2 xl:gap-5">
+          // Era picks: four flat season tickets in a two-by-two grid, the A–D
+          // stub torn across the top, the years on one line (Collins, 9 Nov
+          // 2026, option C of https://claude.ai/artifact/W8WzfBiMFE3F6Lq31H8kec).
+          <div key={`tickets-${current.id}`} className="animate-deal-in mt-4 grid grid-cols-2 gap-2.5 pr-1 lg:mt-6 lg:gap-5">
             {current.choices.map((choice, i) => {
               const state = stateOf(choice);
               const [from, to] = choice.split("–");
@@ -188,22 +190,20 @@ export function PickRound(props: Props) {
                   type="button"
                   onClick={() => pick(current, choice)}
                   disabled={over || Boolean(tap)}
-                  className={`grid h-[78px] grid-cols-[minmax(0,1fr)_58px] border-[2.5px] text-left shadow-[4px_4px_0_var(--color-navy)] transition-[opacity,translate] enabled:hover:-translate-y-0.5 lg:h-[104px] lg:grid-cols-[minmax(0,1fr)_72px] ${TICKET_TONE[state]} ${TILT[i % TILT.length]} ${faded(state)}`}
+                  className={`grid min-w-0 grid-rows-[auto_1fr] border-[2.5px] bg-white text-left transition-[opacity,translate] enabled:hover:-translate-y-0.5 ${TICKET_TONE[state]} ${faded(state)}`}
                 >
-                  <span className="flex min-w-0 flex-col justify-center px-3.5">
-                    <span className="label truncate text-[9px] opacity-75 lg:text-[11px]">Season ticket{eraClub(current.question) ? ` · ${eraClub(current.question)}` : ""}</span>
-                    <span className="mt-0.5 font-display text-[34px] leading-[0.95] whitespace-nowrap tabular-nums lg:text-[44px]">
-                      {to !== undefined ? (
-                        <>
-                          {from} <span className={state === "idle" || state === "pending" ? "text-teal" : ""}>→</span> {to || "now"}
-                        </>
-                      ) : (
-                        choice
-                      )}
-                    </span>
+                  <span className={`flex items-center justify-between gap-2 border-b-[2.5px] border-dashed px-2 py-1 lg:px-3 ${STUB_TONE[state]}`}>
+                    <span className="font-display text-[22px] leading-none lg:text-[30px]">{String.fromCharCode(65 + i)}</span>
+                    <span className="label truncate text-[9px] lg:text-[11px]">{STUB_LABEL[state]}</span>
                   </span>
-                  <span className={`flex items-center justify-center border-l-[2.5px] border-dashed font-display text-[32px] lg:text-[40px] ${STUB_TONE[state]}`}>
-                    {String.fromCharCode(65 + i)}
+                  <span className="px-2 pt-2 pb-2.5 font-display text-[clamp(21px,7.2vw,30px)] leading-none whitespace-nowrap tabular-nums lg:px-3 lg:pt-3 lg:pb-4 lg:text-[44px]">
+                    {to !== undefined ? (
+                      <>
+                        {from} <span className={state === "idle" || state === "pending" ? "text-teal" : ""}>→</span> {to || "now"}
+                      </>
+                    ) : (
+                      choice
+                    )}
                   </span>
                 </button>
               );
@@ -225,11 +225,17 @@ export function PickRound(props: Props) {
   );
 }
 
-/** "Dennis Bergkamp at Arsenal": the player, big (the club is on the tickets). */
+/** "Dennis Bergkamp at Arsenal": the player big, the club after him in royal. */
 function EraQuestion({ question }: { question: string | null }) {
   if (!question) return null;
-  const name = eraClub(question) ? question.slice(0, question.lastIndexOf(" at ")) : question;
-  return <p className="font-display text-[38px] text-balance leading-[0.9] uppercase lg:text-[65px]">{name}</p>;
+  const club = eraClub(question);
+  const name = club ? question.slice(0, question.lastIndexOf(" at ")) : question;
+  return (
+    <p className="font-display text-[38px] text-balance leading-[0.9] uppercase lg:text-[65px]">
+      {name}
+      {club && <span className="text-royal"> at {club}</span>}
+    </p>
+  );
 }
 
 function eraClub(question: string | null): string | null {
@@ -251,8 +257,6 @@ const SPOTS: [number, number][] = [
   [72, 76],
 ];
 
-const TILT = ["-rotate-[1.2deg]", "rotate-[0.8deg]", "-rotate-[0.6deg]", "rotate-[1.1deg]"];
-
 const PICK_TAG = {
   idle: "bg-navy text-white",
   pending: "bg-teal-light text-navy outline-2 outline-navy outline",
@@ -270,15 +274,17 @@ const SHIRT_MOVE = {
 } as const;
 
 const TICKET_TONE = {
-  idle: "border-navy bg-white text-navy",
-  pending: "border-navy bg-mist text-navy",
-  right: "border-navy bg-royal text-white",
-  wrong: "border-navy bg-red-card text-white",
+  idle: "border-navy text-navy shadow-[4px_4px_0_var(--color-navy)]",
+  pending: "border-navy bg-mist! text-navy shadow-[4px_4px_0_var(--color-navy)]",
+  right: "border-royal text-royal shadow-[4px_4px_0_var(--color-royal)]",
+  wrong: "border-red-card text-red-card shadow-[4px_4px_0_var(--color-red-card)]",
 } as const;
 
 const STUB_TONE = {
   idle: "border-navy bg-teal-light text-navy",
   pending: "border-navy bg-teal text-white",
-  right: "border-navy bg-teal-light text-navy",
-  wrong: "border-navy bg-white text-red-card",
+  right: "border-white bg-royal text-white",
+  wrong: "border-white bg-red-card text-white",
 } as const;
+
+const STUB_LABEL = { idle: "Season ticket", pending: "Season ticket", right: "His spell", wrong: "Your tap" } as const;
