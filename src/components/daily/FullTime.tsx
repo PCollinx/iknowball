@@ -5,7 +5,7 @@ import { SeasonTicket } from "@/components/pwa/SeasonTicket";
 import { WhistleStrip } from "@/components/push/WhistleStrip";
 import { APP_ICON_SRC } from "@/lib/og/logo";
 import { RatingBadge } from "@/components/profile/RatingBadge";
-import { TeamSheet } from "@/components/sheet/TeamSheet";
+import { SheetValue, TeamSheet, type SheetRow } from "@/components/sheet/TeamSheet";
 import { scoreInk } from "@/lib/profile/rating";
 import type { Club } from "@/lib/profile/club";
 import { gameDate, gameDateClosesAt, seasonLabel, seasonOf } from "@/lib/time";
@@ -180,7 +180,7 @@ export function FullTime(props: Props) {
           )}
         </div>
 
-        <div className="contents lg:sticky lg:top-4 lg:block lg:pt-5">
+        <div className="contents lg:sticky lg:top-[88px] lg:block lg:pt-5">
           <aside className="order-3 mt-5 lg:mt-0">
             {card && (
               <div className="-rotate-1 shadow-[5px_5px_0_var(--color-navy)] lg:shadow-[7px_7px_0_var(--color-navy)]">
@@ -352,8 +352,6 @@ function OffPitch({ label, miss = false, children }: { label: string; miss?: boo
   );
 }
 
-const TILTS = ["-rotate-[1.5deg]", "rotate-1", "-rotate-1", "rotate-[1.5deg]", "-rotate-[0.5deg]"];
-
 /** An Era picks question is "Dennis Bergkamp at Arsenal": the player and the club. */
 function eraParts(question: string | null): { player: string; club: string | null } {
   const q = question ?? "";
@@ -369,60 +367,83 @@ function stickerName(name: string): string {
   return words.length > 1 ? words.slice(1).join(" ") : name;
 }
 
-/** Part 2's right answer as a row of stickers, wrong ones in red. */
+/** Part 2 on a team sheet (Collins, 9 Nov 2026, option A of
+ * https://claude.ai/artifact/W8WzfBiMFE3F6Lq31H8kec): a row a question with a
+ * dotted leader to the answer, misses on a red rule with what you said, and a
+ * navy row summing the half up. */
 function SecondHalf({ order, kits }: { order: OrderReveal; kits?: Record<string, PathClub> }) {
   const era = order.daily.format === "era";
-  // A career path's answers are clubs: each as its shirt under the year joined.
+  // A career path's answers are clubs: each wears its shirt and keeps its whole name.
   const career = order.daily.template === "career-path";
-  const club = era ? eraParts(order.slots[0]?.note ?? null).club : null;
+  const nameOf = career ? (name: string) => name : shirtName;
+  const yours = order.slots.map((s) => s.placed);
+  const rows: SheetRow[] = order.slots.map((s, i) => {
+    if (era) {
+      const { player, club } = eraParts(s.note);
+      return {
+        title: stickerName(player),
+        value: <SheetAnswer right={s.right}>{period(s.correct)}</SheetAnswer>,
+        text: s.right ? club : <span className="font-semibold text-red-card">{[club, `You said ${s.placed ? period(s.placed) : "nothing"}`].filter(Boolean).join(" · ")}</span>,
+        warn: !s.right,
+      };
+    }
+    const at = yours.indexOf(s.correct);
+    return {
+      title: (
+        <span className="inline-flex items-center gap-2">
+          {career && (
+            <span className="w-7 shrink-0 lg:w-8">
+              <ShirtBack kit={kits?.[s.correct]?.kit} />
+            </span>
+          )}
+          {i + 1} · {nameOf(s.correct)}
+        </span>
+      ),
+      value: <SheetAnswer right={s.right}>{s.note ?? ""}</SheetAnswer>,
+      text: s.right ? undefined : (
+        <span className="font-semibold text-red-card">{at >= 0 ? `You had ${career ? "it" : "him"} ${ordinal(at + 1)}` : "You didn't place him"}</span>
+      ),
+      warn: !s.right,
+    };
+  });
+  rows.push({ title: secondHalfLine(order, nameOf), value: <SheetValue className="text-teal-light">{order.correct}/{order.slots.length}</SheetValue>, dark: true });
   return (
     <section className="order-6 mt-6">
-      <div className="flex items-baseline justify-between gap-3 border-b-2 border-navy pb-1.5">
-        <h2 className="label min-w-0 truncate">
-          2nd half · {FORMAT_NAME[order.daily.format]}
-          {club && ` · at ${club}`}
-        </h2>
-        <span className="label text-royal">
-          {order.correct}/{order.slots.length}
-        </span>
-      </div>
-      <ol className={`mt-3 grid gap-2 lg:gap-2.5 ${era ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-5"}`}>
-        {order.slots.map((s, i) => (
-          <li
-            key={i}
-            className={`min-w-0 border-2 px-1 py-1.5 text-center ${TILTS[i % TILTS.length]} ${s.right ? "border-royal shadow-[2px_2px_0_var(--color-royal)]" : "border-red-card shadow-[2px_2px_0_var(--color-red-card)]"}`}
-          >
-            <span className={`block font-display leading-[0.9] ${s.right ? "text-royal" : "text-red-card"} ${era ? "text-lg lg:text-xl" : "text-xl lg:text-[28px]"}`}>
-              {era ? s.correct : (s.note ?? i + 1)}
-            </span>
-            {career ? (
-              <ShirtBack kit={kits?.[s.correct]?.kit} name={kits?.[s.correct]?.short ?? s.correct.slice(0, 3)} lettering="tag" className="mx-auto mt-1 w-[88%]" />
-            ) : (
-              <span className="mt-1 block truncate font-display text-xs uppercase lg:text-base">{era ? stickerName(eraParts(s.note).player) : shirtName(s.correct)}</span>
-            )}
-          </li>
-        ))}
-      </ol>
-      <SecondHalfNote order={order} />
+      <TeamSheet name={`2nd half · ${FORMAT_NAME[order.daily.format]}`} tag={`${order.correct}/${order.slots.length}`} rows={rows} />
     </section>
   );
 }
 
-/** What went wrong in Part 2, in a line. */
-function SecondHalfNote({ order }: { order: OrderReveal }) {
+/** An answer at the end of the leader, with a square ✓ or ✕ chip. */
+function SheetAnswer({ right, children }: { right: boolean; children: React.ReactNode }) {
+  return (
+    <span className="flex items-center gap-2">
+      <SheetValue className={`text-[20px] whitespace-nowrap lg:text-[24px] ${right ? "text-royal" : ""}`}>{children}</SheetValue>
+      <span
+        aria-label={right ? "Right" : "Wrong"}
+        className={`grid size-8 place-items-center border-2 font-display text-lg text-white lg:size-9 ${right ? "border-royal bg-royal" : "border-red-card bg-red-card"}`}
+      >
+        {right ? "✓" : "✕"}
+      </span>
+    </span>
+  );
+}
+
+/** An Era picks period as the tickets print it: "1995–2006" reads "1995 → 2006", an open one "2019 → now". */
+function period(choice: string): string {
+  const [from, to] = choice.split("–");
+  return to === undefined ? choice : `${from} → ${to || "now"}`;
+}
+
+/** The half in a line, on the sheet's navy row. */
+function secondHalfLine(order: OrderReveal, nameOf: (name: string) => string): string {
   const wrong = order.slots.filter((s) => !s.right);
-  // Clubs keep their whole names ("Man City", not "City").
-  const nameOf = order.daily.template === "career-path" ? (name: string) => name : shirtName;
-  if (!wrong.length) return <p className="mt-2.5 text-[13px] font-semibold text-royal">Every one in its place.</p>;
-  let line: string;
-  if (order.daily.format === "era") {
-    line = wrong.map((s) => `${stickerName(eraParts(s.note).player)}: you said ${s.placed || "nothing"}`).join(" · ");
-  } else if (wrong.length === 2 && wrong[0].placed === wrong[1].correct && wrong[1].placed === wrong[0].correct) {
-    line = `You swapped ${nameOf(wrong[0].correct)} and ${nameOf(wrong[1].correct)}.`;
-  } else {
-    line = wrong.map((s) => `${s.placed ? nameOf(s.placed) : "Nobody"} where ${nameOf(s.correct)} goes`).join(" · ");
+  if (!wrong.length) return "Every one in its place";
+  if (order.daily.format === "era") return wrong.length === 1 ? "One got away" : `${wrong.length} got away`;
+  if (wrong.length === 2 && wrong[0].placed === wrong[1].correct && wrong[1].placed === wrong[0].correct) {
+    return `You swapped ${nameOf(wrong[0].correct)} and ${nameOf(wrong[1].correct)}`;
   }
-  return <p className="mt-2.5 text-[13px] font-semibold text-red-card">{line}</p>;
+  return `${wrong.length} out of place`;
 }
 
 /** Today's table as the home page's scoreboard: your place, the top three and you. */

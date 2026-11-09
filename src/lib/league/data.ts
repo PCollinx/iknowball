@@ -3,9 +3,11 @@ import { currentUserId, guestName } from "@/lib/daily/data";
 import type { Club } from "@/lib/profile/club";
 import { clubsByIds } from "@/lib/profile/data";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isTestSite } from "@/lib/daily/sample";
 import { gapLine } from "./standing";
+import { seasonStartsOn, seasonTable, seasonWeeks, type SeasonRow, type SeasonWeek } from "./season";
 import { claimMine } from "./waitlist";
-import { addDays, gameDate, gameDateClosesAt, matchweekBounds } from "@/lib/time";
+import { addDays, gameDate, gameDateClosesAt, matchweekBounds, seasonOf } from "@/lib/time";
 import { fanbaseTable, movement, weekTable, type FanbaseRow, type WeekPart, type WeekRow, type WeekSprint } from "./week";
 
 // The League reads straight from finished attempts: a past day can't change
@@ -126,22 +128,74 @@ function withPlayers(rows: WeekRow[], people: Map<string, Player>, me: string | 
   }));
 }
 
-/** A league's members on this week's table. Members yet to play sit at the bottom on 0. */
-async function membersTable(leagueId: number, week: Week, me: string | null): Promise<TableLine[]> {
+/** A league's member ids. */
+async function memberIds(leagueId: number): Promise<string[]> {
   const { data, error } = await createAdminClient().from("league_members").select("user_id").eq("league_id", leagueId);
   if (error) throw error;
-  const ids = (data ?? []).map((m) => m.user_id);
-  const [parts, sprints, people] = await Promise.all([weekParts(week, ids), weekSprints(week, ids), players(ids)]);
-  const rows = weekTable(parts, week.startsOn, sprints);
-  const moved = movement(parts, sprints, week.startsOn, week.today);
+  return (data ?? []).map((m) => m.user_id);
+}
+
+/** A week's rows for every member: those yet to play sit at the bottom on 0. */
+function membersRows(rows: WeekRow[], ids: string[], people: Map<string, Player>, me: string | null, moved?: Map<string, number>): TableLine[] {
   const played = new Set(rows.map((r) => r.userId));
-  const idle = ids.filter((id) => !played.has(id));
   const bottom = rows.length + 1;
   const all: WeekRow[] = [
     ...rows,
-    ...idle.map((userId) => ({ userId, days: Array(7).fill(null), counted: [], clash: 0, points: 0, seconds: 0, position: bottom })),
+    ...ids
+      .filter((id) => !played.has(id))
+      .map((userId) => ({ userId, days: Array(7).fill(null), counted: [], clash: 0, points: 0, seconds: 0, position: bottom })),
   ];
   return withPlayers(all, people, me, moved).sort((a, b) => a.position - b.position || a.name.localeCompare(b.name));
+}
+
+/** A league's members on this week's table. Members yet to play sit at the bottom on 0. */
+async function membersTable(leagueId: number, week: Week, me: string | null): Promise<TableLine[]> {
+  const ids = await memberIds(leagueId);
+  const [parts, sprints, people] = await Promise.all([weekParts(week, ids), weekSprints(week, ids), players(ids)]);
+  return membersRows(weekTable(parts, week.startsOn, sprints), ids, people, me, movement(parts, sprints, week.startsOn, week.today));
+}
+
+/** A season week on the matchweek strip, with your place in it (null when you didn't score). */
+export type StripWeek = SeasonWeek & { position: number | null; current: boolean };
+/** moved: places gained (or lost) since last week's close; null in the first week. */
+export type SeasonLine = SeasonRow & Player & { mine: boolean; moved: number | null };
+
+/** The first Monday this season's table counts from. */
+export function seasonStart(today = gameDate()): string {
+  return seasonStartsOn(seasonOf(today), isTestSite());
+}
+
+/** A league's whole season in one read: every week's table, this week's with
+ * its daily movement, and the season table. Before the season starts, only this week. */
+async function leagueSeason(leagueId: number, me: string | null) {
+  const week = currentWeek();
+  const weeks = seasonWeeks(seasonStart(week.today), week.today);
+  const from = weeks[0]?.startsOn ?? week.startsOn;
+  const ids = await memberIds(leagueId);
+  const range = { startsOn: from, endsOn: week.endsOn, today: week.today };
+  const [parts, sprints, people] = await Promise.all([weekParts(range, ids), weekSprints(range, ids), players(ids)]);
+  const inWeek = <T extends { playDate: string }>(xs: T[], w: { startsOn: string; endsOn: string }) =>
+    xs.filter((x) => x.playDate >= w.startsOn && x.playDate <= w.endsOn);
+  const tables = weeks.map((w) => weekTable(inWeek(parts, w), w.startsOn, inWeek(sprints, w)));
+  const nowParts = inWeek(parts, week);
+  const nowSprints = inWeek(sprints, week);
+  const current = membersRows(weekTable(nowParts, week.startsOn, nowSprints), ids, people, me, movement(nowParts, nowSprints, week.startsOn, week.today));
+
+  const strip: StripWeek[] = weeks.map((w, i) => {
+    const mine = me ? tables[i].find((r) => r.userId === me && r.points > 0) : undefined;
+    return { ...w, position: mine?.position ?? null, current: w.startsOn === week.startsOn };
+  });
+  const season = seasonTable(tables);
+  const before = new Map(seasonTable(tables.slice(0, -1)).map((r) => [r.userId, r.position]));
+  const seasonLines: SeasonLine[] = season.map((r) => ({
+    ...r,
+    ...(people.get(r.userId) ?? { userId: r.userId, name: guestName(r.userId), club: null }),
+    mine: r.userId === me,
+    moved: tables.length > 1 && before.has(r.userId) ? before.get(r.userId)! - r.position : null,
+  }));
+  /** A finished or current week's table for every member. */
+  const weekRows = (n: number): TableLine[] => (n === weeks.length ? current : membersRows(tables[n - 1] ?? [], ids, people, me));
+  return { week, ids, strip, current, season: seasonLines, weekRows };
 }
 
 export async function leagueByCode(code: string): Promise<League | null> {
@@ -150,25 +204,51 @@ export async function leagueByCode(code: string): Promise<League | null> {
   return data;
 }
 
-/** `captain` is the owner's name: the owner wears the armband. */
+/** What a member's page shows: one matchweek (this one or a finished one) or the season. */
+export type LeagueShown =
+  | { kind: "week"; n: number | null; week: Week; rows: TableLine[]; final: boolean }
+  | { kind: "season"; rows: SeasonLine[]; weeks: number };
+
+/** `captain` is the owner's name: the owner wears the armband. `rows` is this week's table. */
 export type LeagueView =
   | { kind: "missing" }
   | { kind: "invite"; league: League; week: Week; rows: TableLine[]; captain: string; full: boolean }
-  | { kind: "table"; league: League; week: Week; rows: TableLine[]; captain: string; owner: boolean };
+  | { kind: "table"; league: League; week: Week; rows: TableLine[]; captain: string; owner: boolean; strip: StripWeek[]; shown: LeagueShown; seasonPlace: number | null };
 
-/** A league's page: its table for members, an invite to join for anyone else. */
-export async function getLeagueView(code: string): Promise<LeagueView> {
+/** A league's page: its table for members, an invite to join for anyone else.
+ * `pick` is the ?w= on the address: a week's number or "season"; anything else shows this week. */
+export async function getLeagueView(code: string, pick?: string): Promise<LeagueView> {
   const [league, me] = await Promise.all([leagueByCode(code), currentUserId()]);
   if (!league) return { kind: "missing" };
-  const week = currentWeek();
-  const rows = await membersTable(league.id, week, me);
-  const captain = rows.find((r) => r.userId === league.owner_id)?.name ?? "The owner";
-  if (!me || !rows.some((r) => r.userId === me)) return { kind: "invite", league, week, rows, captain, full: rows.length >= LEAGUE_MAX };
-  return { kind: "table", league, week, rows, captain, owner: league.owner_id === me };
+  const { week, current, strip, season, weekRows } = await leagueSeason(league.id, me);
+  const captain = current.find((r) => r.userId === league.owner_id)?.name ?? "The owner";
+  if (!me || !current.some((r) => r.userId === me)) return { kind: "invite", league, week, rows: current, captain, full: current.length >= LEAGUE_MAX };
+
+  const n = Number(pick);
+  const picked = Number.isInteger(n) ? strip.find((w) => w.n === n && !w.current) : undefined;
+  const shown: LeagueShown =
+    pick === "season" && strip.length
+      ? { kind: "season", rows: season, weeks: strip.length }
+      : picked
+        ? { kind: "week", n: picked.n, week: { startsOn: picked.startsOn, endsOn: picked.endsOn, today: picked.endsOn }, rows: weekRows(picked.n), final: true }
+        : { kind: "week", n: strip.at(-1)?.current ? strip.at(-1)!.n : null, week, rows: current, final: false };
+  const seasonPlace = season.find((r) => r.mine)?.position ?? null;
+  return { kind: "table", league, week, rows: current, captain, owner: league.owner_id === me, strip, shown, seasonPlace };
 }
 
 /** One of your leagues on the hub: your place, its top three, and how far you are from the next place that matters. */
-export type HubLine = { league: League; members: number; position: number | null; points: number; moved: number | null; top: TableLine[]; gap: string };
+export type HubLine = {
+  league: League;
+  members: number;
+  position: number | null;
+  points: number;
+  moved: number | null;
+  top: TableLine[];
+  gap: string;
+  /** Where you finished last week and stand on the season, when you scored. */
+  lastWeek: { position: number; points: number } | null;
+  season: { position: number; points: number } | null;
+};
 
 /** Your leagues with this week's place in each, plus your place on the global table. */
 export type Hub = {
@@ -200,8 +280,10 @@ export async function getHub(): Promise<Hub> {
   const leagues = ((data ?? []) as unknown as { leagues: League | null }[]).map((m) => m.leagues).filter((l): l is League => l !== null);
   const lines = await Promise.all(
     leagues.map(async (league) => {
-      const rows = await membersTable(league.id, week, me);
+      const { current: rows, strip, season, weekRows } = await leagueSeason(league.id, me);
       const mine = rows.find((r) => r.mine);
+      const last = strip.length > 1 ? weekRows(strip.length - 1).find((r) => r.mine && r.points > 0) : undefined;
+      const inSeason = season.find((r) => r.mine);
       return {
         league,
         members: rows.length,
@@ -210,6 +292,8 @@ export async function getHub(): Promise<Hub> {
         moved: mine?.moved ?? null,
         top: rows.slice(0, 3),
         gap: gapLine(rows),
+        lastWeek: last ? { position: last.position, points: last.points } : null,
+        season: inSeason ? { position: inSeason.position, points: inSeason.points } : null,
       };
     }),
   );

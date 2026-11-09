@@ -2,7 +2,7 @@ import { ChallengeButton } from "@/components/clash/ChallengeButton";
 import { CopyLink } from "@/components/league/CopyLink";
 import { ShirtBack, shirtName, type Kit } from "@/components/daily/ShirtBack";
 import { publicEnv } from "@/lib/env";
-import type { League, TableLine } from "@/lib/league/data";
+import type { League, SeasonLine, TableLine } from "@/lib/league/data";
 import { formGuide, type FormDay } from "@/lib/league/standing";
 import { CLASH_MAX, COUNTED_DAYS } from "@/lib/league/week";
 import { kitOf } from "@/lib/profile/club";
@@ -14,17 +14,21 @@ import { kitOf } from "@/lib/profile/club";
 
 const WEEK_MAX = COUNTED_DAYS * 100 + CLASH_MAX;
 const DAYS = ["M", "T", "W", "T", "F", "S", "S"];
-const you = (r: TableLine) => (r.mine ? "You" : r.name);
+const you = (r: Pick<TableLine, "mine" | "name">) => (r.mine ? "You" : r.name);
 
-/** The top three, 2nd · 1st · 3rd, in their club's shirts on navy steps. */
-export function Podium({ rows }: { rows: TableLine[] }) {
+/** Who stands on the podium: a week's row or a season's. */
+type Placed = Pick<TableLine, "userId" | "position" | "points" | "club" | "mine" | "name">;
+
+/** The top three, 2nd · 1st · 3rd, in their club's shirts on navy steps.
+ * The table under it starts on its navy floor, so 4th follows straight on. */
+export function Podium({ rows }: { rows: Placed[] }) {
   const steps = [
     { row: rows[1], shirt: "w-[84%] -rotate-[1.5deg]", step: "h-11 lg:h-[60px]" },
     { row: rows[0], shirt: "w-[96%] rotate-1", step: "h-16 lg:h-[88px]" },
     { row: rows[2], shirt: "w-[84%] rotate-[0.6deg]", step: "h-[30px] lg:h-10" },
   ];
   return (
-    <section aria-label="Top three" className="border-2 border-navy bg-mist px-3 pt-[30px] lg:px-[22px] lg:pt-[34px]">
+    <section aria-label="Top three" className="border-2 border-b-0 border-navy bg-mist px-3 pt-[30px] lg:px-[22px] lg:pt-[34px]">
       <ol className="mx-auto grid max-w-[480px] grid-cols-3 items-end gap-2 lg:gap-6">
         {steps.map(({ row, shirt, step }, i) => (
           <li key={row?.userId ?? i} className="flex flex-col items-center">
@@ -35,6 +39,7 @@ export function Podium({ rows }: { rows: TableLine[] }) {
                 </span>
                 <span className={`mt-1 font-display text-2xl leading-none tabular-nums lg:mt-1.5 lg:text-[32px] ${row.mine ? "text-royal" : ""}`}>
                   {row.points}
+                  <span className="ml-0.5 font-sans text-[10px] font-semibold tracking-[0.08em] lg:text-[11px]">PTS</span>
                   <span className="sr-only"> points, {you(row)}</span>
                 </span>
                 <span aria-hidden="true" className={`mt-1.5 grid w-full place-items-center bg-navy font-display text-[26px] text-teal-light lg:mt-2 lg:text-[34px] ${step}`}>
@@ -78,13 +83,15 @@ function formText(row: TableLine, today: number): string {
   return played.length ? played.join(", ") : "No Dailies yet";
 }
 
-function Move({ moved }: { moved: number | null }) {
+function Move({ moved, since = "today" }: { moved: number | null; since?: string }) {
   if (!moved) return null;
   return (
     <span className={`label text-[10px] ${moved > 0 ? "text-teal" : "text-red-card"}`}>
       {moved > 0 ? "▲" : "▼"}
       {Math.abs(moved)}
-      <span className="sr-only">{moved > 0 ? " up" : " down"} today</span>
+      <span className="sr-only">
+        {moved > 0 ? " up" : " down"} {since}
+      </span>
     </span>
   );
 }
@@ -102,7 +109,7 @@ export function FormTable({ rows, today, captainId }: { rows: TableLine[]; today
   if (!rows.length) return null;
   return (
     <section aria-label="The table" className="tabular-nums">
-      <div className="label grid grid-cols-[20px_32px_minmax(0,1fr)_44px] items-end gap-2 border-b-2 border-navy pb-[5px] text-[10px] lg:grid-cols-[30px_40px_minmax(0,1fr)_230px_70px_60px] lg:gap-3 lg:pb-1.5 lg:text-[11px]">
+      <div className={`${FLOOR} grid-cols-[20px_32px_minmax(0,1fr)_44px] lg:grid-cols-[30px_40px_minmax(0,1fr)_230px_70px_60px]`}>
         <span>#</span>
         <span />
         <span className="flex items-end justify-between lg:block">
@@ -125,12 +132,12 @@ export function FormTable({ rows, today, captainId }: { rows: TableLine[]; today
         <span className="hidden text-right lg:block">Clash</span>
         <span className="text-right">Pts</span>
       </div>
-      <ol>
+      <ol className={FRAME}>
         {rows.map((r) => (
           <li
             key={r.userId}
-            className={`grid grid-cols-[20px_32px_minmax(0,1fr)_44px] items-center gap-2 border-b border-track py-2 lg:grid-cols-[30px_40px_minmax(0,1fr)_230px_70px_60px] lg:gap-3 ${
-              r.mine ? "-mx-2 bg-mist px-2 lg:-mx-2.5 lg:px-2.5" : ""
+            className={`grid grid-cols-[20px_32px_minmax(0,1fr)_44px] items-center gap-2 border-b border-track px-2 py-2 last:border-b-0 lg:grid-cols-[30px_40px_minmax(0,1fr)_230px_70px_60px] lg:gap-3 lg:px-2.5 ${
+              r.mine ? "bg-mist" : ""
             }`}
           >
             <span className="font-display text-[22px] lg:text-[26px]">{r.points > 0 ? r.position : "–"}</span>
@@ -171,6 +178,47 @@ export function FormTable({ rows, today, captainId }: { rows: TableLine[]; today
         </span>
         <span className="font-semibold text-[#00807F] lg:hidden">+N Clash</span>
       </p>
+    </section>
+  );
+}
+
+/** The table's captions as the podium's navy floor (Collins, 9 Nov 2026): the steps stand on it and 4th follows. */
+const FLOOR = "label grid items-end gap-2 bg-navy px-2 pt-1.5 pb-[5px] text-[10px] text-teal-light lg:gap-3 lg:px-2.5 lg:pb-1.5 lg:text-[11px]";
+const FRAME = "border-x-2 border-b-2 border-navy";
+
+/** The season so far: every week's points added up, with weeks played and won. */
+export function SeasonTable({ rows, captainId }: { rows: SeasonLine[]; captainId: string }) {
+  if (!rows.length) return null;
+  const cols = "grid-cols-[20px_32px_minmax(0,1fr)_30px_30px_58px] lg:grid-cols-[30px_40px_minmax(0,1fr)_60px_60px_80px]";
+  return (
+    <section aria-label="The season table" className="tabular-nums">
+      <div className={`${FLOOR} ${cols}`}>
+        <span>#</span>
+        <span />
+        <span>Player</span>
+        <span className="text-right">Wks</span>
+        <span className="text-right">Won</span>
+        <span className="text-right">Pts</span>
+      </div>
+      <ol className={FRAME}>
+        {rows.map((r) => (
+          <li key={r.userId} className={`grid items-center gap-2 border-b border-track px-2 py-2 last:border-b-0 lg:gap-3 lg:px-2.5 ${cols} ${r.mine ? "bg-mist" : ""}`}>
+            <span className="font-display text-[22px] lg:text-[26px]">{r.position}</span>
+            <span aria-hidden="true">
+              <ShirtBack kit={kitOf(r.club)} />
+            </span>
+            <span className="flex min-w-0 items-center gap-[5px] font-semibold">
+              <span className="truncate">{you(r)}</span>
+              {r.userId === captainId && <Armband />}
+              <Move moved={r.moved} since="since last week" />
+            </span>
+            <span className="text-right font-display text-xl">{r.played}</span>
+            <span className={`text-right font-display text-xl ${r.won ? "text-royal" : ""}`}>{r.won}</span>
+            <span className="text-right font-display text-[24px] leading-none lg:text-[28px]">{r.points.toLocaleString("en-GB")}</span>
+          </li>
+        ))}
+      </ol>
+      <p className="mt-2 text-xs text-slate lg:text-[13px]">Each week&apos;s points, out of {WEEK_MAX}, added up. Level on points, more weeks won goes higher.</p>
     </section>
   );
 }

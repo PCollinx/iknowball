@@ -12,7 +12,8 @@ import { NavLinks, SectionLinks } from "./NavLinks";
 // your rating, over a double rule. On phones the sections sit in a row under
 // the logo. It sits in the (site) layout, so every public screen has it, and
 // it needs nothing from the page: the active section comes from the address
-// and the rating loads in its own Suspense slot.
+// and the rating loads in its own Suspense slot. It sticks to the top of the
+// screen, so scrolling never hides it (Collins, 9 Nov 2026).
 //
 // Match mode (21 Oct 2026): while a timed round is on (a page renders
 // <MatchLive />), CSS in globals.css hides the sections, the shirt link and
@@ -21,7 +22,7 @@ import { NavLinks, SectionLinks } from "./NavLinks";
 
 export function SiteNav() {
   return (
-    <header className="border-b-[4px] border-double border-navy">
+    <header className="sticky top-0 z-40 border-b-[4px] border-double border-navy bg-white">
       <div className="mx-auto flex max-w-[1184px] items-center justify-between gap-4 px-4 py-3 lg:py-0">
         <Link href="/" aria-label="iKnowBall home" data-nav-full className="flex items-center gap-2 lg:gap-2.5 lg:py-3">
           <Brand />

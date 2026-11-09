@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { saveWhistle, setWhistle, testWhistle, whistleFor, type Prefs } from "@/lib/push/actions";
+import { saveWhistle, setWhistle, whistleFor, type Prefs } from "@/lib/push/actions";
 import type { Pref } from "@/lib/push/send";
 import { isIos } from "@/lib/pwa/platform";
 
@@ -86,7 +86,5 @@ export function useWhistle() {
     [state],
   );
 
-  const test = useCallback(async () => (state.kind === "on" ? testWhistle(state.endpoint) : "failed"), [state]);
-
-  return { state, turnOn, flip, test };
+  return { state, turnOn, flip };
 }

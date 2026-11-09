@@ -12,6 +12,7 @@ import { WhistleSection } from "@/components/push/WhistleSection";
 import { APP_ICON_SRC } from "@/lib/og/logo";
 import { currentUser } from "@/lib/daily/data";
 import { getHub } from "@/lib/league/data";
+import { isAdmin } from "@/lib/maker/data";
 import { clubChoices, getProfileView } from "@/lib/profile/data";
 import { gameDate, seasonLabel, seasonOf } from "@/lib/time";
 import { KeepyUppy } from "@/components/loading/KeepyUppy";
@@ -77,7 +78,7 @@ async function ProfileScreen({ searchParams }: { searchParams: SearchParams }) {
     );
   }
 
-  const [view, clubs, hub] = await Promise.all([getProfileView(user.id), clubChoices(), getHub()]);
+  const [view, clubs, hub, admin] = await Promise.all([getProfileView(user.id), clubChoices(), getHub(), isAdmin(user.id)]);
   const leagues = hub.leagues;
   const guest = Boolean(user.is_anonymous);
 
@@ -117,6 +118,16 @@ async function ProfileScreen({ searchParams }: { searchParams: SearchParams }) {
         <OnYourPhone guest={guest} icon={APP_ICON_SRC} />
 
         <WhistleSection guest={guest} />
+
+        {admin && (
+          <Section title="The maker">
+            <p>Days, lists, Clash, jobs and the waitlist. Staff only.</p>
+            <Link href="/maker" className="btn-navy btn-press mt-3 flex w-full items-center justify-between px-3.5 py-2.5 font-display text-2xl uppercase">
+              <span>Open the maker</span>
+              <span aria-hidden="true">→</span>
+            </Link>
+          </Section>
+        )}
 
         <Section title={guest ? "Keep your shirt" : "Account"}>
           {guest ? (
