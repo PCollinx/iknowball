@@ -11,11 +11,11 @@ import { usePathname } from "next/navigation";
 type Section = { key: string; href: string; label: string };
 
 const HOME: Section = { key: "home", href: "/welcome", label: "Home" };
-const DAILY: Section = { key: "daily", href: "/daily", label: "The Daily" };
+const DAILY: Section = { key: "daily", href: "/daily", label: "Daily" };
 const CLASH: Section = { key: "clash", href: "/clash", label: "Clash" };
-const LEAGUE: Section = { key: "league", href: "/league", label: "The League" };
-const TABLE: Section = { key: "table", href: "/daily/table", label: "Today's table" };
-const PROFILE: Section = { key: "profile", href: "/profile", label: "Your shirt" };
+const LEAGUE: Section = { key: "league", href: "/league", label: "League" };
+const TABLE: Section = { key: "table", href: "/daily/table", label: "Table" };
+const PROFILE: Section = { key: "profile", href: "/profile", label: "Shirt" };
 
 const SECTIONS = { desktop: [HOME, DAILY, CLASH, LEAGUE, TABLE], phone: [HOME, DAILY, CLASH, LEAGUE, PROFILE] };
 

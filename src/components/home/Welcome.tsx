@@ -307,13 +307,13 @@ function Questions() {
   return (
     <section className="order-4 mt-7 lg:mt-9">
       <Heading>Questions</Heading>
-      <ul className="mt-1 lg:columns-2 lg:gap-7">
+      <ul data-faq className="mt-1 lg:columns-2 lg:gap-7">
         {FAQ.map((f) => (
           <li key={f.q} className="break-inside-avoid border-b border-navy">
             <details className="group">
               <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-2.5 text-[14px] font-semibold lg:text-[15px] [&::-webkit-details-marker]:hidden">
                 {f.q}
-                <span aria-hidden="true" className="font-display text-2xl leading-none transition-transform group-open:rotate-45">
+                <span aria-hidden="true" className="font-display text-2xl leading-none transition-transform duration-300 group-open:rotate-45 motion-reduce:transition-none">
                   +
                 </span>
               </summary>

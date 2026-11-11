@@ -314,3 +314,28 @@ body:has([data-full-screen]) [data-site-frame] {
 body:has([data-full-screen]) [data-site-body] {
   min-height: 0;
 }
+
+/* The welcome's questions slide open and shut (Collins, 11 Nov 2026) instead
+ * of jumping. Browsers without ::details-content or interpolate-size (older
+ * Safari) just open them as before. */
+[data-faq] details {
+  interpolate-size: allow-keywords;
+}
+[data-faq] details::details-content {
+  block-size: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    block-size 0.3s ease,
+    opacity 0.3s ease,
+    content-visibility 0.3s allow-discrete;
+}
+[data-faq] details[open]::details-content {
+  block-size: auto;
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-faq] details::details-content {
+    transition: none;
+  }
+}
