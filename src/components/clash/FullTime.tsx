@@ -62,7 +62,7 @@ export function ClashFullTime({ code, statLabel, setSize, right, kicks, bestRun,
               </span>
             )}
             <h1 className="mt-1 font-display text-[60px] leading-[0.84] uppercase lg:text-[96px] lg:leading-[0.82]">
-              Full <span className="sash-mark">time</span>
+              Full time
             </h1>
             <p className="mt-1.5 text-sm lg:mt-2 lg:text-base">
               {calledLine(kicks.length, setSize)}.{setter && outcome && <> {verdictLine(setter, outcome)}</>}

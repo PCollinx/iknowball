@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { WhistleStrip } from "@/components/push/WhistleStrip";
 import { connection } from "next/server";
 import { ClashTicket } from "@/components/home/ClashTicket";
+import { HowItWorks } from "@/components/home/HowItWorks";
 import { DailySticker } from "@/components/home/DailySticker";
 import { LeagueBoard } from "@/components/home/LeagueBoard";
 import { ShirtSticker } from "@/components/home/ShirtSticker";
@@ -18,7 +19,8 @@ import { KeepyUppy } from "@/components/loading/KeepyUppy";
 // sticker, Clash as a match ticket, the League as a scoreboard and your shirt
 // as a sticker, under the Programme navbar. Once today's Daily is done and you
 // haven't sprinted today, Clash takes the Daily's place at the top (Collins,
-// 2 Nov 2026, option D of the "Clash after the Daily" mocks).
+// 2 Nov 2026, option D of the "Clash after the Daily" mocks). How it works
+// and the FAQ sit at the foot (Collins, 11 Nov 2026).
 
 export default function Home() {
   return (
@@ -101,6 +103,7 @@ async function HomeScreen() {
           </div>
         </div>
 
+        <HowItWorks />
       </main>
     </>
   );

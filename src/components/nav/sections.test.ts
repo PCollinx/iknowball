@@ -7,14 +7,14 @@ describe("sectionOf", () => {
     expect(sectionOf("/clash/K7Q2XM")).toBe("clash");
     expect(sectionOf("/league/everyone")).toBe("league");
     expect(sectionOf("/profile")).toBe("profile");
+    expect(sectionOf("/")).toBe("home");
   });
 
   it("treats today's table as its own section, not the Daily", () => {
     expect(sectionOf("/daily/table")).toBe("table");
   });
 
-  it("marks nothing on home, privacy or a near miss", () => {
-    expect(sectionOf("/")).toBeNull();
+  it("marks nothing on privacy or a near miss", () => {
     expect(sectionOf("/privacy")).toBeNull();
     expect(sectionOf("/dailyx")).toBeNull();
   });
