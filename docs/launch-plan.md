@@ -21,7 +21,6 @@ The home page set the kit. Reuse it before inventing anything new:
 | Ticket | `src/components/home/ClashTicket.tsx` | Something you "enter" (a sprint, an invite) |
 | Buttons | `btn-teal`, `btn-navy`, `btn-press` in `globals.css` | Every button that isn't a full-width royal bar |
 | Royal bar with sash | `bg-royal sash` | The one main action on a screen |
-| `sash-mark` letters | `globals.css` | Short words like "or", "vs" |
 | Keepy-uppy | `src/components/loading/KeepyUppy.tsx` | Every loading state |
 
 House rules still stand (CLAUDE.md, "Look and type"): white background, navy text, no soft rounded card

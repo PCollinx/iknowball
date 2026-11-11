@@ -53,7 +53,7 @@ export default function WaitlistPage() {
           <span className="label text-teal">The team sheet is open</span>
           <h1 className="mt-2 font-display text-[64px] leading-[0.82] uppercase lg:mt-2.5 lg:text-[104px] xl:text-[120px]">
             Think you <br className="lg:hidden" />
-            know <span className="text-teal">ball?</span>
+            know ball?
           </h1>
           <p className="mt-2.5 max-w-[520px] text-base leading-snug lg:mt-4 lg:text-lg">
             A daily football quiz, 60-second duels and mini-leagues with your mates. Put your name down and get your shirt printed before kick-off.

@@ -34,7 +34,7 @@ export function StartLeague(props: Look) {
     <Frame {...props}>
       <form action={action}>
         <label htmlFor="league-name" className={`${TITLE} ${props.look === "slot" ? "mt-1" : ""}`}>
-          Start a <span className="sash-mark">league</span>
+          Start a league
         </label>
         <div className="mt-2 flex gap-2">
           <input
@@ -67,7 +67,7 @@ export function JoinLeague({ code = "", ...props }: Look & { code?: string }) {
     <Frame {...props}>
       <form action={action}>
         <label htmlFor="league-code" className={`${TITLE} ${props.look === "slot" ? "mt-1" : ""}`}>
-          Got a <span className="sash-mark">code?</span>
+          Got a code?
         </label>
         <div className="mt-2 flex gap-2">
           <input

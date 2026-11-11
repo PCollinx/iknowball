@@ -169,7 +169,7 @@ export function FullTime(props: Props) {
           {props.clubChoices && (
             <section className="order-4 mt-6 border-y-4 border-double border-navy py-3.5 lg:mt-7 lg:py-4">
               <h2 className="font-display text-[40px] leading-[0.9] uppercase lg:text-[48px]">
-                Who do you <span className="sash-mark">support?</span>
+                Who do you support?
               </h2>
               <p className="mt-1.5 text-sm leading-snug lg:text-[15px]">
                 Your club dresses your shirt and puts you in the fanbase table. It never changes your questions or your score. You can switch once a

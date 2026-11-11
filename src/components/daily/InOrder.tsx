@@ -57,7 +57,7 @@ export function InOrder(props: Props) {
           label={`${props.partLabel} · In Order`}
           title={
             <h1 className="font-display text-[34px] leading-[0.9] uppercase lg:text-[56px]">
-              In <span className="sash-mark">order</span>
+              In order
             </h1>
           }
           prompt={props.prompt}

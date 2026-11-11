@@ -56,7 +56,7 @@ async function TableScreen({ searchParams }: Pick<PageProps<"/daily/table">, "se
       <main className="mx-auto w-full max-w-[1180px] flex-1 px-4 lg:px-12">
         <Masthead issue={0} right="Today's table" />
         <h1 className="mt-6 font-display text-[64px] leading-[0.9] uppercase">
-          No Daily <span className="sash-mark">today</span>
+          No Daily today
         </h1>
         <p className="mt-3 text-lg">No Daily, no table. Check back tomorrow.</p>
       </main>
@@ -78,7 +78,7 @@ async function TableScreen({ searchParams }: Pick<PageProps<"/daily/table">, "se
               {headlineFixture(day.title)} · {day.rows.length} played
             </span>
             <h1 className="mt-1 font-display text-[56px] leading-[0.86] uppercase lg:text-[84px] lg:leading-[0.84]">
-              Today&apos;s <span className="sash-mark">table</span>
+              Today&apos;s table
             </h1>
             {tabs.length > 1 && <Tabs tabs={tabs} on={tab.key} />}
           </div>
@@ -269,7 +269,7 @@ function Actions({ playDate }: { playDate: string }) {
     <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center lg:gap-4">
       <Link href="/daily" className="btn-white btn-press flex items-center justify-between px-3.5 py-2.5 font-display text-2xl leading-none uppercase lg:px-4 lg:py-3 lg:text-[28px]">
         <span>
-          Back to the <span className="sash-mark">Daily</span>
+          Back to the Daily
         </span>
         <span aria-hidden="true">←</span>
       </Link>

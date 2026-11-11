@@ -41,7 +41,7 @@ async function Everyone() {
             {players.toLocaleString("en-GB")} {players === 1 ? "player" : "players"} · {WEEKDAYS[dayIndex(week.startsOn, week.today)]}
           </span>
           <h1 className="mt-0.5 font-display text-[52px] leading-[0.86] uppercase lg:text-[64px]">
-            Team of the <span className="sash-mark">week</span>
+            Team of the week
           </h1>
           <p className="mt-1.5 text-slate">The top 11 make the team. Best 5 Dailies and 3 sprints count, out of 600.</p>
           <div className="mt-3.5 lg:hidden">

@@ -39,7 +39,7 @@ async function Fans() {
               {rows.length} {rows.length === 1 ? "club" : "clubs"} on the table · {WEEKDAYS[dayIndex(week.startsOn, week.today)]}
             </span>
             <h1 className="mt-0.5 font-display text-[52px] leading-[0.86] uppercase lg:text-[64px]">
-              The away <span className="sash-mark">end</span>
+              The away end
             </h1>
             <p className="mt-1.5 text-slate">
               Clubs by their fans&apos; average week, out of 600. A club needs {minFans} fans playing to get through the gate.

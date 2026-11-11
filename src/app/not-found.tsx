@@ -28,7 +28,7 @@ export default function NotFound() {
         <div className="lg:self-end">
           <span className="label text-royal">404 · VAR check</span>
           <h1 className="mt-1 font-display text-[72px] leading-[0.85] uppercase lg:text-[120px]">
-            Off<span className="text-royal">side</span>
+            Offside
           </h1>
         </div>
         <div className="mt-[18px] lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mt-0 lg:self-center">

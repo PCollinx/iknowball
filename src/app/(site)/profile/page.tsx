@@ -60,7 +60,7 @@ async function ProfileScreen({ searchParams }: { searchParams: SearchParams }) {
         {authError && <Alert>{authError}</Alert>}
         <span className="label mt-4 block text-royal">Your shirt</span>
         <h1 className="mt-0.5 font-display text-[60px] leading-[0.86] uppercase">
-          No shirt <span className="text-royal">yet</span>
+          No shirt yet
         </h1>
         <EmptyPeg />
         <p className="mt-3.5 text-lg">Play today&apos;s Daily and your shirt goes up. No sign-up needed.</p>

@@ -32,20 +32,9 @@ export default function LeagueTablePage({ params, searchParams }: { params: Para
   );
 }
 
-/** The league's name, its last word carrying the sash. */
+/** The league's name, all in navy like every heading (Collins, 11 Nov 2026). */
 function Title({ name, className }: { name: string; className: string }) {
-  const cut = name.lastIndexOf(" ");
-  return (
-    <h1 className={`font-display uppercase break-words ${className}`}>
-      {cut > 0 ? (
-        <>
-          {name.slice(0, cut)} <span className="sash-mark">{name.slice(cut + 1)}</span>
-        </>
-      ) : (
-        <span className="sash-mark">{name}</span>
-      )}
-    </h1>
-  );
+  return <h1 className={`font-display uppercase break-words ${className}`}>{name}</h1>;
 }
 
 /** The top three on the podium, the rest on the table standing on its floor. */
@@ -72,7 +61,7 @@ async function LeagueScreen({ params, searchParams }: { params: Params; searchPa
       <main className="mx-auto w-full max-w-[560px] flex-1 px-4 pb-10">
         <LeagueMasthead right="Invite" />
         <h1 className="mt-6 font-display text-[64px] leading-[0.9] uppercase">
-          No such <span className="sash-mark">league</span>
+          No such league
         </h1>
         <p className="mt-3 mb-5 text-lg">That code doesn&apos;t match a league. Check it with whoever sent it.</p>
         <JoinLeague />

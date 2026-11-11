@@ -271,15 +271,15 @@ function Ticket({ code, url, setSize, right, table, challenge, rival }: { code: 
         <h2 className="mt-1 mb-1.5 font-display text-[34px] leading-[0.9] uppercase lg:mt-1.5 lg:mb-2 lg:text-[40px]">
           {challenge ? (
             <>
-              Pass it <span className="sash-mark">on</span>
+              Pass it on
             </>
           ) : rival ? (
             <>
-              For <span className="sash-mark">{rival}</span>
+              For {rival}
             </>
           ) : (
             <>
-              Settle <span className="sash-mark">it</span>
+              Settle it
             </>
           )}
         </h2>

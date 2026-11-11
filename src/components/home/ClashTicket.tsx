@@ -27,11 +27,11 @@ export function ClashTicket({ clash, stat }: { clash: HomeClash | null; stat: St
         <h2 className="mt-1 mb-2 font-display text-[30px] leading-[0.9] uppercase lg:mt-1.5 lg:mb-2.5 lg:text-[40px]">
           {lastWeek ? (
             <>
-              Your three are <span className="sash-mark">empty</span>
+              Your three are empty
             </>
           ) : (
             <>
-              Higher <span className="sash-mark">or</span> lower
+              Higher or lower
             </>
           )}
         </h2>
@@ -44,7 +44,7 @@ export function ClashTicket({ clash, stat }: { clash: HomeClash | null; stat: St
               <span className="label block truncate text-[9px] lg:text-[10px]">{surname(first.name)}</span>
             </span>
           </div>
-          <span className="sash-mark font-display text-base uppercase lg:text-xl">vs</span>
+          <span className="font-display text-base uppercase lg:text-xl">vs</span>
           <div className="flex min-w-0 flex-col items-center gap-1 text-center min-[400px]:flex-row-reverse min-[400px]:gap-2 min-[400px]:text-right">
             <MiniShirt num="10" />
             <span className="min-w-0 leading-none">
