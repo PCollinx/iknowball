@@ -248,23 +248,6 @@ body {
   background-image: linear-gradient(110deg, transparent 0 91%, var(--color-sky) 91% 97%, transparent 97%);
 }
 
-/* A short word ("or", "vs") whose letters carry the sash: royal letterforms
- * with one teal slash cutting through the whole word, painted only inside the
- * letters (no box behind them). Full teal, as light teal fades on white. */
-@utility sash-mark {
-  display: inline-block;
-  background-color: var(--color-royal);
-  background-image: linear-gradient(112deg, transparent 0 40%, var(--color-teal) 40% 60%, transparent 60%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  /* The paint stops at the box, and tight headings (leading under 1) make the
-   * box shorter than the letters, clipping their tops: pad it out without
-   * moving the line. */
-  padding-block: 0.12em;
-  margin-block: -0.12em;
-}
-
 /* Clash's scoreboard (option D, 28 Oct 2026): the light-teal end of the split,
  * cut on a straight slant, and the red impact burst on the line. */
 @utility clash-end {
@@ -330,4 +313,29 @@ body:has([data-full-screen]) [data-site-frame] {
 }
 body:has([data-full-screen]) [data-site-body] {
   min-height: 0;
+}
+
+/* The welcome's questions slide open and shut (Collins, 11 Nov 2026) instead
+ * of jumping. Browsers without ::details-content or interpolate-size (older
+ * Safari) just open them as before. */
+[data-faq] details {
+  interpolate-size: allow-keywords;
+}
+[data-faq] details::details-content {
+  block-size: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    block-size 0.3s ease,
+    opacity 0.3s ease,
+    content-visibility 0.3s allow-discrete;
+}
+[data-faq] details[open]::details-content {
+  block-size: auto;
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-faq] details::details-content {
+    transition: none;
+  }
 }

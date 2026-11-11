@@ -42,8 +42,8 @@ async function ClashScreen({ params }: { params: Params }) {
       return (
         <main className="mx-auto w-full flex-1 max-w-[560px] px-4">
           <ClashMasthead right="Higher or lower" />
-          <h1 className="mt-6 font-display text-[64px] leading-[0.9] uppercase">
-            No such <span className="text-royal">challenge</span>
+          <h1 className="mt-6 font-display text-[50px] leading-[0.9] uppercase">
+            No such challenge
           </h1>
           <p className="mt-3 text-lg">That link doesn&apos;t match a sprint. Check it, or start your own.</p>
           <Link href="/clash" className="btn-teal btn-press mt-5 flex w-full items-center justify-between px-[18px] py-3.5 font-display text-[28px] uppercase">

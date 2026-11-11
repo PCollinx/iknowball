@@ -5,11 +5,11 @@ import type { Challenge } from "@/lib/clash/challenges";
 import { STATS } from "@/lib/clash/rules";
 
 // Beaten challenges come back (Collins, 31 Oct 2026, mocks at
-// https://claude.ai/artifact/V7SuwLBLP6oSZwyw7norBW): home's banner when a mate
-// beats a challenge you sent, with "Settle it" (a new set on the same stat, for
+// https://claude.ai/artifact/V7SuwLBLP6oSZwyw7norBW): the kick-off's banner
+// when a friend beats a challenge you sent (on home until 11 Nov 2026), with "Settle it" (a new set on the same stat, for
 // them), and the kick-off's list of your challenges.
 
-/** Home's banner for a beaten challenge: a white sticker with a red shadow. */
+/** The kick-off's banner for a beaten challenge: a white sticker with a red shadow. */
 export function BeatenBanner({ challenge }: { challenge: Challenge }) {
   const { code, stat, rival, mine, played } = challenge;
   if (!rival) return null;

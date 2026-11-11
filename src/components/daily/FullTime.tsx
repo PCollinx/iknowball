@@ -107,16 +107,16 @@ export function FullTime(props: Props) {
         <div className="contents lg:block">
           <section className="order-1 pt-3 lg:pt-5">
             <span className="label text-royal">Match report · {recall ? headlineFixture(recall.daily.title) : "The Daily"}</span>
-            <h1 className="mt-1 font-display text-[56px] leading-[0.86] uppercase lg:hidden">
-              Full <span className="sash-mark">time</span>
+            <h1 className="mt-1 font-display text-[44px] leading-[0.86] uppercase lg:hidden">
+              Full time
             </h1>
             {/* One even band: (desktop) the headline | the score in its rating colour | where it leaves you. */}
             <div className="mt-3 grid grid-cols-[auto_minmax(0,1fr)] border-t-[3px] border-b-4 border-navy [border-bottom-style:double] lg:mt-2 lg:grid-cols-[auto_auto_minmax(0,1fr)]">
               <div className="hidden items-center border-r-2 border-track py-3.5 pr-6 lg:flex">
-                <h1 className="font-display text-[84px] leading-[0.84] uppercase">
+                <h1 className="font-display text-[64px] leading-[0.84] uppercase">
                   Full
                   <br />
-                  <span className="sash-mark">time</span>
+                  time
                 </h1>
               </div>
               <div className="border-r-2 border-track py-3 pr-4 lg:px-6 lg:py-3.5">
@@ -124,7 +124,7 @@ export function FullTime(props: Props) {
                 <span className="label mt-1.5 block lg:mt-2">Day score</span>
               </div>
               <div className="flex flex-col justify-center gap-2 py-3 pl-4 lg:gap-2.5 lg:pl-6">
-                <span className="self-start bg-teal px-2 py-1 font-display text-[22px] leading-none text-white uppercase lg:px-2.5 lg:text-[26px]">
+                <span className="self-start bg-navy px-2 py-1 font-display text-[22px] leading-none text-white uppercase lg:px-2.5 lg:text-[26px]">
                   {position ? `${ordinal(position)} of ${players}` : "Early doors"}
                 </span>
                 <span className="label leading-relaxed text-navy/80">
@@ -169,7 +169,7 @@ export function FullTime(props: Props) {
           {props.clubChoices && (
             <section className="order-4 mt-6 border-y-4 border-double border-navy py-3.5 lg:mt-7 lg:py-4">
               <h2 className="font-display text-[40px] leading-[0.9] uppercase lg:text-[48px]">
-                Who do you <span className="sash-mark">support?</span>
+                Who do you support?
               </h2>
               <p className="mt-1.5 text-sm leading-snug lg:text-[15px]">
                 Your club dresses your shirt and puts you in the fanbase table. It never changes your questions or your score. You can switch once a
@@ -225,7 +225,7 @@ export function FullTime(props: Props) {
             <span className="label">Next Daily in</span>
             <NextDaily
               closesAt={gameDateClosesAt(playDate).toISOString()}
-              className="border-2 border-navy bg-teal px-2 text-[30px] text-white shadow-[3px_3px_0_var(--color-navy)] lg:text-[32px]"
+              className="border-2 border-navy bg-white px-2 text-[30px] text-navy shadow-[3px_3px_0_var(--color-navy)] lg:text-[32px]"
             />
           </div>
 

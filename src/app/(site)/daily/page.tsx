@@ -55,8 +55,8 @@ async function DailyScreen() {
       return (
         <main className="mx-auto w-full max-w-[560px] flex-1 px-4 pb-10">
           <Masthead issue={0} right={dateLabel} />
-          <h1 className="mt-6 font-display text-[64px] leading-[0.9] uppercase">
-            No Daily <span className="text-royal">today</span>
+          <h1 className="mt-6 font-display text-[50px] leading-[0.9] uppercase">
+            No Daily today
           </h1>
           <p className="mt-3 text-lg">The pitch is being cut. Back tomorrow with a new one.</p>
           <Link

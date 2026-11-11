@@ -507,22 +507,8 @@ async function myLeagues(me: string): Promise<TableLeague[]> {
   }));
 }
 
-/** Today's Daily as the home page shows it: the parts, and how far you've got. */
+/** Today's Daily as its sticker shows it (the kick-off): the parts, and how far you've got. */
 export type HomeDaily = { issue: number; parts: DailyRow[]; status: "fresh" | "playing" | "done"; points: number };
-
-export async function getHomeDaily(userId: string | null): Promise<HomeDaily | null> {
-  await ensureTestDaily();
-  const parts = await todaysParts();
-  if (!parts.length) return null;
-  const [issue, attempts] = await Promise.all([
-    issueNumber(),
-    userId ? attemptsFor(userId, parts.map((p) => p.id)) : new Map<number, AttemptRow>(),
-  ]);
-  const finished = parts.filter((p) => attempts.get(p.id)?.submitted_at);
-  const points = finished.reduce((sum, p) => sum + partScore(p.part, attempts.get(p.id)!.correct_count, p.answer_count), 0);
-  const status = finished.length === parts.length ? "done" : attempts.size ? "playing" : "fresh";
-  return { issue, parts, status, points };
-}
 
 export async function getDailyView(): Promise<DailyView> {
   // Test sites never go without: they get today's drafts or a sample. This

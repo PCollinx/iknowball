@@ -49,7 +49,7 @@ export function ShareButtons({ text, image, className = "mt-4" }: { text: string
         className={`btn-white btn-press ${className} mb-1 flex w-full items-center justify-between px-4 py-3 font-display text-[24px] uppercase lg:text-[26px]`}
       >
         <span>
-          Share the <span className="sash-mark">card</span>
+          Share the card
         </span>
         <span aria-hidden="true">↗</span>
       </button>

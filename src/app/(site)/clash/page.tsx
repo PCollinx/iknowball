@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { BestCell } from "@/components/clash/Board";
-import { ChallengeList } from "@/components/clash/Challenges";
+import { BeatenBanner, ChallengeList } from "@/components/clash/Challenges";
 import { ClashKickOff } from "@/components/clash/KickOff";
 import { YourThree } from "@/components/clash/YourThree";
 import { KeepyUppy } from "@/components/loading/KeepyUppy";
@@ -58,8 +58,21 @@ async function Best({ clash }: { clash: Promise<HomeClash | null> }) {
   return <BestCell best={c?.three[0] ?? null} lastCode={c?.lastCode ?? null} />;
 }
 
+/** Your challenges, led by the banner for one a friend has beaten since you
+ * last looked (it was on home until home became the welcome, 11 Nov 2026). */
 async function Challenges({ challenges }: { challenges: Promise<Awaited<ReturnType<typeof getChallenges>>> }) {
-  return <ChallengeList challenges={await challenges} />;
+  const list = await challenges;
+  const beaten = list.find((c) => c.news);
+  return (
+    <>
+      {beaten && (
+        <div className="mt-6">
+          <BeatenBanner challenge={beaten} />
+        </div>
+      )}
+      <ChallengeList challenges={list} />
+    </>
+  );
 }
 
 async function Three({ clash }: { clash: Promise<HomeClash | null> }) {

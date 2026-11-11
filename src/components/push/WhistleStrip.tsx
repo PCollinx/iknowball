@@ -8,7 +8,7 @@ import { StripButton, WhistleStripFrame } from "./Whistle";
 import { useWhistle } from "./useWhistle";
 
 // Option A of the whistle (Collins, 7 Nov 2026): a small strip at the Daily's
-// full time, and on home the first times the installed app opens. "Not now"
+// full time (home had it in the installed app until 11 Nov 2026). "Not now"
 // keeps it away for 14 days in this browser, like the Season ticket. On
 // iPhone in Safari it carries the home screen steps instead (the Season
 // ticket stands down there, so full time asks once).
@@ -39,14 +39,12 @@ function notNow() {
   window.dispatchEvent(new Event(CHANGED));
 }
 
-/** `installedOnly`: on home, only inside the installed app (where it's one tap away). */
-export function WhistleStrip({ guest, installedOnly = false, className = "" }: { guest: boolean; installedOnly?: boolean; className?: string }) {
+export function WhistleStrip({ guest, className = "" }: { guest: boolean; className?: string }) {
   const { state, turnOn } = useWhistle();
-  const { way, inApp } = useInstall();
+  const { inApp } = useInstall();
   const due = useSyncExternalStore(subscribeLater, () => ticketDue(readLater(), Date.now()), () => false);
   const [busy, setBusy] = useState(false);
   if (!due || (state.kind !== "off" && state.kind !== "install")) return null;
-  if (installedOnly && (way !== "installed" || state.kind !== "off")) return null;
 
   const dismiss = (
     <button type="button" onClick={notNow} className="py-1 text-[13px] font-semibold text-slate underline underline-offset-[3px]">

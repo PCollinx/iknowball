@@ -10,6 +10,9 @@ export const GATES_OPEN = new Date("2026-11-20T00:00:00+01:00");
 export const GATES_OPEN_LABEL = "Fri 20 Nov";
 
 export const BETA_COOKIE = "ikb_beta";
+/** Set once a player has played a Daily: / then goes straight to /daily
+ * (src/proxy.ts) instead of the welcome. Holds no data, just "1". */
+export const PLAYED_COOKIE = "ikb_played";
 
 export function waitlistUp(at: Date = new Date()): boolean {
   return at >= WAITLIST_OPENS && at < GATES_OPEN;
@@ -19,7 +22,7 @@ export function waitlistUp(at: Date = new Date()): boolean {
  * stay open, so a beta tester's shared card still shows in a post. */
 export function gated(pathname: string): boolean {
   if (pathname.endsWith("/card")) return false;
-  return pathname === "/" || /^\/(daily|clash|league|profile)(\/|$)/.test(pathname);
+  return pathname === "/" || /^\/(welcome|daily|clash|league|profile)(\/|$)/.test(pathname);
 }
 
 /** The invite code is the cookie's value, so changing BETA_CODE shuts out

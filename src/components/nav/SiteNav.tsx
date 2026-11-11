@@ -46,9 +46,9 @@ export function SiteNav() {
           Live
         </span>
       </div>
-      <nav aria-label="Sections" data-nav-full className="flex gap-[18px] overflow-x-auto px-4 lg:hidden">
-        <Suspense fallback={<SectionLinks variant="phone" className="pt-1 pb-2.5 text-sm" active={null} />}>
-          <NavLinks variant="phone" className="pt-1 pb-2.5 text-sm" />
+      <nav aria-label="Sections" data-nav-full className="flex justify-between gap-3 overflow-x-auto px-4 lg:hidden">
+        <Suspense fallback={<SectionLinks variant="phone" className="pt-1 pb-2.5 text-[13.5px]" active={null} />}>
+          <NavLinks variant="phone" className="pt-1 pb-2.5 text-[13.5px]" />
         </Suspense>
       </nav>
     </header>

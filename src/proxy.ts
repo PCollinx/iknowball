@@ -1,11 +1,14 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { BETA_COOKIE, betaPass, gated, waitlistUp } from "@/lib/waitlist";
+import { BETA_COOKIE, PLAYED_COOKIE, betaPass, gated, waitlistUp } from "@/lib/waitlist";
 
 // Keeps the Supabase session cookie fresh on every page request. While the
 // waitlist is up (src/lib/waitlist.ts), the live site shows it in place of the
 // games, except to browsers holding the beta invite's cookie. Test sites never
-// switch: there the waitlist is at /waitlist.
+// switch: there the waitlist is at /waitlist. Home is the welcome for new
+// players; one who has played a Daily goes from / straight to /daily
+// (Collins, 11 Nov 2026), remembered by a cookie so the database is asked
+// once. The navbar's 00 Home opens the welcome at /welcome for everyone.
 export async function proxy(request: NextRequest) {
   if (
     process.env.VERCEL_ENV === "production" &&
@@ -33,8 +36,25 @@ export async function proxy(request: NextRequest) {
   });
   // Verifies the token locally (refreshing it when it has expired) rather than
   // asking Supabase on every request.
-  await supabase.auth.getClaims();
+  const { data } = await supabase.auth.getClaims();
+  if (request.nextUrl.pathname === "/") {
+    if (request.cookies.has(PLAYED_COOKIE)) return toDaily(request, response);
+    const me = data?.claims.sub;
+    if (me) {
+      // Row-level security lets a player read only their own attempts.
+      const { data: played } = await supabase.from("attempts").select("id").eq("user_id", me).limit(1);
+      if (played?.length) return toDaily(request, response, true);
+    }
+  }
   return response;
+}
+
+/** Off to the Daily, keeping any session cookies the refresh just set. */
+function toDaily(request: NextRequest, response: NextResponse, remember = false) {
+  const redirect = NextResponse.redirect(new URL("/daily", request.url));
+  response.cookies.getAll().forEach((c) => redirect.cookies.set(c));
+  if (remember) redirect.cookies.set(PLAYED_COOKIE, "1", { maxAge: 60 * 60 * 24 * 400, path: "/", sameSite: "lax", secure: request.nextUrl.protocol === "https:" });
+  return redirect;
 }
 
 // Server actions skip this: on Vercel the proxy is a hop of its own, measured

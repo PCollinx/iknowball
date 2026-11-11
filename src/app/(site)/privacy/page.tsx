@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description: "What iKnowBall collects, why, who it's shared with, and how to get it deleted.",
 };
 
-const UPDATED = "4 Nov 2026";
+const UPDATED = "11 Nov 2026";
 
 const SECTIONS = [
   ["collect", "What we collect"],
@@ -46,8 +46,8 @@ export default function PrivacyPage() {
           <span className="label">Privacy &amp; data</span>
           <span className="rotate-3 bg-navy px-2.5 py-0.5 font-display text-base whitespace-nowrap text-teal-light uppercase">Updated · {UPDATED}</span>
         </div>
-        <h1 className="mt-2 font-display text-[56px] leading-[0.86] uppercase lg:text-[64px]">
-          Your data, <span className="text-royal">plainly</span>
+        <h1 className="mt-2 font-display text-[44px] leading-[0.86] uppercase lg:text-[50px]">
+          Your data, plainly
         </h1>
         <p className="mt-3 text-lg">
           iKnowBall is an independent football quiz made by Collins Paul. What we collect when you play, why, who helps us run it,
@@ -147,7 +147,7 @@ export default function PrivacyPage() {
         </Section>
 
         <Section n={5}>
-          A sign-in cookie, which the app needs to work, and PostHog&apos;s analytics ID, kept in a cookie and your browser&apos;s
+          A sign-in cookie, which the app needs to work; one that remembers you&apos;ve played, so the home page opens on the Daily; and PostHog&apos;s analytics ID, kept in a cookie and your browser&apos;s
           storage. No ad trackers. Clearing your browser data removes them; as a guest, that also loses the shirt on that device.
         </Section>
 
