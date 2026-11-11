@@ -120,7 +120,7 @@ function Signed({ position, name, club, again, siteUrl }: { position: number; na
   return (
     <div data-signed>
       <span className="label text-teal">{again ? "Already on the sheet" : "Name's on the sheet"}</span>
-      <h2 className="mt-2 font-display text-[72px] leading-[0.82] uppercase lg:text-[96px]">
+      <h2 className="mt-2 font-display text-[56px] leading-[0.82] uppercase lg:text-[72px]">
         You&apos;re
         <br />
         No. {position}

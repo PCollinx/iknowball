@@ -116,7 +116,7 @@ export function PickRound(props: Props) {
           label={`${props.partLabel} · ${era ? "Era picks" : "Rapid picks"}`}
           title={
             era ? (
-              <h1 className="font-display text-[34px] leading-[0.9] whitespace-nowrap uppercase lg:text-5xl xl:text-[64px]">
+              <h1 className="font-display text-[34px] leading-[0.9] whitespace-nowrap uppercase lg:text-5xl xl:text-[50px]">
                 Era picks
               </h1>
             ) : (

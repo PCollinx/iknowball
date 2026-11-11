@@ -32,7 +32,7 @@ async function Hub() {
       <LeagueMasthead right={weekLabel(hub.week)} />
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-11">
         <div className="min-w-0">
-          <h1 className="mt-3.5 font-display text-[60px] leading-[0.84] uppercase lg:mt-[18px] lg:text-[84px]">
+          <h1 className="mt-3.5 font-display text-[46px] leading-[0.84] uppercase lg:mt-[18px] lg:text-[64px]">
             Your leagues
           </h1>
           <p className="mt-2 text-sm lg:mt-2.5 lg:text-[15px]">

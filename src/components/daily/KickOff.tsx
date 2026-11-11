@@ -63,7 +63,7 @@ export function KickOff({ issue, dateLabel, daily, parts, total, before, club, k
               <span className="label text-royal">
                 Part 2 of {total} · opens now
               </span>
-              <h1 className="mt-1 font-display text-[44px] leading-[0.9] uppercase lg:text-[64px] lg:leading-[0.88]">
+              <h1 className="mt-1 font-display text-[44px] leading-[0.9] uppercase lg:text-[50px] lg:leading-[0.88]">
                 {daily.format === "era" ? "Era picks" : "In order"}
               </h1>
               <p className="mt-2 text-[17px] leading-snug lg:text-lg">{daily.prompt}</p>

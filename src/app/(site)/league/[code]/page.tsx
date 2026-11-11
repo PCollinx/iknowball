@@ -60,7 +60,7 @@ async function LeagueScreen({ params, searchParams }: { params: Params; searchPa
     return (
       <main className="mx-auto w-full max-w-[560px] flex-1 px-4 pb-10">
         <LeagueMasthead right="Invite" />
-        <h1 className="mt-6 font-display text-[64px] leading-[0.9] uppercase">
+        <h1 className="mt-6 font-display text-[50px] leading-[0.9] uppercase">
           No such league
         </h1>
         <p className="mt-3 mb-5 text-lg">That code doesn&apos;t match a league. Check it with whoever sent it.</p>
@@ -127,7 +127,7 @@ async function LeagueScreen({ params, searchParams }: { params: Params; searchPa
           <span className="label mt-3.5 block text-[10px] text-royal lg:mt-[18px] lg:text-[11px]">
             {players(rows.length)} · {WEEKDAYS[today]}
           </span>
-          <Title name={league.name} className="mt-0.5 text-[56px] leading-[0.86] lg:text-[84px] lg:leading-[0.84]" />
+          <Title name={league.name} className="mt-0.5 text-[44px] leading-[0.86] lg:text-[64px] lg:leading-[0.84]" />
           {fresh && <p className="mt-2">You&apos;re in. Send the invite to get your friends on the team sheet.</p>}
           <WeekStrip code={league.invite_code} weeks={strip} selected={season ? "season" : (shown.n ?? 0)} seasonPlace={seasonPlace} />
           <div className="mt-3.5 flex items-center justify-between gap-3 lg:mt-4">

@@ -38,7 +38,7 @@ async function Fans() {
             <span className="label mt-3.5 block text-[10px] text-royal lg:mt-[18px] lg:text-[11px]">
               {rows.length} {rows.length === 1 ? "club" : "clubs"} on the table · {WEEKDAYS[dayIndex(week.startsOn, week.today)]}
             </span>
-            <h1 className="mt-0.5 font-display text-[52px] leading-[0.86] uppercase lg:text-[64px]">
+            <h1 className="mt-0.5 font-display text-[42px] leading-[0.86] uppercase lg:text-[50px]">
               The away end
             </h1>
             <p className="mt-1.5 text-slate">

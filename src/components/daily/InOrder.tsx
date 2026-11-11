@@ -56,7 +56,7 @@ export function InOrder(props: Props) {
         <RoundHead
           label={`${props.partLabel} · In Order`}
           title={
-            <h1 className="font-display text-[34px] leading-[0.9] uppercase lg:text-[56px]">
+            <h1 className="font-display text-[34px] leading-[0.9] uppercase lg:text-[44px]">
               In order
             </h1>
           }

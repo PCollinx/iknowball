@@ -40,7 +40,7 @@ async function Everyone() {
           <span className="label mt-3.5 block text-[10px] text-royal lg:mt-[18px] lg:text-[11px]">
             {players.toLocaleString("en-GB")} {players === 1 ? "player" : "players"} · {WEEKDAYS[dayIndex(week.startsOn, week.today)]}
           </span>
-          <h1 className="mt-0.5 font-display text-[52px] leading-[0.86] uppercase lg:text-[64px]">
+          <h1 className="mt-0.5 font-display text-[42px] leading-[0.86] uppercase lg:text-[50px]">
             Team of the week
           </h1>
           <p className="mt-1.5 text-slate">The top 11 make the team. Best 5 Dailies and 3 sprints count, out of 600.</p>

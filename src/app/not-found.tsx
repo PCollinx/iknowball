@@ -27,7 +27,7 @@ export default function NotFound() {
       <main className="mx-auto grid w-full max-w-[560px] flex-1 content-start px-4 pt-5 pb-8 lg:max-w-[1200px] lg:grid-cols-2 lg:content-center lg:gap-x-14 lg:px-10 lg:pt-10">
         <div className="lg:self-end">
           <span className="label text-royal">404 · VAR check</span>
-          <h1 className="mt-1 font-display text-[72px] leading-[0.85] uppercase lg:text-[120px]">
+          <h1 className="mt-1 font-display text-[56px] leading-[0.85] uppercase lg:text-[92px]">
             Offside
           </h1>
         </div>

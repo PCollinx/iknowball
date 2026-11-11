@@ -107,13 +107,13 @@ export function FullTime(props: Props) {
         <div className="contents lg:block">
           <section className="order-1 pt-3 lg:pt-5">
             <span className="label text-royal">Match report · {recall ? headlineFixture(recall.daily.title) : "The Daily"}</span>
-            <h1 className="mt-1 font-display text-[56px] leading-[0.86] uppercase lg:hidden">
+            <h1 className="mt-1 font-display text-[44px] leading-[0.86] uppercase lg:hidden">
               Full time
             </h1>
             {/* One even band: (desktop) the headline | the score in its rating colour | where it leaves you. */}
             <div className="mt-3 grid grid-cols-[auto_minmax(0,1fr)] border-t-[3px] border-b-4 border-navy [border-bottom-style:double] lg:mt-2 lg:grid-cols-[auto_auto_minmax(0,1fr)]">
               <div className="hidden items-center border-r-2 border-track py-3.5 pr-6 lg:flex">
-                <h1 className="font-display text-[84px] leading-[0.84] uppercase">
+                <h1 className="font-display text-[64px] leading-[0.84] uppercase">
                   Full
                   <br />
                   time

@@ -46,7 +46,7 @@ export default function PrivacyPage() {
           <span className="label">Privacy &amp; data</span>
           <span className="rotate-3 bg-navy px-2.5 py-0.5 font-display text-base whitespace-nowrap text-teal-light uppercase">Updated · {UPDATED}</span>
         </div>
-        <h1 className="mt-2 font-display text-[56px] leading-[0.86] uppercase lg:text-[64px]">
+        <h1 className="mt-2 font-display text-[44px] leading-[0.86] uppercase lg:text-[50px]">
           Your data, plainly
         </h1>
         <p className="mt-3 text-lg">

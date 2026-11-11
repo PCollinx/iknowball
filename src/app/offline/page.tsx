@@ -28,7 +28,7 @@ export default function Offline() {
       <main className="mx-auto grid w-full max-w-[560px] flex-1 content-start px-4 pt-5 pb-8 lg:max-w-[1200px] lg:grid-cols-2 lg:content-center lg:gap-x-14 lg:px-10 lg:pt-10">
         <div className="lg:self-end">
           <span className="label text-red-card">Stoppage · No signal</span>
-          <h1 className="mt-1 font-display text-[60px] leading-[0.85] uppercase lg:text-[110px]">
+          <h1 className="mt-1 font-display text-[46px] leading-[0.85] uppercase lg:text-[84px]">
             Lost the <span className="text-red-card">signal</span>
           </h1>
         </div>

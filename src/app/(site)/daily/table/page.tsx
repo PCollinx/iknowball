@@ -55,7 +55,7 @@ async function TableScreen({ searchParams }: Pick<PageProps<"/daily/table">, "se
     return (
       <main className="mx-auto w-full max-w-[1180px] flex-1 px-4 lg:px-12">
         <Masthead issue={0} right="Today's table" />
-        <h1 className="mt-6 font-display text-[64px] leading-[0.9] uppercase">
+        <h1 className="mt-6 font-display text-[50px] leading-[0.9] uppercase">
           No Daily today
         </h1>
         <p className="mt-3 text-lg">No Daily, no table. Check back tomorrow.</p>
@@ -77,7 +77,7 @@ async function TableScreen({ searchParams }: Pick<PageProps<"/daily/table">, "se
             <span className="label text-royal">
               {headlineFixture(day.title)} · {day.rows.length} played
             </span>
-            <h1 className="mt-1 font-display text-[56px] leading-[0.86] uppercase lg:text-[84px] lg:leading-[0.84]">
+            <h1 className="mt-1 font-display text-[44px] leading-[0.86] uppercase lg:text-[64px] lg:leading-[0.84]">
               Today&apos;s table
             </h1>
             {tabs.length > 1 && <Tabs tabs={tabs} on={tab.key} />}

@@ -61,7 +61,7 @@ export function ClashFullTime({ code, statLabel, setSize, right, kicks, bestRun,
                 {setter.name}&apos;s challenge · {statLabel}
               </span>
             )}
-            <h1 className="mt-1 font-display text-[60px] leading-[0.84] uppercase lg:text-[96px] lg:leading-[0.82]">
+            <h1 className="mt-1 font-display text-[46px] leading-[0.84] uppercase lg:text-[72px] lg:leading-[0.82]">
               Full time
             </h1>
             <p className="mt-1.5 text-sm lg:mt-2 lg:text-base">

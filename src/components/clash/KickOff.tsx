@@ -64,7 +64,7 @@ export function ClashKickOff({ code, stat, setter, firstCall, best, three }: Pro
         <div className="min-w-0 pt-5 lg:pt-8">
           {setter && (
             <>
-              <h1 className="font-display text-[64px] leading-[0.82] uppercase lg:text-[88px]">Beat {setter.right}.</h1>
+              <h1 className="font-display text-[50px] leading-[0.82] uppercase lg:text-[68px]">Beat {setter.right}.</h1>
               <p className="mt-2 text-sm leading-snug lg:text-base">{setter.name} sent you this one. One go each, so make it count.</p>
             </>
           )}
