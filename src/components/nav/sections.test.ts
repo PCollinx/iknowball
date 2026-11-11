@@ -8,6 +8,7 @@ describe("sectionOf", () => {
     expect(sectionOf("/league/everyone")).toBe("league");
     expect(sectionOf("/profile")).toBe("profile");
     expect(sectionOf("/")).toBe("home");
+    expect(sectionOf("/welcome")).toBe("home");
   });
 
   it("treats today's table as its own section, not the Daily", () => {

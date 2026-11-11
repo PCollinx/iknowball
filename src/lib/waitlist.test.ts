@@ -12,7 +12,7 @@ describe("waitlistUp", () => {
 
 describe("gated", () => {
   it("covers the games' screens", () => {
-    for (const p of ["/", "/daily", "/daily/table", "/clash", "/clash/GH39HV", "/league", "/league/IKB7QX", "/profile"]) expect(gated(p)).toBe(true);
+    for (const p of ["/", "/welcome", "/daily", "/daily/table", "/clash", "/clash/GH39HV", "/league", "/league/IKB7QX", "/profile"]) expect(gated(p)).toBe(true);
   });
   it("leaves the rest open", () => {
     for (const p of ["/privacy", "/waitlist", "/beta/abc", "/auth/callback", "/maker", "/daily/card", "/clash/GH39HV/card", "/league/everyone/card", "/dailyx"])

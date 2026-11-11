@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description: "What iKnowBall collects, why, who it's shared with, and how to get it deleted.",
 };
 
-const UPDATED = "4 Nov 2026";
+const UPDATED = "11 Nov 2026";
 
 const SECTIONS = [
   ["collect", "What we collect"],
@@ -147,7 +147,7 @@ export default function PrivacyPage() {
         </Section>
 
         <Section n={5}>
-          A sign-in cookie, which the app needs to work, and PostHog&apos;s analytics ID, kept in a cookie and your browser&apos;s
+          A sign-in cookie, which the app needs to work; one that remembers you&apos;ve played, so the home page opens on the Daily; and PostHog&apos;s analytics ID, kept in a cookie and your browser&apos;s
           storage. No ad trackers. Clearing your browser data removes them; as a guest, that also loses the shirt on that device.
         </Section>
 
