@@ -3,13 +3,13 @@ import { bestFive, dayScores, nextTier, streak, tierFor } from "./stats";
 
 describe("tierFor", () => {
   it("uses the beta cut-offs", () => {
-    expect(tierFor(3.9)).toBe("Plastic");
-    expect(tierFor(4)).toBe("Casual");
+    expect(tierFor(4.4)).toBe("Plastic");
+    expect(tierFor(4.5)).toBe("Casual");
     expect(tierFor(5.4)).toBe("Casual");
     expect(tierFor(5.5)).toBe("Supporter");
-    expect(tierFor(7)).toBe("Ball Knower");
-    expect(tierFor(8)).toBe("Pundit");
-    expect(tierFor(9)).toBe("Ball God");
+    expect(tierFor(6.5)).toBe("Ball Knower");
+    expect(tierFor(7.5)).toBe("Pundit");
+    expect(tierFor(8.5)).toBe("Ball God");
     expect(tierFor(10)).toBe("Ball God");
   });
 });
@@ -57,15 +57,15 @@ describe("streak", () => {
 
 describe("nextTier", () => {
   it("gives the tier above, the gap and the way through this one", () => {
-    expect(nextTier(7.6)).toEqual({ name: "Pundit", gap: 0.4, progress: expect.closeTo(0.6, 5) });
-    expect(nextTier(5.5)).toEqual({ name: "Ball Knower", gap: 1.5, progress: 0 });
+    expect(nextTier(7.6)).toEqual({ name: "Ball God", gap: 0.9, progress: expect.closeTo(0.1, 5) });
+    expect(nextTier(5.5)).toEqual({ name: "Ball Knower", gap: 1, progress: 0 });
   });
 
-  it("measures Plastic from zero", () => {
-    expect(nextTier(2)).toEqual({ name: "Casual", gap: 2, progress: 0.5 });
+  it("measures Plastic from the floor", () => {
+    expect(nextTier(3.9)).toEqual({ name: "Casual", gap: 0.6, progress: expect.closeTo(0.6, 5) });
   });
 
   it("has nothing above Ball God", () => {
-    expect(nextTier(9.4)).toBeNull();
+    expect(nextTier(8.6)).toBeNull();
   });
 });

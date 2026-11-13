@@ -1,7 +1,7 @@
 import { formatRating, ratingColours } from "@/lib/profile/rating";
 
-/** The overall rating in a circle coloured like a match rating: red, orange,
- * yellow, green. Size, border and type size come from the caller. `square`
+/** The overall rating in a circle in its tier's colour: red, orange, yellow,
+ * green, deep green, royal (TIERS in rating.ts). Size, border and type size come from the caller. `square`
  * for the team sheet's player ratings. */
 export function RatingBadge({ rating, className = "", square = false }: { rating: number | null; className?: string; square?: boolean }) {
   const c = ratingColours(rating);

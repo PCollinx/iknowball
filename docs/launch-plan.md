@@ -195,12 +195,12 @@ Production, a pair each), the live migration, and a real buzz on an Android phon
 - [x] **Collins:** create the app's own X account: done 30 Oct, **@playiKnowBall**. The footer and the
   waitlist link to it (`src/lib/site.ts`); profile picture (400 × 400) and header
   (1500 × 500) drawn from the logo canvas's option A2 (https://claude.ai/artifact/BCUq7vK7p7NRFQnyY3F1Hz).
-- [ ] **Sun 1 Nov:** the waitlist goes up at midnight WAT by itself; reveal the name and the waitlist on X;
+- [x] **Sun 1 Nov:** the waitlist goes up at midnight WAT by itself; reveal the name and the waitlist on X;
   send the first beta invite links to the most engaged followers.
-- [ ] **Sun 8 Nov checkpoint:** Collins and three friends trade Clash challenge links.
+- [x] **Sun 8 Nov checkpoint:** Collins and three friends trade Clash challenge links.
 - [ ] **9 to 15 Nov checkpoint** (international break): a real league plays a full week of Dailies and the
   table is right.
-- [ ] **During the beta:** tune the tier cut-offs on real ratings; make the demo video (Remotion, `LaunchDemo` in
+- [ ] **During the beta:** ~~tune the tier cut-offs on real ratings~~ (done 13 Nov: 3 + 0.07 × score, tiers from 4.5, a colour each); make the demo video (Remotion, `LaunchDemo` in
   `video/`, by Wed 18 Nov; see `docs/launch-posts.md`).
 - [ ] **Thu 19 Nov:** publish the demo video on X, WhatsApp, TikTok, Reels and Shorts, and pin it on the waitlist
   page (step 19).
