@@ -47,17 +47,17 @@ describe("rankTable", () => {
 });
 
 describe("halfRating", () => {
-  it("turns a half's points into a rating out of 10, to one decimal", () => {
-    expect(halfRating(1, 42)).toBe(7);
-    expect(halfRating(1, 43)).toBe(7.2);
-    expect(halfRating(2, 24)).toBe(6);
+  it("reads a half's share like a day score: 3 + 0.07 × share", () => {
+    expect(halfRating(1, 42)).toBe(7.9);
+    expect(halfRating(1, 30)).toBe(6.5);
+    expect(halfRating(2, 24)).toBe(7.2);
     expect(halfRating(2, 40)).toBe(10);
-    expect(halfRating(1, 0)).toBe(0);
+    expect(halfRating(1, 0)).toBe(3);
   });
 
-  it("stays between 0 and 10", () => {
+  it("stays between 3 and 10", () => {
     expect(halfRating(2, 55)).toBe(10);
-    expect(halfRating(1, -3)).toBe(0);
-    expect(halfRating(3, 10)).toBe(0);
+    expect(halfRating(1, -3)).toBe(3);
+    expect(halfRating(3, 10)).toBe(3);
   });
 });

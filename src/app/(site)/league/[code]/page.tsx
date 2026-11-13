@@ -3,11 +3,11 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { JoinButton, JoinLeague } from "@/components/league/Forms";
 import { FormTable, Invite, Podium, Rules, SeasonTable, TeamSheet, ThisWeek } from "@/components/league/LeaguePage";
+import { ShownWeek } from "@/components/league/ShownWeek";
 import { WeekStrip } from "@/components/league/WeekStrip";
 import { LeagueLoading, LeagueMasthead } from "@/components/league/Masthead";
 import { cleanCode, weekLabel } from "@/components/league/format";
 import { getLeagueView, LEAGUE_MAX } from "@/lib/league/data";
-import { seasonLabel, seasonOf } from "@/lib/time";
 import { dayIndex, splitPodium } from "@/lib/league/standing";
 import { CLASH_MAX, COUNTED_DAYS } from "@/lib/league/week";
 import { kitOf } from "@/lib/profile/club";
@@ -129,18 +129,8 @@ async function LeagueScreen({ params, searchParams }: { params: Params; searchPa
           </span>
           <Title name={league.name} className="mt-0.5 text-[44px] leading-[0.86] lg:text-[64px] lg:leading-[0.84]" />
           {fresh && <p className="mt-2">You&apos;re in. Send the invite to get your friends on the team sheet.</p>}
-          <WeekStrip code={league.invite_code} weeks={strip} selected={season ? "season" : (shown.n ?? 0)} seasonPlace={seasonPlace} />
-          <div className="mt-3.5 flex items-center justify-between gap-3 lg:mt-4">
-            <span className="label text-[10px] lg:text-[11px]">
-              {shown.kind === "season"
-                ? `Season ${seasonLabel(seasonOf(week.today))} · ${shown.weeks === 1 ? "Week 1" : `Weeks 1–${shown.weeks}`}`
-                : `${shown.n ? `Week ${shown.n} · ` : ""}${weekLabel(shown.week)}`}
-            </span>
-            {shown.kind === "week" && shown.final && (
-              <span className="-rotate-3 border-[3px] border-red-card px-2 pt-0.5 font-display text-lg leading-none text-red-card uppercase">Full time</span>
-            )}
-            {shown.kind === "week" && !shown.final && <span className="label text-[10px] text-teal lg:text-[11px]">Live</span>}
-          </div>
+          <WeekStrip base={`/league/${league.invite_code}`} weeks={strip} selected={season ? "season" : (shown.n ?? 0)} seasonPlace={seasonPlace} />
+          <ShownWeek shown={shown} today={week.today} />
           {shown.rows.some((r) => r.points > 0) ? (
             <div className="mt-2.5 lg:mt-3">
               {shown.kind === "season" ? (

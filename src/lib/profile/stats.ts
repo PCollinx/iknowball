@@ -1,20 +1,12 @@
 import { partScore } from "@/lib/daily/score";
 import { addDays } from "@/lib/time";
+import { RATING_FLOOR, TIERS, type TierName } from "./rating";
 
 // What the profile page shows, worked out from a player's finished attempts.
 // Rules decided 16 Oct 2026 (see CLAUDE.md, "Rating and scoring").
 
-/** Tiers by overall rating out of 10 (see rating.ts). Cut-offs to tune in the beta. */
-export const TIERS = [
-  { name: "Plastic", from: -Infinity },
-  { name: "Casual", from: 4 },
-  { name: "Supporter", from: 5.5 },
-  { name: "Ball Knower", from: 7 },
-  { name: "Pundit", from: 8 },
-  { name: "Ball God", from: 9 },
-] as const;
-
-export type TierName = (typeof TIERS)[number]["name"];
+// Tiers live with the rating, each in its own colour (rating.ts).
+export { TIERS, type TierName };
 
 /** Dailies (days) a player needs before they get a tier. */
 export const PLACEMENT_DAYS = 3;
@@ -24,12 +16,13 @@ export function tierFor(rating: number): TierName {
 }
 
 /** The tier above a rating, how far off it is, and how much of the way
- * through the current tier the rating is (0 to 1). Null at the top. */
+ * through the current tier the rating is (0 to 1), Plastic counted from the
+ * floor. Null at the top. */
 export function nextTier(rating: number): { name: TierName; gap: number; progress: number } | null {
   const i = TIERS.findLastIndex((t) => rating >= t.from);
   const next = TIERS[i + 1];
   if (!next) return null;
-  const from = Math.max(0, TIERS[i].from);
+  const from = Math.max(RATING_FLOOR, TIERS[i].from);
   return {
     name: next.name,
     gap: Math.round((next.from - rating) * 10) / 10,

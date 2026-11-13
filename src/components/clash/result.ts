@@ -1,4 +1,5 @@
-import { longDate } from "@/components/daily/share";
+import type { Kit } from "@/components/daily/ShirtBack";
+import type { Item, Stat } from "@/lib/clash/rules";
 import type { Result } from "@/lib/clash/data";
 
 // Clash full time, option D (picked 25 Oct 2026, docs/launch-plan.md step 6):
@@ -85,27 +86,74 @@ export function toBeat(table: Result[], right: number): { right: number; name: s
 /** One side of the head-to-head: a player's page in the album. */
 export type Side = { name: string; right: number; kicks: string; bestRun: number };
 
-// What the result image carries: full time as you saw it, drawn on the server
-// as a 1080 x 1080 PNG (src/lib/clash/ResultImage.tsx).
+// What the result image carries (Collins, 13 Nov 2026, option E "The chain" of
+// https://claude.ai/artifact/PahqeKZqGjRTBcuAkLon9a): the score bug, the run's
+// first players as the chain shows them, the question, then the dare and the
+// challenge link. Made for someone who's never played; the card is a picture,
+// so the live link travels in the message. Drawn on the server as a 1080 x 1080
+// PNG (src/lib/clash/ResultImage.tsx).
+
+/** One player in the card's chain. Only the first has his number: the game shows it, the rest stay hidden. */
+export type ChainLine = { name: string; club: string | null; kit: Kit | undefined; value: number | null; mark: boolean | null };
+
 export type ResultCardData = {
-  code: string;
-  dateLabel: string;
-  statLabel: string;
-  setSize: number;
+  /** Over the score: "collinsCFC" ("Right" alone for a guest). */
+  name: string | null;
   right: number;
-  kicks: string;
-  bestRun: number;
-  /** Your overall rating out of 10. */
-  rating: number | null;
-  /** On someone else's challenge: who set it and how they did. */
-  setter: Side | null;
-  /** The score the next player has to beat, and whose it is. */
-  toBeat: { right: number; name: string };
+  missed: number;
+  chain: ChainLine[];
+  /** "Who has more league goals?" */
+  ask: string;
+  /** The score the next player has to beat. */
+  toBeat: number;
   /** "playiknowball.com/clash/K7Q2XY", the challenge on the card. */
   link: string;
 };
 
-export function resultCardData(d: Omit<ResultCardData, "dateLabel" | "link"> & { playDate: string; siteUrl: string }): ResultCardData {
-  const { playDate, siteUrl, ...rest } = d;
-  return { ...rest, dateLabel: longDate(playDate), link: `${new URL(siteUrl).host}/clash/${d.code}` };
+/** Players the card's chain shows at most: the kick-off player and the calls after him. */
+export const CARD_CHAIN = 5;
+
+/** Each stat's question as a stranger reads it. */
+export const CARD_ASK: Record<Stat, string> = {
+  goals: "Who has more league goals?",
+  apps: "Who's played more league games?",
+  height: "Who's taller?",
+  years: "Who stayed longer at his club?",
+  clubs: "Who's had more clubs?",
+  sample: "Who has more Premier League goals?",
+};
+
+type CardInput = {
+  stat: Stat;
+  items: Item[];
+  kicks: string;
+  right: number;
+  /** Your name on the challenge table; a guest's "Guest AB12" is left off. */
+  name: string | null;
+  toBeat: number;
+  clubs: Map<number, { name: string; kit: Kit }>;
+  code: string;
+  siteUrl: string;
+};
+
+export function resultCardData(d: CardInput): ResultCardData {
+  const shown = Math.min(CARD_CHAIN, d.items.length, d.kicks.length + 1);
+  return {
+    name: d.name && !d.name.startsWith("Guest ") ? d.name : null,
+    right: d.right,
+    missed: [...d.kicks].filter((k) => k === "0").length,
+    chain: d.items.slice(0, shown).map((item, i) => {
+      const club = item.club_id !== null ? d.clubs.get(item.club_id) : undefined;
+      return { name: item.name, club: club?.name ?? null, kit: club?.kit, value: i === 0 ? item.value : null, mark: i === 0 ? null : d.kicks[i - 1] === "1" };
+    }),
+    ask: CARD_ASK[d.stat],
+    toBeat: d.toBeat,
+    link: `${new URL(d.siteUrl).host}/clash/${d.code}`,
+  };
+}
+
+/** The message that goes with the card; the share button adds the link after
+ * it, the only place it can be tapped (the card is a picture). */
+export function cardMessage(d: Pick<ResultCardData, "right" | "missed" | "toBeat">): string {
+  return `${d.right} right, ${d.missed} missed in 60 seconds of Higher or Lower on iKnowBall. Same players, one go. Can you beat ${d.toBeat}?`;
 }

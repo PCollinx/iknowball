@@ -1,3 +1,5 @@
+import { toRating } from "@/lib/profile/rating";
+
 // A day of The Daily scores out of 100 (decided 16 Oct 2026, see CLAUDE.md
 // "Rating and scoring"): Part 1 up to 60 and Part 2 up to 40, by the share of
 // answers right, so a day with more answers weighs the same as one with fewer.
@@ -12,11 +14,12 @@ export function partScore(part: number, correct: number, answerCount: number): n
   return Math.round((PART_MAX[part] ?? 0) * share);
 }
 
-/** A half's rating out of 10 for full time (22 Oct 2026): its points over the
- * most it could give, to one decimal like a match rating. */
+/** A half's rating out of 10 for full time (22 Oct 2026), on the same scale
+ * as the overall rating: its share of the most it could give, as toRating
+ * reads a day score (so a blank half is 3.0, a perfect one 10). */
 export function halfRating(part: number, score: number): number {
   const max = PART_MAX[part] ?? 0;
-  return max ? Math.round((Math.max(0, Math.min(score, max)) / max) * 100) / 10 : 0;
+  return toRating(max ? (Math.max(0, Math.min(score, max)) / max) * 100 : 0);
 }
 
 /** "Top 36%": where a score sits among today's finished scores (higher is better). */
