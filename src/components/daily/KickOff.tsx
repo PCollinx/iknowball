@@ -108,7 +108,7 @@ export function KickOff({ issue, dateLabel, daily, parts, before, club, kit, kit
 function MatchStrip({ before, next }: { before: RecallReveal; next: DailyRow }) {
   const end = "flex flex-col items-center justify-center bg-mist px-1.5 text-center lg:px-2.5";
   const half = "flex min-w-0 flex-col justify-center px-2 py-1.5 lg:px-3 lg:py-2.5";
-  const name = "font-display text-[20px] leading-[0.9] uppercase lg:text-[28px]";
+  const name = "font-display text-[min(20px,5vw)] leading-[0.9] whitespace-nowrap uppercase lg:text-[28px]";
   const note = "mt-0.5 truncate text-[11px] font-semibold lg:text-[13px]";
   return (
     <div className="mb-6 lg:mb-8">
@@ -127,7 +127,7 @@ function MatchStrip({ before, next }: { before: RecallReveal; next: DailyRow }) 
           </span>
         </div>
         <div className="relative flex items-center border-x-[2.5px] border-navy bg-teal-light px-2 lg:px-3">
-          <span className="font-display text-[22px] leading-none lg:text-[30px]">HT</span>
+          <span className="font-display text-[22px] leading-none whitespace-nowrap lg:text-[30px]">HT</span>
           <span className="label absolute top-full left-1/2 mt-1 -translate-x-1/2 bg-navy px-1.5 py-[3px] text-[9px] whitespace-nowrap text-white lg:text-[10px]">
             You are here
           </span>
