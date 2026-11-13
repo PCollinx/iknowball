@@ -6,6 +6,7 @@ import { shortDate } from "@/components/daily/Masthead";
 import { Chip, MAKER_MAIN, MakerBar, MakerHead, type ChipKind } from "@/components/maker/MakerBar";
 import { listParts, requireAdmin, type MakerPart } from "@/lib/maker/data";
 import { addDays, gameDate, matchweekBounds } from "@/lib/time";
+import { Arrow } from "@/components/icons/Icon";
 
 // Days (maker redesign, 31 Oct 2026): the next seven as tiles, then every
 // week from last week to four ahead as a table of both parts.
@@ -80,7 +81,7 @@ async function DayList() {
           <span>{gaps.length ? `${gaps.length} of the next 7 days ${gaps.length === 1 ? "isn't" : "aren't"} scheduled.` : "The next 7 days are all scheduled."}</span>
           {gaps.length > 0 && (
             <Link href={dayHref(gaps[0])} className="btn-white btn-press px-3 py-1 font-display text-[15px] uppercase">
-              Review {shortDate(gaps[0])} →
+              Review {shortDate(gaps[0])} <Arrow />
             </Link>
           )}
         </div>
@@ -106,8 +107,8 @@ async function DayList() {
                   <tr className="bg-mist text-left text-[10px] tracking-[0.06em] uppercase">
                     <th className="px-2 py-1.5">Day</th>
                     <th className="px-2 py-1.5">Fixture</th>
-                    <th className="px-2 py-1.5">Part 1</th>
-                    <th className="px-2 py-1.5">Part 2</th>
+                    <th className="px-2 py-1.5">First half</th>
+                    <th className="px-2 py-1.5">Second half</th>
                     <th className="px-2 py-1.5">State</th>
                     <th className="px-2 py-1.5 text-right">Played</th>
                   </tr>

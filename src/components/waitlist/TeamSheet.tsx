@@ -7,6 +7,7 @@ import { ShirtBack, shirtName } from "@/components/daily/ShirtBack";
 import { kitOf, type Club } from "@/lib/profile/club";
 import { SOCIAL } from "@/lib/site";
 import { GATES_OPEN_LABEL } from "@/lib/waitlist";
+import { Arrow } from "@/components/icons/Icon";
 
 // The team sheet (step 13, option A): four numbered lines with your shirt
 // dressing beside them as you fill them in. Signed, your place in the queue is
@@ -135,7 +136,7 @@ function Signed({ position, name, club, again, siteUrl }: { position: number; na
       </p>
       <button type="button" onClick={share} className="btn-white btn-press mt-4 flex w-full items-center justify-between px-4 py-3 font-display text-[24px] uppercase lg:text-[26px]">
         <span>Bring your mates</span>
-        <span aria-hidden="true">→</span>
+        <Arrow />
       </button>
       <p role="status" className="min-h-[22px] pt-1.5 text-[15px] font-semibold text-teal">
         {note}

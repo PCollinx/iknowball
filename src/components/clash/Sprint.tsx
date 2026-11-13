@@ -9,6 +9,7 @@ import { ClockFace } from "@/components/daily/InPlay";
 import { useRoundClock } from "@/components/daily/useRoundClock";
 import { ShirtBack, shirtName } from "@/components/daily/ShirtBack";
 import type { StickerState } from "./Album";
+import { Arrow, Check, Cross } from "@/components/icons/Icon";
 
 const RIGHT = ["Ball knowledge.", "Sharp.", "You know ball.", "Oya, next.", "Clinical."];
 const WRONG = [
@@ -228,7 +229,7 @@ export function Sprint(props: Props) {
         </div>
 
         <p role="status" className={`m-3 border-[2.5px] border-navy bg-white px-2 pt-2 pb-1.5 text-center font-display text-[22px] leading-none uppercase shadow-[3px_3px_0_var(--color-sky)] lg:text-[26px] ${ink || "text-navy"}`}>
-          {call || over || runs.current > 1 ? feedback : "↑ Tap who has more ↑"}
+          {call || over || runs.current > 1 ? feedback : <><Arrow dir="up" /> Tap who has more <Arrow dir="up" /></>}
         </p>
       </section>
     </main>
@@ -250,7 +251,7 @@ function ChainRow({ name, club, kit, value, mark }: { name: string; club?: strin
       </span>
       <span className="font-display text-[26px] leading-none tabular-nums">{value}</span>
       <span aria-label={mark === null ? "Kick-off" : mark ? "Right" : "Missed"} className={`text-center font-display text-lg ${mark === false ? "text-red-card" : "text-royal"}`}>
-        {mark === null ? "" : mark ? "✓" : "✕"}
+        {mark === null ? "" : mark ? <Check /> : <Cross />}
       </span>
     </li>
   );

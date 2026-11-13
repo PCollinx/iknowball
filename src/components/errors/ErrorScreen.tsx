@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { SignalLost, VarBox } from "./Var";
+import { Arrow } from "@/components/icons/Icon";
 
 type Props = {
   error: Error & { digest?: string };
@@ -45,19 +46,19 @@ export function ErrorScreen({ error, retry, line, safe, hardLink = false }: Prop
         <div className="mt-[18px] grid gap-3 lg:max-w-[420px]">
           <button type="button" onClick={() => retry()} className="btn-teal btn-press flex w-full items-center justify-between px-[18px] py-3.5 font-display text-[28px] uppercase">
             <span>Try again</span>
-            <span aria-hidden="true">→</span>
+            <Arrow />
           </button>
           {hardLink ? (
             // The root layout is gone, so a client-side link has nothing to render into.
             // eslint-disable-next-line @next/next/no-html-link-for-pages
             <a href="/" className={back}>
               <span>Back to matchday</span>
-              <span aria-hidden="true">→</span>
+              <Arrow />
             </a>
           ) : (
             <Link href="/" className={back}>
               <span>Back to matchday</span>
-              <span aria-hidden="true">→</span>
+              <Arrow />
             </Link>
           )}
         </div>

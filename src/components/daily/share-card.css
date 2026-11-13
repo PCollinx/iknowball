@@ -1,5 +1,6 @@
-/* The square share card ("Programme cover", picked 15 Oct 2026). Sized in
-   container units so it reads the same in the app and as a 1080px image.
+/* The square share card, "The dare, match first" (A3, Collins, 13 Nov 2026).
+   Sized in container units so it reads the same in the app and as a 1080px
+   image (src/lib/daily/ShareImage.tsx draws the same card measure for measure).
    Plain CSS with an sc- prefix, because the Tailwind loader rule in
    next.config.ts turns CSS Modules into global CSS. */
 .sc-card {
@@ -8,46 +9,31 @@
   aspect-ratio: 1;
   border: 2px solid var(--color-navy);
   background: #fff;
+  color: var(--color-navy);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
-.sc-inner { flex: 1; display: flex; flex-direction: column; padding: 4.5cqw 5cqw 0; min-height: 0; }
-.sc-mast { display: flex; justify-content: space-between; align-items: end; border-bottom: 0.5cqw solid var(--color-navy); padding-bottom: 1.6cqw; }
-.sc-logo { font-size: 7cqw; line-height: 0.9; text-transform: none; }
-.sc-logo b { color: var(--color-teal); }
-.sc-meta { text-align: right; font-size: 2.4cqw; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; line-height: 1.35; }
-.sc-right-mast { display: flex; align-items: end; gap: 2cqw; }
-/* The overall rating, top right, coloured like a match rating. */
-.sc-rate { width: 9cqw; border-width: 0.45cqw; font-size: 4.4cqw; flex: none; }
-.sc-fan { color: var(--color-teal); }
-.sc-fix { font-size: 10.5cqw; line-height: 0.9; margin-top: 2.6cqw; }
-.sc-fix span { color: var(--color-royal); }
-.sc-q { font-size: 2.9cqw; color: rgb(12 19 48 / 0.7); margin-top: 1cqw; padding-bottom: 2cqw; border-bottom: 1.2cqw double var(--color-navy); }
-.sc-mid { flex: 1; padding: 2.4cqw 0 2.8cqw; display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 3cqw; align-items: center; min-height: 0; }
-.sc-score { font-size: 24cqw; line-height: 0.78; font-variant-numeric: tabular-nums; text-shadow: 0.75cqw 0.75cqw 0 var(--color-navy); }
-/* The score takes its rating's colour (set inline) on a navy shadow; the navy
-   "/100" gets a light one (Collins, 22 Oct 2026). Yellow gets a navy edge. */
-.sc-edge { -webkit-text-stroke: 0.35cqw var(--color-navy); }
-.sc-score small { font-size: 8cqw; color: var(--color-navy); text-shadow: 0.5cqw 0.5cqw 0 var(--color-track); -webkit-text-stroke: 0; }
-.sc-lab { display: block; margin-top: 1.6cqw; font-size: 2.4cqw; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; }
-/* The shirts shrink to the room left under the fixture, and the stamp sits
-   below them in the flow, so neither can reach the stats row. */
-.sc-right { align-self: stretch; display: flex; flex-direction: column; align-items: flex-end; min-height: 0; }
-.sc-kitbox { flex: 1 1 0; min-height: 0; width: 100%; container-type: size; display: flex; align-items: center; justify-content: flex-end; }
-.sc-kit {
-  --gap: 1.4cqw;
-  --w: min((100cqw - 5 * var(--gap)) / 6, (100cqh - (var(--rows) - 1) * var(--gap)) / var(--rows) / 1.04);
-  display: grid; grid-template-columns: repeat(6, var(--w)); gap: var(--gap);
-}
-.sc-stamp { flex: none; margin: 1.4cqw -1cqw 0 0; transform: rotate(-3deg); white-space: nowrap; border: 0.6cqw solid var(--color-red-card); color: var(--color-red-card); background: #fff; padding: 0.6cqw 1.6cqw 0.9cqw; font-size: 3.6cqw; line-height: 0.9; }
-.sc-stats { display: grid; grid-auto-columns: 1fr; grid-auto-flow: column; border-top: 0.35cqw solid var(--color-navy); }
-.sc-stats > div { padding: 1.8cqw 0 2.2cqw; min-width: 0; }
-.sc-stats > div + div { border-left: 0.35cqw solid var(--color-track); padding-left: 2.2cqw; }
-.sc-val { display: block; font-size: 5.2cqw; line-height: 0.9; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.sc-accent { color: var(--color-teal); }
-.sc-key { font-size: 2.1cqw; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgb(12 19 48 / 0.7); }
-/* The dare in light teal under a navy rule (the full-time mix, 22 Oct 2026). */
-.sc-foot { background: var(--color-teal-light); color: var(--color-navy); border-top: 0.5cqw solid var(--color-navy); display: flex; justify-content: space-between; align-items: center; gap: 2cqw; padding: 2.6cqw 5cqw 2.8cqw; }
-.sc-dare { font-size: 5.6cqw; line-height: 0.9; }
-.sc-url { font-size: 2.6cqw; font-weight: 600; letter-spacing: 0.1em; text-align: right; }
+.sc-inner { flex: 1; display: flex; flex-direction: column; padding: 5.5cqw 6cqw 0; min-height: 0; }
+.sc-top { display: flex; justify-content: space-between; align-items: center; }
+.sc-logo { font-size: 6.4cqw; line-height: 0.9; }
+.sc-logo b { color: var(--color-teal); font-weight: inherit; }
+.sc-lbl { font-size: 2.4cqw; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-slate); }
+.sc-match { margin-top: 5cqw; }
+.sc-fix { line-height: 0.9; margin-top: 1cqw; white-space: nowrap; }
+/* The score box and the shirts take what's left, so long questions shrink them, never the other way. */
+.sc-row { flex: 1; min-height: 0; container-type: size; display: flex; align-items: center; gap: 3cqw; }
+.sc-box { background: var(--color-navy); color: #fff; padding: 2.6cqh 3.6cqw 3cqh; box-shadow: 1.3cqw 1.3cqw 0 var(--color-teal-light); }
+.sc-who { display: block; font-size: 2.6cqw; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-teal-light); white-space: nowrap; }
+.sc-n { display: block; margin-top: 1cqh; font-size: min(18cqw, 52cqh); line-height: 0.8; font-variant-numeric: tabular-nums; }
+.sc-n small { font-size: 0.38em; color: var(--color-track); }
+.sc-kits { flex: 1; display: flex; justify-content: center; gap: 1.5cqw; height: 80cqh; }
+.sc-kits > * { height: 100%; width: auto; aspect-ratio: 100 / 104; max-width: 46%; }
+.sc-qs { list-style: none; margin: 0; padding: 2.4cqw 0 3cqw; display: grid; gap: 1.8cqw; }
+.sc-qs li { border-left: 0.8cqw solid var(--color-navy); padding-left: 1.8cqw; font-size: 3.8cqw; font-weight: 600; line-height: 1.25; }
+.sc-half { display: block; font-size: 2.1cqw; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-slate); margin-bottom: 0.6cqw; line-height: 1; }
+/* The dare in light teal under a navy rule. */
+.sc-foot { background: var(--color-teal-light); border-top: 0.6cqw solid var(--color-navy); display: flex; justify-content: space-between; align-items: flex-end; gap: 3cqw; padding: 3cqw 6cqw 3.4cqw; }
+.sc-dare { display: block; font-size: 7cqw; line-height: 0.88; }
+.sc-small { display: block; margin-top: 1cqw; font-size: 2.5cqw; font-weight: 600; }
+.sc-url { font-size: 3.4cqw; line-height: 1; background: var(--color-navy); color: #fff; padding: 1.4cqw 2cqw; white-space: nowrap; }

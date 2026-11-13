@@ -3,6 +3,7 @@ import Link from "next/link";
 import { OffsideScreen, VarBox } from "@/components/errors/Var";
 import { SiteFooter } from "@/components/nav/SiteFooter";
 import { SiteNav } from "@/components/nav/SiteNav";
+import { Arrow } from "@/components/icons/Icon";
 
 // 404, in the site frame. It sits outside the (site) group (Next serves the
 // root not-found for any address that matches nothing), so it draws the
@@ -40,7 +41,7 @@ export default function NotFound() {
           <p className="mt-4 text-lg">That page doesn&apos;t exist, or it was beyond the last man when we looked. The flag&apos;s up.</p>
           <Link href="/" className="btn-teal btn-press mt-[18px] flex w-full items-center justify-between px-[18px] py-3.5 font-display text-[28px] uppercase lg:max-w-[420px]">
             <span>Back to matchday</span>
-            <span aria-hidden="true">→</span>
+            <Arrow />
           </Link>
           <p className="mt-3.5 text-[15px]">
             Or straight to{" "}

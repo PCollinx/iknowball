@@ -7,6 +7,7 @@ import { poolOf, POOL_SIZE, recentSets, testDraw, weekNumbers } from "@/lib/clas
 import { statOfDay, STATS, WEEK_STATS, type LiveStat, type Stat } from "@/lib/clash/rules";
 import { requireAdmin } from "@/lib/maker/data";
 import { gameDate, matchweekBounds } from "@/lib/time";
+import { Arrow } from "@/components/icons/Icon";
 
 // The maker's Clash page (Collins, 31 Oct 2026, mocks at
 // https://claude.ai/artifact/7fYaL9vEK1xQvVEHgEUFW6): the pool for each stat
@@ -98,7 +99,7 @@ async function MakerClash({ searchParams }: { searchParams: Search }) {
               <p className="mt-1 mb-2 text-[13px] text-slate">A {STATS[stat].short.toLowerCase()} set as a player would get it now. Nothing is saved.</p>
               <Link href={href(stat, true)} className="btn-teal btn-press inline-flex items-center gap-4 px-3 py-1 font-display text-lg uppercase">
                 <span>{draw ? "Draw again" : "Draw a set"}</span>
-                <span aria-hidden="true">→</span>
+                <Arrow />
               </Link>
               {draw && <Draw items={draw} stat={stat} />}
             </section>

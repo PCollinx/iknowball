@@ -7,6 +7,7 @@ import { FullTime } from "@/components/daily/FullTime";
 import { InOrder } from "@/components/daily/InOrder";
 import { PickRound } from "@/components/daily/PickRound";
 import { KickOff } from "@/components/daily/KickOff";
+import { halfName } from "@/components/daily/formats";
 import { Masthead, shortDate } from "@/components/daily/Masthead";
 import { getHomeClash } from "@/lib/clash/data";
 import { statOfDay } from "@/lib/clash/rules";
@@ -19,6 +20,7 @@ import { isTestSite } from "@/lib/daily/sample";
 import { gameDate, gameDateClosesAt } from "@/lib/time";
 import { KeepyUppy } from "@/components/loading/KeepyUppy";
 import { MatchLive } from "@/components/nav/MatchLive";
+import { Arrow } from "@/components/icons/Icon";
 
 export const metadata: Metadata = {
   title: "The Daily · iKnowBall",
@@ -46,7 +48,7 @@ async function DailyScreen() {
   const [supporter, kit, kits, pathKits] = await Promise.all([
     userId && (view.kind === "kickoff" || view.kind === "fulltime") ? getSupporter(userId) : null,
     kitForFixture(fixtureTitle(view)),
-    view.kind === "kickoff" && !view.before ? kitsForFixture(view.daily.title) : ([undefined, undefined] as const),
+    view.kind === "kickoff" && !view.before ? kitsForFixture(view.daily.title) : view.kind === "fulltime" ? kitsForFixture(view.recall?.daily.title ?? null) : ([undefined, undefined] as const),
     pathClubs(careerClubNames(view)),
   ]);
 
@@ -64,7 +66,7 @@ async function DailyScreen() {
             className="btn-teal btn-press mt-6 flex items-center justify-between px-[18px] py-3.5 font-display text-[26px] uppercase"
           >
             <span>Kick off a Clash instead</span>
-            <span aria-hidden="true">→</span>
+            <Arrow />
           </Link>
         </main>
       );
@@ -90,7 +92,7 @@ async function DailyScreen() {
           <FreeRecall
             key={view.attemptId}
             whistle={view.daily.part === 1 ? "half" : "full"}
-            partLabel={`Part ${view.daily.part}`}
+            partLabel={halfName(view.daily.part)}
             title={view.daily.title}
             prompt={view.daily.prompt}
             answerCount={view.daily.answer_count}
@@ -112,7 +114,7 @@ async function DailyScreen() {
           <PickRound
             key={view.attemptId}
             whistle={view.daily.part === 1 ? "half" : "full"}
-            partLabel={`Part ${view.daily.part}`}
+            partLabel={halfName(view.daily.part)}
             format={view.daily.format === "era" ? "era" : "pick"}
             title={view.daily.title}
             prompt={view.daily.prompt}
@@ -136,7 +138,7 @@ async function DailyScreen() {
           <InOrder
             key={view.attemptId}
             whistle={view.daily.part === 1 ? "half" : "full"}
-            partLabel={`Part ${view.daily.part}`}
+            partLabel={halfName(view.daily.part)}
             prompt={view.daily.prompt}
             attemptId={view.attemptId}
             dailyId={view.daily.id}
@@ -173,6 +175,7 @@ async function DailyScreen() {
           clubChoices={choices}
           featuredClubs={choices ? featuredClubs(choices, title) : []}
           kit={kit}
+          fixtureKits={[kits[0], kits[1]]}
           myKit={kitOf(supporter?.club ?? null)}
           orderKits={pathKits}
           rating={rating}

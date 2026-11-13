@@ -25,7 +25,7 @@ describe("job problems", () => {
       { play_date: "2026-11-01", part: 1, status: "scheduled" },
       { play_date: "2026-11-01", part: 2, status: "draft" },
     ];
-    expect(dailyProblems(rows, ["2026-10-31", "2026-11-01"])).toEqual(["Sun 1 Nov: Part 2 not scheduled."]);
+    expect(dailyProblems(rows, ["2026-10-31", "2026-11-01"])).toEqual(["Sun 1 Nov: second half not scheduled."]);
     expect(dailyProblems([], ["2026-11-02"])).toEqual(["No Daily for Mon 2 Nov."]);
   });
 

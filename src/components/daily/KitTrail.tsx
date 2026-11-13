@@ -1,6 +1,7 @@
 import { Fragment } from "react";
 import { PATH_ARROW } from "./formats";
 import { ShirtBack, type Kit } from "./ShirtBack";
+import { Arrow } from "@/components/icons/Icon";
 
 // Career paths in kits (Collins, 29 Oct 2026, options B and D of the mocks at
 // https://claude.ai/artifact/XZPeyWysVXSbECdxN3hmf5): Rapid picks shows a
@@ -24,7 +25,7 @@ export function KitTrail({ clubs, kits, className = "" }: { clubs: string[]; kit
         <Fragment key={`${name}-${i}`}>
           {i > 0 && (
             <span aria-hidden className="self-center pb-3 font-display text-xl text-teal lg:text-2xl">
-              →
+              <Arrow />
             </span>
           )}
           <span className="min-w-0 flex-1 basis-0">

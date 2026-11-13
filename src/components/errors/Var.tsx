@@ -1,4 +1,5 @@
 import { ShirtBack, type Kit } from "@/components/daily/ShirtBack";
+import { Dot } from "@/components/icons/Icon";
 
 // "VAR check" (step 11, option A, picked by Collins on 27 Oct 2026): the 404
 // and the error screens are the VAR monitor. A strip on top says what's being
@@ -12,17 +13,18 @@ type Props = {
   stripClass: string;
   verdict: string;
   verdictClass: string;
-  /** The strip's corner: "● Live" while the monitor is on. */
+  /** The strip's corner: "Live" while the monitor is on, a filled dot before it; `live={false}` leaves the dot hollow. */
   status?: string;
+  live?: boolean;
   children: React.ReactNode;
 };
 
-export function VarBox({ strip, stripClass, verdict, verdictClass, status = "● Live", children }: Props) {
+export function VarBox({ strip, stripClass, verdict, verdictClass, status = "Live", live = true, children }: Props) {
   return (
     <section className="border-[3px] border-navy bg-navy shadow-[6px_6px_0_var(--color-navy)]">
       <div className={`flex items-center justify-between px-2.5 py-1.5 ${stripClass}`}>
         <span className="font-display text-lg uppercase">{strip}</span>
-        <span className="label">{status}</span>
+        <span className="label"><Dot on={live} /> {status}</span>
       </div>
       <div className="p-2">{children}</div>
       <div className={`flex items-center justify-between px-3 py-2 font-display text-[26px] text-white uppercase ${verdictClass}`}>

@@ -1,4 +1,5 @@
 import { continueWithGoogle } from "@/app/(site)/profile/actions";
+import { Arrow } from "@/components/icons/Icon";
 
 /** Google sign-in as the app's white sticker button, with Google's own G in
  * front of the label (Collins, 27 Oct 2026). Use it wherever Google signs in. */
@@ -10,7 +11,7 @@ export function GoogleButton({ label, className = "" }: { label: string; classNa
           <GoogleG />
           {label}
         </span>
-        <span aria-hidden="true">→</span>
+        <Arrow />
       </button>
     </form>
   );

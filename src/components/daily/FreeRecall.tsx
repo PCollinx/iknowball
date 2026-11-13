@@ -7,10 +7,10 @@ import { GiveUp, Pitch, RoundHead, WhistleCover, type Whistle } from "./InPlay";
 import { ShirtBack, shirtName, type Kit } from "./ShirtBack";
 import { lineup } from "./lineup";
 import { useRoundClock } from "./useRoundClock";
+import { afterRight, NEW_BANTER, wrongLine } from "@/lib/daily/banter";
 import type { Found } from "@/lib/daily/data";
 
 const RIGHT = ["Ball knowledge.", "Correct. Next one.", "Sharp. Keep going.", "You know ball.", "Oya, next."];
-const WRONG = ["Not on the list. Try again.", "Not on the list, chief.", "Who told you that one?", "E no dey the list."];
 
 type Props = {
   /** Half-time or full time when this part ends. */
@@ -41,6 +41,7 @@ export function FreeRecall(props: Props) {
   const [checking, startGuess] = useTransition();
   const [pending, setPending] = useState("");
   const input = useRef<HTMLInputElement>(null);
+  const banter = useRef(NEW_BANTER);
 
   const close = () => startClosing(() => endPart(props.attemptId));
   const { left } = useRoundClock({
@@ -58,17 +59,21 @@ export function FreeRecall(props: Props) {
     input.current?.focus();
     // Say at once what's being checked, so the box never looks stuck.
     setPending(value);
+    const at = { found: found.length, answers: props.answerCount, left };
     startGuess(async () => {
       const r = await submitGuess(props.attemptId, props.dailyId, value);
       if (r.status === "correct") {
         setFound((f) => (f.some((x) => x.id === r.id) ? f : [...f, { id: r.id, text: r.text, position: r.position }]));
         setFresh(r.id);
+        banter.current = afterRight(banter.current);
         setFeedback({ text: `${r.text}. ${RIGHT[r.found % RIGHT.length]}`, tone: "ok" });
         if (r.done) close();
       } else if (r.status === "duplicate") {
         setFeedback({ text: `You've already got ${shirtName(r.text)}.`, tone: "dup" });
       } else if (r.status === "wrong") {
-        setFeedback({ text: WRONG[Math.floor(Math.random() * WRONG.length)], tone: "no" });
+        const line = wrongLine(banter.current, value, at);
+        banter.current = line.next;
+        setFeedback({ text: line.text, tone: "no" });
       } else {
         close();
       }

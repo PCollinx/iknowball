@@ -10,6 +10,8 @@ import { FORMAT_NAME } from "@/components/daily/formats";
 import type { DailyFormat } from "@/lib/daily/score";
 import { addDays } from "@/lib/time";
 import { Chip, MAKER_MAIN, MakerHead } from "./ui";
+import { Arrow, Chevron } from "@/components/icons/Icon";
+import { halfName } from "@/components/daily/formats";
 
 export type EditorPart = {
   part: 1 | 2;
@@ -113,15 +115,15 @@ export function DayEditor({ date, today, status, parts, options }: Props) {
           tools={
             <>
               <a href={`/maker/day?date=${addDays(date, -1)}`} className="btn-white btn-press px-3 py-1 font-display text-[15px] uppercase">
-                ← {shortDate(addDays(date, -1))}
+                <Arrow dir="left" /> {shortDate(addDays(date, -1))}
               </a>
               <a href={`/maker/day?date=${addDays(date, 1)}`} className="btn-white btn-press px-3 py-1 font-display text-[15px] uppercase">
-                {shortDate(addDays(date, 1))} →
+                {shortDate(addDays(date, 1))} <Arrow />
               </a>
             </>
           }
         >
-          Two parts, one try. Part 1 is Free Recall or Rapid picks; Part 2 is In Order or Era picks and can be left blank. A part locks once anyone starts it.
+          Two halves, one try. The first half is Free Recall or Rapid picks; the second half is In Order or Era picks and can be left blank. A half locks once anyone starts it.
         </MakerHead>
 
         <PartSection
@@ -188,7 +190,7 @@ export function DayEditor({ date, today, status, parts, options }: Props) {
               className="btn-teal btn-press flex flex-1 items-center justify-between gap-3 px-3 py-1.5 font-display text-xl whitespace-nowrap uppercase shadow-none! disabled:bg-track disabled:text-navy/60 sm:px-4 sm:text-2xl"
             >
               <span>{saving ? "Saving…" : "Save day"}</span>
-              <span aria-hidden="true">→</span>
+              <Arrow />
             </button>
           </div>
         </div>
@@ -221,7 +223,7 @@ function PartSection({ part, options, format, formats, onFormat, titleHint, answ
     <section className="grid gap-4 py-3 lg:grid-cols-[minmax(0,1fr)_440px] lg:gap-6">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 bg-navy px-3 py-2 text-white">
-          <h2 className="font-display text-[22px] leading-none uppercase">Part {part.part}</h2>
+          <h2 className="font-display text-[22px] leading-none uppercase">{halfName(part.part)}</h2>
           <span>{FORMAT_NAME[format]}</span>
           {part.template && <Chip kind="auto">Auto</Chip>}
           {part.template && <span className="font-mono text-[11px] text-teal-light">{part.template}</span>}
@@ -335,7 +337,7 @@ function Options({ saved, options, inForm, onUse }: OptionsProps) {
           <span className="label">Other drafts</span> <span className="font-display text-lg leading-none">{options.length}</span>
         </span>
         <span aria-hidden="true" className="font-display text-lg leading-none group-open:rotate-180">
-          ▾
+          <Chevron />
         </span>
       </summary>
       <ul className="grid gap-0.5 border-t-2 border-navy bg-track">
@@ -357,7 +359,7 @@ function Options({ saved, options, inForm, onUse }: OptionsProps) {
               <Chip kind="ok">In the form</Chip>
             ) : (
               <button type="button" onClick={() => onUse(key, o)} className="btn-white btn-press flex items-center gap-2 px-2.5 py-1 font-display text-[15px] uppercase">
-                Use <span aria-hidden="true">→</span>
+                Use <Arrow />
               </button>
             )}
           </li>
@@ -427,7 +429,7 @@ function OrderPreview({ source }: { source: string }) {
           ))}
         </ol>
       ) : (
-        <p className="text-navy/60">Leave Part 2 blank for a one-part day.</p>
+        <p className="text-navy/60">Leave the second half blank for a one-half day.</p>
       )}
     </>
   );

@@ -24,8 +24,9 @@ import { ExtraTime } from "./ExtraTime";
 import { ShareCard } from "./ShareCard";
 import { FORMAT_NAME, ordinal } from "./formats";
 import type { PathClub } from "./KitTrail";
-import { shareCardData } from "./share";
+import { shareCardData, shareMessage } from "./share";
 import { ShirtBack, shirtName, type Kit } from "./ShirtBack";
+import { Arrow, Check, Cross } from "@/components/icons/Icon";
 
 // Full time (step 3 of docs/launch-plan.md, Collins's mix of 22 Oct 2026):
 // the match report's headline, score, line and ratings; the scoreboard's 1st
@@ -58,6 +59,8 @@ type Props = {
   fanOf: string | null;
   /** The fixture's kit for the answer shirts. */
   kit: Kit | null;
+  /** Each club in its own kit, for the share card. */
+  fixtureKits: [Kit | undefined, Kit | undefined];
   /** Your own shirt: your club's kit, or the neutral one. */
   myKit: Kit;
   /** Kits of the clubs in a career path In Order, by club name. */
@@ -85,18 +88,9 @@ export function FullTime(props: Props) {
   const total = recall ? found + recall.missed.length : 0;
   const seconds = props.me?.seconds ?? null;
   const card = recall
-    ? shareCardData({ issue, playDate, recall, order, points, topPercent, siteUrl, fanOf: props.fanOf, kit, rating, seconds })
+    ? shareCardData({ playDate, recall, order, points, siteUrl, name: props.me?.name ?? null, kits: props.fixtureKits })
     : null;
-  const shareText = [
-    `iKnowBall · The Daily No. ${String(issue).padStart(3, "0")}`,
-    recall?.daily.title ?? "",
-    `${points}/100`,
-    recall ? `${"■".repeat(found)}${"□".repeat(total - found)} ${found}/${total}` : "",
-    order ? `${FORMAT_NAME[order.daily.format]} ${order.correct}/${order.slots.length}` : "",
-    `Beat me: ${siteUrl.replace(/\/$/, "")}/daily`,
-  ]
-    .filter(Boolean)
-    .join("\n");
+  const shareText = card ? shareMessage(card, siteUrl) : `Beat me: ${siteUrl.replace(/\/$/, "")}/daily`;
 
   return (
     <main className="mx-auto w-full max-w-[560px] flex-1 px-4 pb-10 lg:max-w-[1280px] lg:px-8">
@@ -153,10 +147,10 @@ export function FullTime(props: Props) {
               tag="Out of 10"
               rows={[
                 ...(recall
-                  ? [{ title: "1st half", text: `${FORMAT_NAME[recall.daily.format]} ${found}/${total}`, value: <SheetBadge rating={halfRating(1, recall.score)} /> }]
+                  ? [{ title: "First half", text: `${FORMAT_NAME[recall.daily.format]} ${found}/${total}`, value: <SheetBadge rating={halfRating(1, recall.score)} /> }]
                   : []),
                 ...(order
-                  ? [{ title: "2nd half", text: `${FORMAT_NAME[order.daily.format]} ${order.correct}/${order.slots.length}`, value: <SheetBadge rating={halfRating(2, order.score)} /> }]
+                  ? [{ title: "Second half", text: `${FORMAT_NAME[order.daily.format]} ${order.correct}/${order.slots.length}`, value: <SheetBadge rating={halfRating(2, order.score)} /> }]
                   : []),
                 { title: "Overall", text: "Last 30 days", value: <SheetBadge rating={rating} dark />, dark: true },
               ]}
@@ -202,7 +196,7 @@ export function FullTime(props: Props) {
                 <span className="block font-display text-[26px] leading-[0.9] uppercase lg:text-[24px]">{handoffHeading(props.clash.three)}</span>
                 <MiniThree three={props.clash.three} />
                 <span className="block text-[13px] text-navy/80">
-                  Today&apos;s stat is <b>{STATS[props.clash.stat].short.toLowerCase()}</b>. Try a sprint →
+                  Today&apos;s stat is <b>{STATS[props.clash.stat].short.toLowerCase()}</b>. Try a sprint <Arrow />
                 </span>
               </span>
               <span className="grid place-items-center border-l-[2.5px] border-dashed border-navy bg-navy font-display text-xl text-sky uppercase lg:hidden">
@@ -300,9 +294,9 @@ function Squad({ recall, kit }: { recall: RecallReveal; kit: Kit | null }) {
   const found = recall.found.length;
   const team = fullTimeLineup(recall.found, recall.missed);
   return (
-    <section className="order-5 mt-6" aria-label={`1st half squad: ${found} found, ${recall.missed.length} got away`}>
+    <section className="order-5 mt-6" aria-label={`First half squad: ${found} found, ${recall.missed.length} got away`}>
       <div className="flex items-baseline justify-between border-b-2 border-navy pb-1.5">
-        <h2 className="label">1st half · the squad</h2>
+        <h2 className="label">First half · the squad</h2>
         <span className="label text-royal">
           {found} found · <span className="text-red-card">{recall.missed.length} got away</span>
         </span>
@@ -383,7 +377,7 @@ function SecondHalf({ order, kits }: { order: OrderReveal; kits?: Record<string,
       return {
         title: stickerName(player),
         value: <SheetAnswer right={s.right}>{period(s.correct)}</SheetAnswer>,
-        text: s.right ? club : <span className="font-semibold text-red-card">{[club, `You said ${s.placed ? period(s.placed) : "nothing"}`].filter(Boolean).join(" · ")}</span>,
+        text: s.right ? club : <span className="font-semibold text-red-card">{club && <>{club} · </>}You said {s.placed ? period(s.placed) : "nothing"}</span>,
         warn: !s.right,
       };
     }
@@ -409,7 +403,7 @@ function SecondHalf({ order, kits }: { order: OrderReveal; kits?: Record<string,
   rows.push({ title: secondHalfLine(order, nameOf), value: <SheetValue className="text-teal-light">{order.correct}/{order.slots.length}</SheetValue>, dark: true });
   return (
     <section className="order-6 mt-6">
-      <TeamSheet name={`2nd half · ${FORMAT_NAME[order.daily.format]}`} tag={`${order.correct}/${order.slots.length}`} rows={rows} />
+      <TeamSheet name={`Second half · ${FORMAT_NAME[order.daily.format]}`} tag={`${order.correct}/${order.slots.length}`} rows={rows} />
     </section>
   );
 }
@@ -423,16 +417,16 @@ function SheetAnswer({ right, children }: { right: boolean; children: React.Reac
         aria-label={right ? "Right" : "Wrong"}
         className={`grid size-8 place-items-center border-2 font-display text-lg text-white lg:size-9 ${right ? "border-royal bg-royal" : "border-red-card bg-red-card"}`}
       >
-        {right ? "✓" : "✕"}
+        {right ? <Check /> : <Cross />}
       </span>
     </span>
   );
 }
 
 /** An Era picks period as the tickets print it: "1995–2006" reads "1995 → 2006", an open one "2019 → now". */
-function period(choice: string): string {
+function period(choice: string): React.ReactNode {
   const [from, to] = choice.split("–");
-  return to === undefined ? choice : `${from} → ${to || "now"}`;
+  return to === undefined ? choice : <>{from} <Arrow /> {to || "now"}</>;
 }
 
 /** The half in a line, on the sheet's navy row. */
@@ -453,7 +447,7 @@ function TodaysTable({ top, me, position, players }: { top: TableRow[]; me: Tabl
     <Link href="/daily/table" className="order-7 mt-6 block border-[2.5px] border-navy bg-navy text-white shadow-[5px_5px_0_var(--color-sky)] lg:mt-6">
       <span className="flex justify-between border-b-[1.5px] border-[#3a4466] px-3 py-2">
         <span className="label text-teal-light">Today&apos;s table</span>
-        <span className="label">{players} played →</span>
+        <span className="label">{players} played <Arrow /></span>
       </span>
       <span className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3.5 px-3 pt-2 pb-2.5">
         <span className="font-display text-[70px] leading-[0.85] text-teal-light tabular-nums">

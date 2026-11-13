@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { handoffHeading, SPRINT_SECONDS, STATS, type Stat } from "@/lib/clash/rules";
+import { Arrow } from "@/components/icons/Icon";
 
 // Extra time (Collins, 2 Nov 2026, option B of the "Clash after the Daily"
 // mocks): a ticket pinned to the foot of full time, so Clash is one tap away
@@ -19,7 +20,7 @@ export function ExtraTime({ three, stat }: { three: number[]; stat: Stat }) {
             <span className="truncate font-display text-[24px] leading-[0.9] uppercase">{handoffHeading(three)}</span>
           </span>
           <span className="flex items-center justify-center gap-1.5 border-l-[2.5px] border-dashed border-navy bg-navy font-display text-[22px] text-teal-light uppercase">
-            {SPRINT_SECONDS}s →
+            {SPRINT_SECONDS}s <Arrow />
           </span>
         </Link>
       </div>

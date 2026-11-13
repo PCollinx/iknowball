@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { saveWithEmail, setUsername, signInWithEmail, type FormState } from "@/app/(site)/profile/actions";
+import { Arrow } from "@/components/icons/Icon";
 
 function Message({ state }: { state: FormState }) {
   return (
@@ -53,7 +54,7 @@ export function EmailForm({ mode }: { mode: "save" | "signin" }) {
       <summary className="btn-white btn-press flex cursor-pointer list-none items-center justify-between px-4 py-3 font-display text-[22px] uppercase [&::-webkit-details-marker]:hidden">
         {label}
         <span aria-hidden="true" className="transition-transform group-open:rotate-90">
-          →
+          <Arrow />
         </span>
       </summary>
       <form action={action} className="mt-3 border-2 border-navy p-3">
@@ -75,7 +76,7 @@ export function EmailForm({ mode }: { mode: "save" | "signin" }) {
           className="btn-teal btn-press mt-3 flex w-full items-center justify-between px-4 py-3 font-display text-[22px] uppercase disabled:translate-0 disabled:bg-track disabled:shadow-none"
         >
           <span>{pending ? "Sending…" : sent ? "Send again" : "Email me a sign-in link"}</span>
-          <span aria-hidden="true">→</span>
+          <Arrow />
         </button>
         <p className="mt-1.5 text-sm text-navy/70">No password. Tap the link we send and you&apos;re in.</p>
         <Message state={state} />

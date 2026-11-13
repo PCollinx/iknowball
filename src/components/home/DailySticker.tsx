@@ -6,6 +6,7 @@ import { ShirtBack, type Kit } from "@/components/daily/ShirtBack";
 import type { HomeDaily } from "@/lib/daily/data";
 import { ClosesIn } from "./ClosesIn";
 import { Sticker, StickerHead, StickerSlot } from "./Sticker";
+import { Arrow, ArrowUpRight } from "@/components/icons/Icon";
 
 // The Daily as a sticker in its album slot (picked 20 Oct 2026), the
 // fixture's two shirts floating over the number of answers. On the home page
@@ -35,12 +36,12 @@ export function DailySticker({ daily, kits, closesAt, serverNow, variant = "home
   return (
     <StickerSlot
       caption={
-        daily ? (kickoff ? `No. 01 · The Daily · Part 1 of ${daily.parts.length}` : `No. 01 · The Daily · Issue ${daily.issue}`) : "No. 01 · The Daily"
+        daily ? (kickoff ? "No. 01 · The Daily · First half" : `No. 01 · The Daily · Issue ${daily.issue}`) : "No. 01 · The Daily"
       }
       aside={
         daily?.status === "done" ? (
           <Link href="/daily/table" className="text-royal underline-offset-2 hover:underline">
-            Today&apos;s table ↗
+            Today&apos;s table <ArrowUpRight />
           </Link>
         ) : (
           <span className="text-royal">One try</span>
@@ -81,7 +82,7 @@ export function DailySticker({ daily, kits, closesAt, serverNow, variant = "home
         {daily && (
           <dl className="grid grid-cols-3 px-1.5 py-2 text-center lg:py-3">
             <Stat value={daily.status === "done" ? `${daily.points}` : `${first?.answer_count ?? 0}`} label={daily.status === "done" ? "Of 100" : first ? FORMAT_NAME[first.format] : ""} />
-            <Stat value={`${second?.answer_count ?? "–"}`} label={second ? FORMAT_NAME[second.format] : "Part 2"} className="border-x-[1.5px] border-track" />
+            <Stat value={`${second?.answer_count ?? "–"}`} label={second ? FORMAT_NAME[second.format] : "Second half"} className="border-x-[1.5px] border-track" />
             <Stat value={clock(seconds)} label="Clock" />
           </dl>
         )}
@@ -89,7 +90,7 @@ export function DailySticker({ daily, kits, closesAt, serverNow, variant = "home
         {!kickoff && (
           <span className="block px-2.5 pt-1 pb-4 lg:px-3 lg:pb-5">
             <span className="btn-navy block p-2 text-center font-display text-[22px] uppercase lg:p-2.5 lg:text-[28px]">
-              {daily ? CTA[daily.status] : "See you tomorrow"} →
+              {daily ? CTA[daily.status] : "See you tomorrow"} <Arrow />
             </span>
           </span>
         )}

@@ -6,7 +6,7 @@ import { clubInTitle, type Club } from "@/lib/profile/club";
 import { clock } from "./clock";
 import { TeamSheet, type SheetRow } from "@/components/sheet/TeamSheet";
 import { headlineFixture } from "./fixture";
-import { FORMAT_NAME } from "./formats";
+import { FORMAT_NAME, halfName } from "./formats";
 import { Masthead } from "./Masthead";
 import { RecallGrid } from "./RecallGrid";
 import type { Kit } from "./ShirtBack";
@@ -38,7 +38,7 @@ type Props = {
 };
 
 
-export function KickOff({ issue, dateLabel, daily, parts, total, before, club, kit, kits, closesAt, serverNow }: Props) {
+export function KickOff({ issue, dateLabel, daily, parts, before, club, kit, kits, closesAt, serverNow }: Props) {
   const fixture = before ? before.daily.title : daily.title;
   const yourLot = !before && clubInTitle(club, fixture);
   const second = parts.find((p) => p.part === 2);
@@ -49,7 +49,10 @@ export function KickOff({ issue, dateLabel, daily, parts, total, before, club, k
       <div className="mt-4 lg:mt-6 lg:grid lg:grid-cols-12 lg:gap-10">
         <div className="lg:col-span-7">
           {before ? (
-            <HalfTime before={before} kit={kit} />
+            <>
+              <MatchStrip before={before} next={daily} />
+              <HalfTime before={before} kit={kit} />
+            </>
           ) : (
             <TapToKickOff form="kick-off">
               <DailySticker variant="kickoff" daily={{ issue, parts, status: "fresh", points: 0 }} kits={kits} closesAt={closesAt} serverNow={serverNow} />
@@ -60,9 +63,7 @@ export function KickOff({ issue, dateLabel, daily, parts, total, before, club, k
         <div className="mt-7 flex flex-col gap-5 lg:col-span-5 lg:mt-0">
           {before && (
             <div>
-              <span className="label text-royal">
-                Part 2 of {total} · opens now
-              </span>
+              <span className="label text-[13px] text-royal lg:text-sm">Second half · kicks off now</span>
               <h1 className="mt-1 font-display text-[44px] leading-[0.9] uppercase lg:text-[50px] lg:leading-[0.88]">
                 {daily.format === "era" ? "Era picks" : "In order"}
               </h1>
@@ -72,7 +73,7 @@ export function KickOff({ issue, dateLabel, daily, parts, total, before, club, k
 
           <TeamSheet
             name={before ? "Team talk" : "The gaffer's instructions"}
-            tag={`Part ${daily.part}`}
+            tag={halfName(daily.part)}
             rows={before ? teamTalk(daily) : gafferNotes(daily, second)}
           />
 
@@ -86,17 +87,63 @@ export function KickOff({ issue, dateLabel, daily, parts, total, before, club, k
           <form id="kick-off" action={startPart}>
             <input type="hidden" name="dailyId" value={daily.id} />
             <SubmitButton tone="teal" pendingText="Starting…">
-              {before ? "Start the 2nd half" : "Kick off"}
+              {before ? "Start the second half" : "Kick off"}
             </SubmitButton>
             {!before && (
               <p className="mt-2.5 text-center text-[13px] text-navy/80 lg:text-sm">
-                Part 1 · {FORMAT_NAME[daily.format]} · {clock(daily.time_limit_seconds)} on the clock
+                First half · {FORMAT_NAME[daily.format]} · {clock(daily.time_limit_seconds)} on the clock
               </p>
             )}
           </form>
         </div>
       </div>
     </main>
+  );
+}
+
+/** Option A of https://claude.ai/artifact/L79FmZCiRieyEmaw2StSPZ (Collins, 13 Nov
+ * 2026): the day as one match, kick-off to full time, the first half done in
+ * royal with its points, half-time lit as where you are, the second half still
+ * to play with what it's worth. */
+function MatchStrip({ before, next }: { before: RecallReveal; next: DailyRow }) {
+  const end = "flex flex-col items-center justify-center bg-mist px-1.5 text-center lg:px-2.5";
+  const half = "flex min-w-0 flex-col justify-center px-2 py-1.5 lg:px-3 lg:py-2.5";
+  const name = "font-display text-[min(20px,5vw)] leading-[0.9] whitespace-nowrap uppercase lg:text-[28px]";
+  const note = "mt-0.5 truncate text-[11px] font-semibold lg:text-[13px]";
+  return (
+    <div className="mb-6 lg:mb-8">
+      <div
+        role="img"
+        aria-label={`Kick-off, first half played: ${before.score} points. Half-time now. Second half: ${FORMAT_NAME[next.format]}, ${PART_MAX[next.part] ?? 0} to play for. Full time out of 100.`}
+        className="grid grid-cols-[auto_minmax(0,1fr)_auto_minmax(0,1fr)_auto] border-[2.5px] border-navy"
+      >
+        <div className={end}>
+          <span className="font-display text-[13px] leading-none uppercase lg:text-base">KO</span>
+        </div>
+        <div className={`${half} bg-royal text-white`}>
+          <span className={name}>First half</span>
+          <span className={note}>
+            {FORMAT_NAME[before.daily.format]} · {before.score} pts
+          </span>
+        </div>
+        <div className="relative flex items-center border-x-[2.5px] border-navy bg-teal-light px-2 lg:px-3">
+          <span className="font-display text-[22px] leading-none whitespace-nowrap lg:text-[30px]">HT</span>
+          <span className="label absolute top-full left-1/2 mt-1 -translate-x-1/2 bg-navy px-1.5 py-[3px] text-[9px] whitespace-nowrap text-white lg:text-[10px]">
+            You are here
+          </span>
+        </div>
+        <div className={`${half} bg-[repeating-linear-gradient(-45deg,#fff_0_6px,var(--color-mist)_6px_12px)]`}>
+          <span className={name}>Second half</span>
+          <span className={note}>
+            {FORMAT_NAME[next.format]} · {PART_MAX[next.part] ?? 0} left
+          </span>
+        </div>
+        <div className={end}>
+          <span className="font-display text-[13px] leading-none uppercase lg:text-base">FT</span>
+          <span className="text-[9px] font-semibold lg:text-[11px]">/100</span>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -108,8 +155,8 @@ function HalfTime({ before, kit }: { before: RecallReveal; kit: Kit | null }) {
     before.missed.length === 0
       ? `Clean sheet: all ${all} found.`
       : found === 0
-        ? "Nothing on the sheet yet. The 2nd half is a fresh start."
-        : `${found} found, ${before.missed.length} got away. The 2nd half can still lift the day.`;
+        ? "Nothing on the sheet yet. The second half is a fresh start."
+        : `${found} found, ${before.missed.length} got away. The second half can still lift the day.`;
   return (
     <>
       <section className="grid grid-cols-[110px_minmax(0,1fr)] border-2 border-navy lg:grid-cols-[150px_minmax(0,1fr)]">
@@ -124,7 +171,7 @@ function HalfTime({ before, kit }: { before: RecallReveal; kit: Kit | null }) {
           </span>
         </div>
         <div className="p-2.5 px-3 lg:px-5 lg:py-4">
-          <span className="label text-[10px] text-royal lg:text-xs">Part 1 · {FORMAT_NAME[before.daily.format]}</span>
+          <span className="label text-[10px] text-royal lg:text-xs">First half · {FORMAT_NAME[before.daily.format]}</span>
           <div className="mt-0.5 font-display text-[28px] leading-[0.9] uppercase lg:text-[44px]">{headlineFixture(before.daily.title)}</div>
           <p className="mt-1.5 text-[13px] lg:mt-2.5 lg:text-base">{line}</p>
         </div>
@@ -141,7 +188,7 @@ function gafferNotes(daily: DailyRow, second: DailyRow | undefined): SheetRow[] 
     { title: "Be quick", text: daily.format === "free_recall" ? "Type the names. Typos are forgiven." : "One tap per question." },
     { title: "One go", text: "Leave and the clock runs on." },
     second
-      ? { title: "Then the 2nd half", text: `${FORMAT_NAME[second.format]} straight after. 100 on the day.` }
+      ? { title: "Then the second half", text: `${FORMAT_NAME[second.format]} straight after. 100 on the day.` }
       : { title: "Up to 100", text: "Every right answer counts." },
   ];
 }

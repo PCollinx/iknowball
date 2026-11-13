@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { SET_SIZE, SPRINT_SECONDS, STATS, type Stat } from "@/lib/clash/rules";
+import { ArrowUpRight } from "@/components/icons/Icon";
 
 // The kick-off's header, option D "The screen splits" (picked 28 Oct 2026, mocks
 // at https://claude.ai/artifact/KXh9PT72Dgos7NwVyzuDXS): the ground's navy
@@ -81,7 +82,7 @@ export function BestCell({ best, lastCode }: { best: number | null; lastCode: st
     <Cell value={best ?? "–"} label="Your best" className="bg-slate">
       {lastCode && (
         <Link href={`/clash/${lastCode}`} className="mt-0.5 block font-display text-[13px] tracking-[0.06em] text-white normal-case lg:mt-0 lg:ml-1.5 lg:inline">
-          {lastCode} ↗
+          {lastCode} <ArrowUpRight />
         </Link>
       )}
     </Cell>

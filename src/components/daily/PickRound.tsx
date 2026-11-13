@@ -8,6 +8,7 @@ import { GiveUp, Pitch, RoundHead, Steps, type Step, WhistleCover, type Whistle 
 import { KitTrail, pathOf, type PathClub } from "./KitTrail";
 import { ShirtBack, type Kit } from "./ShirtBack";
 import { useRoundClock } from "./useRoundClock";
+import { Arrow } from "@/components/icons/Icon";
 
 const RIGHT = ["Ball knowledge.", "Correct. Next one.", "Sharp.", "You know ball.", "Oya, next."];
 const WRONG = ["Not that one, chief.", "Who told you that one?", "E no reach.", "Wrong shout."];
@@ -203,7 +204,7 @@ export function PickRound(props: Props) {
                   <span className="flex items-center px-2 pt-2 pb-2.5 font-display text-[clamp(21px,7.2vw,30px)] leading-none whitespace-nowrap tabular-nums lg:px-3 lg:pt-3 lg:pb-4 lg:text-[44px]">
                     {to !== undefined ? (
                       <>
-                        {from} <span className={state === "idle" || state === "pending" ? "text-teal" : ""}>→</span> {to || "now"}
+                        {from} <span className={state === "idle" || state === "pending" ? "text-teal" : ""}><Arrow /></span> {to || "now"}
                       </>
                     ) : (
                       choice

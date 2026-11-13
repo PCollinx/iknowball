@@ -8,6 +8,7 @@ import { RATING_DAYS } from "@/lib/profile/rating";
 import { nextTier, PLACEMENT_DAYS } from "@/lib/profile/stats";
 import { SheetValue, TeamSheet, type SheetRow } from "@/components/sheet/TeamSheet";
 import { RatingBadge } from "./RatingBadge";
+import { Arrow } from "@/components/icons/Icon";
 
 // Your shirt as "The dressing-room peg" (option A, picked 27 Oct 2026, with
 // B's stat stickers, league stickers and section heads): the shirt hangs on
@@ -88,7 +89,7 @@ export function LeagueStickers({ leagues }: { leagues: HubLine[] }) {
       <>
         <p>No leagues yet. Start one and send the code to your mates.</p>
         <Link href="/league" className="btn-navy btn-press mt-3 inline-block px-4 py-2 font-display text-xl uppercase">
-          The League →
+          The League <Arrow />
         </Link>
       </>
     );

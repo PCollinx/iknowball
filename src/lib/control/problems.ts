@@ -67,7 +67,7 @@ export function dailyProblems(rows: { play_date: string; part: number; status: s
     const parts = rows.filter((r) => r.play_date === date);
     if (!parts.length) return [`No Daily for ${dayLabel(date)}.`];
     const waiting = [1, 2].filter((p) => parts.find((r) => r.part === p)?.status !== "scheduled");
-    return waiting.length ? [`${dayLabel(date)}: Part ${waiting.join(" and ")} not scheduled.`] : [];
+    return waiting.length ? [`${dayLabel(date)}: ${waiting.map((p) => (p === 1 ? "first half" : "second half")).join(" and ")} not scheduled.`] : [];
   });
 }
 

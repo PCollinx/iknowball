@@ -4,6 +4,7 @@ import { useState, useSyncExternalStore } from "react";
 import { ticketDue } from "@/lib/pwa/platform";
 import { IosSteps } from "./IosSteps";
 import { useInstall } from "./useInstall";
+import { Arrow } from "@/components/icons/Icon";
 
 // "Season ticket" (step 16, option A, Collins, 30 Oct 2026): at the Daily's
 // full time, a ticket to put iKnowBall on the home screen, the app icon on
@@ -76,7 +77,7 @@ export function SeasonTicket({ guest, icon, season }: Props) {
               className="btn-teal btn-press mt-1 flex items-center justify-between gap-6 px-3.5 py-2.5 font-display text-2xl uppercase"
             >
               <span>{phone ? "Add to home screen" : "Install iKnowBall"}</span>
-              <span aria-hidden="true">→</span>
+              <Arrow />
             </button>
           </>
         )}
