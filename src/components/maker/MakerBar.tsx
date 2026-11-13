@@ -5,6 +5,7 @@ import { Logo } from "@/components/nav/SiteNav";
 import { JOB_NAMES } from "@/lib/control/problems";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addDays, gameDate } from "@/lib/time";
+import { ArrowUpRight } from "@/components/icons/ArrowUpRight";
 
 export { Chip, MAKER_MAIN, MakerHead, type ChipKind } from "./ui";
 
@@ -83,7 +84,7 @@ export async function MakerBar({ active }: { active?: MakerPageName }) {
         <div className="ml-auto hidden items-center gap-3.5 pl-3.5 text-[13px] whitespace-nowrap md:flex">
           <span className="font-display text-base text-teal-light">{shortDate(gameDate())}</span>
           <Link href="/" className="text-white/70 hover:text-white">
-            Site ↗
+            Site <ArrowUpRight />
           </Link>
           <SignOut />
         </div>
@@ -109,7 +110,7 @@ export async function MakerBar({ active }: { active?: MakerPageName }) {
             <div className="mt-3 flex items-center justify-between text-sm">
               <span className="font-display text-base text-teal-light">{shortDate(gameDate())}</span>
               <Link href="/" className="text-white/70">
-                Site ↗
+                Site <ArrowUpRight />
               </Link>
               <SignOut />
             </div>

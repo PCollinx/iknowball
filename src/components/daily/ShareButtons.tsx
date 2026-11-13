@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { ArrowUpRight } from "@/components/icons/ArrowUpRight";
 
 type Image = { url: string; name: string };
 
@@ -51,7 +52,7 @@ export function ShareButtons({ text, image, className = "mt-4" }: { text: string
         <span>
           Share the card
         </span>
-        <span aria-hidden="true">↗</span>
+        <ArrowUpRight className="size-[0.75em]" />
       </button>
       <p role="status" className="min-h-[22px] text-[15px] font-semibold text-royal">
         {note}

@@ -6,6 +6,7 @@ import { ShirtBack, type Kit } from "@/components/daily/ShirtBack";
 import type { HomeDaily } from "@/lib/daily/data";
 import { ClosesIn } from "./ClosesIn";
 import { Sticker, StickerHead, StickerSlot } from "./Sticker";
+import { ArrowUpRight } from "@/components/icons/ArrowUpRight";
 
 // The Daily as a sticker in its album slot (picked 20 Oct 2026), the
 // fixture's two shirts floating over the number of answers. On the home page
@@ -40,7 +41,7 @@ export function DailySticker({ daily, kits, closesAt, serverNow, variant = "home
       aside={
         daily?.status === "done" ? (
           <Link href="/daily/table" className="text-royal underline-offset-2 hover:underline">
-            Today&apos;s table ↗
+            Today&apos;s table <ArrowUpRight />
           </Link>
         ) : (
           <span className="text-royal">One try</span>
