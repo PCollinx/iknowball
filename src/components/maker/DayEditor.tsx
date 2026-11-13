@@ -11,6 +11,7 @@ import type { DailyFormat } from "@/lib/daily/score";
 import { addDays } from "@/lib/time";
 import { Chip, MAKER_MAIN, MakerHead } from "./ui";
 import { Arrow, Chevron } from "@/components/icons/Icon";
+import { halfName } from "@/components/daily/formats";
 
 export type EditorPart = {
   part: 1 | 2;
@@ -122,7 +123,7 @@ export function DayEditor({ date, today, status, parts, options }: Props) {
             </>
           }
         >
-          Two parts, one try. Part 1 is Free Recall or Rapid picks; Part 2 is In Order or Era picks and can be left blank. A part locks once anyone starts it.
+          Two halves, one try. The first half is Free Recall or Rapid picks; the second half is In Order or Era picks and can be left blank. A half locks once anyone starts it.
         </MakerHead>
 
         <PartSection
@@ -222,7 +223,7 @@ function PartSection({ part, options, format, formats, onFormat, titleHint, answ
     <section className="grid gap-4 py-3 lg:grid-cols-[minmax(0,1fr)_440px] lg:gap-6">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 bg-navy px-3 py-2 text-white">
-          <h2 className="font-display text-[22px] leading-none uppercase">Part {part.part}</h2>
+          <h2 className="font-display text-[22px] leading-none uppercase">{halfName(part.part)}</h2>
           <span>{FORMAT_NAME[format]}</span>
           {part.template && <Chip kind="auto">Auto</Chip>}
           {part.template && <span className="font-mono text-[11px] text-teal-light">{part.template}</span>}
@@ -428,7 +429,7 @@ function OrderPreview({ source }: { source: string }) {
           ))}
         </ol>
       ) : (
-        <p className="text-navy/60">Leave Part 2 blank for a one-part day.</p>
+        <p className="text-navy/60">Leave the second half blank for a one-half day.</p>
       )}
     </>
   );

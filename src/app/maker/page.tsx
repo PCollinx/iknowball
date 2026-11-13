@@ -107,8 +107,8 @@ async function DayList() {
                   <tr className="bg-mist text-left text-[10px] tracking-[0.06em] uppercase">
                     <th className="px-2 py-1.5">Day</th>
                     <th className="px-2 py-1.5">Fixture</th>
-                    <th className="px-2 py-1.5">Part 1</th>
-                    <th className="px-2 py-1.5">Part 2</th>
+                    <th className="px-2 py-1.5">First half</th>
+                    <th className="px-2 py-1.5">Second half</th>
                     <th className="px-2 py-1.5">State</th>
                     <th className="px-2 py-1.5 text-right">Played</th>
                   </tr>

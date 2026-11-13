@@ -13,6 +13,7 @@ import { runJob } from "@/lib/control/runs";
 import { currentEmail } from "@/lib/daily/data";
 import { sendTestLaunchEmail } from "@/lib/launch/send";
 import { PER_PLAYER, WEEK_STATS } from "@/lib/clash/rules";
+import { halfName } from "@/components/daily/formats";
 
 export type SignInState = { error: string; email: string } | null;
 
@@ -68,7 +69,7 @@ export async function saveDay(_prev: SaveState, formData: FormData): Promise<Sav
       continue;
     }
     const raw = Object.fromEntries(["title", "prompt", "time", "source", "answers"].map((n) => [n, field(formData, part, n)]));
-    const label = part === 1 ? "Part 1" : "Part 2";
+    const label = halfName(part);
     // Part 2 is optional: left blank, it is removed.
     if (part === 2 && !raw.title.trim() && !raw.prompt.trim() && !raw.answers.trim()) {
       specs.push(null);
