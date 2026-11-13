@@ -1,27 +1,40 @@
-import type { ReactNode } from "react";
-import { calledLine, fitSlots, outcomeLabel, outcomeOf, slots, verdict, type ResultCardData, type Side } from "@/components/clash/result";
+import type { ChainLine, ResultCardData } from "@/components/clash/result";
+import { ROYAL_KIT } from "@/components/daily/ShirtBack";
 import { BODY, C, DISPLAY } from "@/lib/og/fonts";
-import { FOOTBALL_SRC, MISS_SRC } from "@/lib/og/football";
-import { formatRating, ratingColours } from "@/lib/profile/rating";
+import { Shirt } from "@/lib/og/Shirt";
+import { shirtSvg } from "@/lib/og/shirt-svg";
 
-// Clash full time as a 1080 x 1080 image, option D (picked 25 Oct 2026): the
-// screen's album page with the score stuck on it (after a challenge, your page
-// beside the setter's), closed by the ticket with the score to beat and the
-// code on its stub. Drawn by next/og: every text node is one string, no style
-// is undefined and every box with children is a flex box, or Satori fails.
+// The Clash share card, option E "The chain" (Collins, 13 Nov 2026, from
+// https://claude.ai/artifact/PahqeKZqGjRTBcuAkLon9a): the live game frozen. The
+// score bug (royal Clash tag, teal clock, navy tally), the chain of the run's
+// first players with their ticks and crosses (numbers hidden but the first,
+// which the game shows anyway), a navy bar with the question, then the dare
+// and the challenge link on one line. Drawn by next/og: every text node is one
+// string, no style is undefined and every box with children is a flex box.
 
 export const RESULT_SIZE = 1080;
-/** The mocks were drawn at half size: one mock pixel is two here. */
-const px = (n: number) => n * 2;
-const PAD_X = px(24);
-const INNER = RESULT_SIZE - 2 * PAD_X;
-const SLOT_EDGE = "#8E9BD6";
-const SLOT_FILL = "#E3E8FF";
+/** The mock's sizes are in cqw: 1cqw is 10.8px here. */
+const u = RESULT_SIZE / 100;
+const PAD_X = 6 * u;
+const SLATE = "#3A4466";
+const SKY = "#5CB8FF";
+/** Rows the chain has room for; fewer players sit at its foot, like the game's. */
+const ROWS = 5;
 
 const label = { fontWeight: 600, letterSpacing: "0.12em", textTransform: "uppercase" } as const;
 const display = { fontFamily: DISPLAY, textTransform: "uppercase" } as const;
 
+const mark = (path: string, colour: string) =>
+  `data:image/svg+xml;base64,${Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16"><path d="${path}" fill="none" stroke="${colour}" stroke-width="3" stroke-linecap="square"/></svg>`,
+  ).toString("base64")}`;
+const TICK = mark("M2.75 8.5 6.25 12l7-8", C.royal);
+const CROSS = mark("M4 4l8 8M12 4l-8 8", C.red);
+
 export function ResultImage({ d }: { d: ResultCardData }) {
+  // Everything but the chain has a set height; the chain takes the rest.
+  const chainH = RESULT_SIZE - 2 - (4.6 * u + 6.4 * u * 0.9 + 3 * u + 10.2 * u + 2.6 * u + 13.2 * u + 17.6 * u);
+  const rowH = Math.floor(chainH / ROWS);
   return (
     <div
       style={{
@@ -33,296 +46,152 @@ export function ResultImage({ d }: { d: ResultCardData }) {
         border: `2px solid ${C.navy}`,
         color: C.navy,
         fontFamily: BODY,
-        padding: `${px(20)}px ${PAD_X}px ${px(22)}px`,
       }}
     >
-      <Masthead d={d} />
-      {d.setter ? <HeadToHead d={d} setter={d.setter} /> : <Solo d={d} />}
-      <Ticket d={d} />
-    </div>
-  );
-}
-
-function Masthead({ d }: { d: ResultCardData }) {
-  const rate = ratingColours(d.rating);
-  return (
-    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: `${px(2)}px solid ${C.navy}`, paddingBottom: px(8) }}>
-      <div style={{ display: "flex", ...display, textTransform: "none", fontSize: px(34), lineHeight: 0.9 }}>
-        <span>iKnow</span>
-        <span style={{ color: C.teal }}>Ball</span>
-      </div>
-      <div style={{ display: "flex", alignItems: "center" }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", fontSize: px(11), lineHeight: 1.4, ...label }}>
-          <span>{d.setter ? `${d.setter.name}'s challenge` : "Clash · Full time"}</span>
-          <span>{d.dateLabel}</span>
+      <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, padding: `${4.6 * u}px ${PAD_X}px 0` }}>
+        {/* Logo and what this is */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", fontFamily: DISPLAY, fontSize: 6.4 * u, lineHeight: 0.9 }}>
+            <span>iKnow</span>
+            <span style={{ color: C.teal }}>Ball</span>
+          </div>
+          <span style={{ fontSize: 2.4 * u, color: SLATE, ...label }}>Football quiz · Higher or lower</span>
         </div>
+
+        <ScoreBug d={d} />
+
+        {/* The chain: the run's first players, newest at the foot */}
         <div
           style={{
             display: "flex",
+            flexDirection: "column",
+            justifyContent: "flex-end",
+            height: chainH,
+            marginTop: 2.6 * u,
+            border: `${0.5 * u}px solid ${C.navy}`,
+            borderBottom: "none",
+          }}
+        >
+          {d.chain.map((line, i) => (
+            <Row key={i} line={line} height={rowH} />
+          ))}
+        </div>
+
+        {/* The question */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
             alignItems: "center",
-            justifyContent: "center",
-            width: px(38),
-            height: px(38),
-            marginLeft: px(10),
-            borderRadius: px(38),
-            border: `${px(2.5)}px solid ${C.navy}`,
-            background: rate.fill,
-            color: rate.text,
-            fontFamily: DISPLAY,
-            fontSize: px(18),
+            height: 13.2 * u,
+            background: C.navy,
+            color: "#FFFFFF",
+            padding: `0 ${2.6 * u}px`,
           }}
         >
-          {formatRating(d.rating)}
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <span style={{ ...display, fontSize: 5 * u, lineHeight: 0.95 }}>{d.ask}</span>
+            <span style={{ marginTop: 1 * u, fontSize: 2.2 * u, color: C.tealLight, ...label }}>{`${d.right} right · ${d.missed} missed`}</span>
+          </div>
+          <span
+            style={{
+              ...display,
+              fontSize: 3.4 * u,
+              lineHeight: 1,
+              background: "#FFFFFF",
+              color: C.navy,
+              padding: `${1.2 * u}px ${1.6 * u}px`,
+              boxShadow: `${0.5 * u}px ${0.5 * u}px 0 ${SKY}`,
+            }}
+          >
+            Your go
+          </span>
         </div>
       </div>
-    </div>
-  );
-}
 
-/** A page's kicks, a slot per call, sized to fill `width` x `height`. */
-function Slots({ kicks, size, width, height, gap, pad }: { kicks: string; size: number; width: number; height: number; gap: number; pad: number }) {
-  const { cols, slot } = fitSlots(Math.max(1, size), width, height, gap, px(60));
-  return (
-    <div style={{ display: "flex", flexWrap: "wrap", width: cols * slot + (cols - 1) * gap }}>
-      {slots(kicks, Math.max(1, size)).map((k, i) => (
+      {/* The dare, and the link on one line (the card is a picture: the message carries the live link) */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          height: 17.6 * u,
+          justifyContent: "center",
+          background: C.tealLight,
+          borderTop: `${0.6 * u}px solid ${C.navy}`,
+          padding: `0 ${PAD_X}px`,
+        }}
+      >
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+          <span style={{ ...display, fontSize: 6 * u, lineHeight: 0.88 }}>{`Can you beat ${d.toBeat}?`}</span>
+          <span style={{ fontSize: 2.3 * u, fontWeight: 600 }}>Free · 60 seconds · no sign-up</span>
+        </div>
         <div
-          key={i}
           style={{
             display: "flex",
-            width: slot,
-            height: slot,
-            marginRight: i % cols === cols - 1 ? 0 : gap,
-            marginBottom: gap,
-            padding: k === null ? 0 : pad,
-            ...(k === null ? { border: `${px(1.5)}px dashed ${SLOT_EDGE}`, background: SLOT_FILL } : {}),
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginTop: 1.4 * u,
+            background: C.navy,
+            color: "#FFFFFF",
+            padding: `${1.3 * u}px ${2 * u}px`,
           }}
         >
-          {k !== null && (
-            // eslint-disable-next-line @next/next/no-img-element -- Satori draws <img>, not next/image
-            <img src={k === "1" ? FOOTBALL_SRC : MISS_SRC} width={slot - 2 * pad} height={slot - 2 * pad} alt="" />
-          )}
+          <span style={{ fontFamily: DISPLAY, fontSize: 3.6 * u, lineHeight: 1 }}>{d.link}</span>
+          <span style={{ fontSize: 2 * u, color: C.tealLight, ...label }}>Same players · one go</span>
         </div>
-      ))}
+      </div>
     </div>
   );
 }
 
-function ScoreSticker({ right, size, ink, tilt, word = true }: { right: number; size: number; ink: string; tilt: number; word?: boolean }) {
+/** As the sprint's: the royal Clash tag, the teal clock run out, your score on navy. */
+function ScoreBug({ d }: { d: ResultCardData }) {
   return (
     <div
       style={{
         display: "flex",
-        alignItems: "baseline",
-        transform: `rotate(${tilt}deg)`,
-        background: "#FFFFFF",
-        border: `${px(word ? 3 : 2.5)}px solid ${C.navy}`,
-        boxShadow: `${px(word ? 5 : 3)}px ${px(word ? 5 : 3)}px 0 ${C.navy}`,
-        padding: `${px(3)}px ${px(word ? 12 : 9)}px ${px(word ? 5 : 4)}px`,
-        ...display,
+        height: 10.2 * u,
+        marginTop: 3 * u,
+        border: `${0.6 * u}px solid ${C.navy}`,
+        boxShadow: `${0.8 * u}px ${0.8 * u}px 0 ${C.navy}`,
       }}
     >
-      <span style={{ fontSize: size, lineHeight: 0.8, color: ink }}>{String(right)}</span>
-      {word && <span style={{ fontSize: px(24), marginLeft: px(6) }}>RIGHT</span>}
+      <span style={{ display: "flex", alignItems: "center", background: C.royal, color: "#FFFFFF", ...display, fontSize: 3.6 * u, padding: `0 ${2.4 * u}px` }}>Clash</span>
+      <span style={{ display: "flex", alignItems: "center", background: C.teal, color: "#FFFFFF", fontFamily: DISPLAY, fontSize: 8 * u, padding: `0 ${2.4 * u}px` }}>0:00</span>
+      <div style={{ display: "flex", flexGrow: 1, alignItems: "center", justifyContent: "space-between", background: C.navy, color: "#FFFFFF", padding: `0 ${2.6 * u}px` }}>
+        <span style={{ fontSize: 2.2 * u, color: C.tealLight, ...label }}>{d.name ? `${d.name} · right` : "Right"}</span>
+        <span style={{ fontFamily: DISPLAY, fontSize: 8 * u, lineHeight: 1 }}>{String(d.right)}</span>
+      </div>
     </div>
   );
 }
 
-function Sticker({ children, bg, tilt }: { children: ReactNode; bg: string; tilt: number }) {
+/** One player in the chain: shirt, name and club, his number or "?", and the call that brought him on. */
+function Row({ line, height }: { line: ChainLine; height: number }) {
+  const kit = line.kit ?? ROYAL_KIT;
+  const shirt = Math.round(Math.min(height * 0.62, 6 * u));
   return (
     <div
       style={{
         display: "flex",
-        alignItems: "baseline",
-        border: `${px(2)}px solid ${C.navy}`,
-        boxShadow: `${px(2)}px ${px(2)}px 0 ${C.navy}`,
-        background: bg,
-        padding: `${px(2)}px ${px(9)}px`,
-        transform: `rotate(${tilt}deg)`,
-        fontSize: px(13),
+        alignItems: "center",
+        height,
+        borderBottom: `${0.2 * u}px solid ${C.track}`,
+        borderLeft: `${1.1 * u}px solid ${line.mark === false ? C.red : C.royal}`,
+        padding: `0 ${2 * u}px`,
       }}
     >
-      {children}
-    </div>
-  );
-}
-
-/** After your own sprint: one album page, the score and the misses on it. */
-function Solo({ d }: { d: ResultCardData }) {
-  const missed = d.kicks.length - d.right;
-  const inner = INNER - 2 * px(2) - 2 * px(14);
-  return (
-    <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, paddingBottom: px(16) }}>
-      <span style={{ marginTop: px(10), fontSize: px(13) }}>{calledLine(d.kicks.length, d.setSize)}</span>
-      <div
-        style={{
-          position: "relative",
-          display: "flex",
-          flexDirection: "column",
-          flexGrow: 1,
-          marginTop: px(22),
-          background: C.mist,
-          border: `${px(2)}px solid ${C.navy}`,
-          padding: `${px(24)}px ${px(14)}px ${px(10)}px`,
-        }}
-      >
-        <div style={{ position: "absolute", top: -px(13), left: 0, right: 0, display: "flex", justifyContent: "center" }}>
-          <div
-            style={{
-              display: "flex",
-              transform: "rotate(-2deg)",
-              background: C.tealLight,
-              border: `${px(2)}px solid ${C.navy}`,
-              boxShadow: `${px(3)}px ${px(3)}px 0 ${C.navy}`,
-              padding: `${px(2)}px ${px(12)}px`,
-              fontSize: px(17),
-              ...display,
-            }}
-          >
-            {d.statLabel}
-          </div>
-        </div>
-        <Slots kicks={d.kicks} size={d.kicks.length} width={inner} height={px(195)} gap={px(3)} pad={px(2)} />
-        <div style={{ display: "flex", flexGrow: 1 }} />
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-          <ScoreSticker right={d.right} size={px(78)} ink={C.royal} tilt={-3} />
-          <div style={{ display: "flex", alignItems: "center", marginBottom: px(4) }}>
-            <Sticker bg="#FFFFFF" tilt={1}>
-              <span style={{ fontFamily: DISPLAY, fontSize: px(17), marginRight: px(4) }}>{String(d.bestRun)}</span>
-              <span>best run</span>
-            </Sticker>
-            <div
-              style={{
-                display: "flex",
-                marginLeft: px(8),
-                transform: "rotate(-8deg)",
-                border: `${px(3.5)}px solid ${C.red}`,
-                color: C.red,
-                background: "#FFFFFF",
-                fontSize: px(20),
-                lineHeight: 1,
-                padding: `${px(1)}px ${px(7)}px ${px(3)}px`,
-                ...display,
-              }}
-            >
-              {missed === 0 ? "Clean sheet" : `${missed} missed`}
-            </div>
-          </div>
-        </div>
+      <Shirt src={shirtSvg(kit)} size={shirt} big="" kit={kit} />
+      <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, marginLeft: 2 * u }}>
+        <span style={{ ...display, fontSize: 4 * u, lineHeight: 1 }}>{line.name}</span>
+        {line.club && <span style={{ fontSize: 2.2 * u, color: SLATE }}>{line.club}</span>}
       </div>
-    </div>
-  );
-}
-
-/** After someone's challenge: the verdict, then your page beside theirs. */
-function HeadToHead({ d, setter }: { d: ResultCardData; setter: Side }) {
-  const o = outcomeOf(d.right, setter.right);
-  const [lead, tail] = verdict(setter, o);
-  const pageWidth = (INNER - px(14)) / 2;
-  const sides: { side: Side; mine: boolean }[] = [
-    { side: { name: "You", right: d.right, kicks: d.kicks, bestRun: d.bestRun }, mine: true },
-    { side: setter, mine: false },
-  ];
-  return (
-    <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, paddingBottom: px(16) }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: px(10) }}>
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <div style={{ display: "flex", ...display, fontSize: px(38), lineHeight: 0.9 }}>
-            <span>{lead}</span>
-            <span style={{ color: C.royal, marginLeft: px(9) }}>{tail}</span>
-          </div>
-          <span style={{ fontSize: px(15), marginTop: px(4) }}>{calledLine(d.kicks.length, d.setSize)}</span>
-        </div>
-        <Sticker bg={o.kind === "lost" ? "#FFFFFF" : C.tealLight} tilt={-1.5}>
-          <span style={{ fontFamily: DISPLAY, fontSize: px(19), marginRight: px(4) }}>{outcomeLabel(o).split(" ")[0].toUpperCase()}</span>
-          <span>{outcomeLabel(o).split(" ").slice(1).join(" ")}</span>
-        </Sticker>
-      </div>
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: px(30) }}>
-        {sides.map(({ side, mine }) => (
-          <div
-            key={side.name}
-            style={{
-              position: "relative",
-              display: "flex",
-              flexDirection: "column",
-              width: pageWidth,
-              background: C.mist,
-              border: `${px(2)}px solid ${mine ? C.royal : C.navy}`,
-              padding: `${px(20)}px ${px(8)}px ${px(8)}px`,
-            }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                top: -px(12),
-                left: px(10),
-                display: "flex",
-                transform: "rotate(-3deg)",
-                background: mine ? C.tealLight : C.navy,
-                color: mine ? C.navy : "#FFFFFF",
-                border: `${px(2)}px solid ${C.navy}`,
-                boxShadow: `${px(2)}px ${px(2)}px 0 ${C.navy}`,
-                padding: `${px(1)}px ${px(9)}px`,
-                fontSize: px(16),
-                ...display,
-              }}
-            >
-              {side.name}
-            </div>
-            <Slots kicks={side.kicks} size={Math.max(d.kicks.length, setter.kicks.length)} width={pageWidth - 2 * px(2) - 2 * px(8)} height={px(150)} gap={px(2)} pad={px(1)} />
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: px(8) }}>
-              <ScoreSticker right={side.right} size={px(50)} ink={mine ? C.royal : C.navy} tilt={mine ? -3 : 2} word={false} />
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", fontSize: px(9), lineHeight: 1.4, ...label }}>
-                <span>{`${side.kicks.length - side.right} missed`}</span>
-                <span>{`run ${side.bestRun}`}</span>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/** The ticket: the dare and the link, the score to beat and the code on the stub. */
-function Ticket({ d }: { d: ResultCardData }) {
-  const challenge = Boolean(d.setter);
-  return (
-    <div
-      style={{
-        display: "flex",
-        marginTop: "auto",
-        border: `${px(2.5)}px solid ${C.navy}`,
-        boxShadow: `${px(4)}px ${px(4)}px 0 ${C.navy}`,
-        transform: "rotate(0.6deg)",
-      }}
-    >
-      <div style={{ display: "flex", flexDirection: "column", flexGrow: 1, padding: `${px(8)}px ${px(12)}px` }}>
-        <span style={{ fontSize: px(9), ...label }}>{`Admit one · Challenge · ${d.setSize} players`}</span>
-        <div style={{ display: "flex", ...display, fontSize: px(26), lineHeight: 0.95 }}>
-          <span>{challenge ? "Your turn." : "Think you know ball?"}</span>
-          <span style={{ color: C.royal, marginLeft: px(6) }}>{challenge ? "Pass it on" : "Settle it"}</span>
-        </div>
-        <span style={{ fontSize: px(9), color: "#3A4466", ...label }}>{d.link}</span>
-      </div>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          width: px(128),
-          flexShrink: 0,
-          background: C.teal,
-          borderLeft: `${px(2.5)}px dashed ${C.navy}`,
-          padding: px(6),
-        }}
-      >
-        <span style={{ fontSize: px(9), ...label }}>{challenge ? "Top score" : "To beat"}</span>
-        <span style={{ fontFamily: DISPLAY, fontSize: px(44), lineHeight: 0.85 }}>{String(d.toBeat.right)}</span>
-        <span style={{ display: "flex", marginTop: px(3), background: C.navy, color: "#FFFFFF", fontFamily: DISPLAY, fontSize: px(12), letterSpacing: "0.08em", padding: `${px(1)}px ${px(5)}px` }}>
-          {d.code}
-        </span>
+      <span style={{ fontFamily: DISPLAY, fontSize: 5 * u, lineHeight: 1, color: SLATE, marginRight: 2 * u }}>{line.value === null ? "?" : String(line.value)}</span>
+      <div style={{ display: "flex", width: 4.4 * u, justifyContent: "center" }}>
+        {line.mark !== null && (
+          // eslint-disable-next-line @next/next/no-img-element -- Satori draws <img>, not next/image
+          <img src={line.mark ? TICK : CROSS} width={3.6 * u} height={3.6 * u} alt="" />
+        )}
       </div>
     </div>
   );

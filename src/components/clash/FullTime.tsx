@@ -11,7 +11,7 @@ import { SheetValue, TeamSheet, type SheetRow } from "@/components/sheet/TeamShe
 import { Kick } from "./KickRow";
 import { ClashMasthead } from "./Masthead";
 import { MiniThree } from "./YourThree";
-import { banter, calledLine, outcomeLabel, outcomeOf, slots, toBeat, verdictLine, type Outcome, type Side } from "./result";
+import { banter, calledLine, cardMessage, outcomeLabel, outcomeOf, slots, toBeat, type Outcome, type Side, verdictLine } from "./result";
 
 // Full time, option D (picked 25 Oct 2026, docs/launch-plan.md step 6): the
 // sprint as a finished album page, a slot per player with a kick in every one
@@ -48,7 +48,7 @@ export function ClashFullTime({ code, statLabel, setSize, right, kicks, bestRun,
   const url = `${siteUrl.replace(/\/$/, "")}/clash/${code}`;
 
   const board = <ChallengeTable table={table} mine={mine} right={right} />;
-  const ticket = <Ticket code={code} url={url} setSize={setSize} right={right} table={table} challenge={Boolean(setter)} rival={setter ? null : rival} />;
+  const ticket = <Ticket code={code} url={url} setSize={setSize} right={right} missed={missed} table={table} challenge={Boolean(setter)} rival={setter ? null : rival} />;
 
   return (
     <main className="mx-auto w-full max-w-[560px] flex-1 px-4 pb-10 lg:max-w-[1180px] lg:px-12">
@@ -259,7 +259,7 @@ function ChallengeTable({ table, mine, right }: { table: Result[]; mine: Result 
 }
 
 /** The home page's ticket for sending the set on: the score to beat on the stub. */
-function Ticket({ code, url, setSize, right, table, challenge, rival }: { code: string; url: string; setSize: number; right: number; table: Result[]; challenge: boolean; rival: string | null }) {
+function Ticket({ code, url, setSize, right, missed, table, challenge, rival }: { code: string; url: string; setSize: number; right: number; missed: number; table: Result[]; challenge: boolean; rival: string | null }) {
   const beat = toBeat(table, right);
   return (
     <section className="grid rotate-[0.8deg] grid-cols-[minmax(0,1fr)_96px] border-[3px] border-navy bg-white shadow-[5px_5px_0_var(--color-navy)] lg:grid-cols-[minmax(0,1fr)_120px] lg:shadow-[7px_7px_0_var(--color-navy)]">
@@ -293,7 +293,7 @@ function Ticket({ code, url, setSize, right, table, challenge, rival }: { code: 
         <div className="mr-1.5">
           <ChallengeButton
             url={url}
-            text={`Think you know ball? Beat ${beat.right} in 60 seconds of Higher or Lower on iKnowBall.`}
+            text={cardMessage({ right, missed, toBeat: beat.right })}
             label={challenge ? "Pass it on" : rival ? `Send to ${rival}` : "Send it"}
             code={code}
             image={{ url: `/clash/${code}/card`, name: `iknowball-clash-${code}.png` }}
