@@ -154,10 +154,10 @@ export function FullTime(props: Props) {
               tag="Out of 10"
               rows={[
                 ...(recall
-                  ? [{ title: "1st half", text: `${FORMAT_NAME[recall.daily.format]} ${found}/${total}`, value: <SheetBadge rating={halfRating(1, recall.score)} /> }]
+                  ? [{ title: "First half", text: `${FORMAT_NAME[recall.daily.format]} ${found}/${total}`, value: <SheetBadge rating={halfRating(1, recall.score)} /> }]
                   : []),
                 ...(order
-                  ? [{ title: "2nd half", text: `${FORMAT_NAME[order.daily.format]} ${order.correct}/${order.slots.length}`, value: <SheetBadge rating={halfRating(2, order.score)} /> }]
+                  ? [{ title: "Second half", text: `${FORMAT_NAME[order.daily.format]} ${order.correct}/${order.slots.length}`, value: <SheetBadge rating={halfRating(2, order.score)} /> }]
                   : []),
                 { title: "Overall", text: "Last 30 days", value: <SheetBadge rating={rating} dark />, dark: true },
               ]}
@@ -301,9 +301,9 @@ function Squad({ recall, kit }: { recall: RecallReveal; kit: Kit | null }) {
   const found = recall.found.length;
   const team = fullTimeLineup(recall.found, recall.missed);
   return (
-    <section className="order-5 mt-6" aria-label={`1st half squad: ${found} found, ${recall.missed.length} got away`}>
+    <section className="order-5 mt-6" aria-label={`First half squad: ${found} found, ${recall.missed.length} got away`}>
       <div className="flex items-baseline justify-between border-b-2 border-navy pb-1.5">
-        <h2 className="label">1st half · the squad</h2>
+        <h2 className="label">First half · the squad</h2>
         <span className="label text-royal">
           {found} found · <span className="text-red-card">{recall.missed.length} got away</span>
         </span>
@@ -410,7 +410,7 @@ function SecondHalf({ order, kits }: { order: OrderReveal; kits?: Record<string,
   rows.push({ title: secondHalfLine(order, nameOf), value: <SheetValue className="text-teal-light">{order.correct}/{order.slots.length}</SheetValue>, dark: true });
   return (
     <section className="order-6 mt-6">
-      <TeamSheet name={`2nd half · ${FORMAT_NAME[order.daily.format]}`} tag={`${order.correct}/${order.slots.length}`} rows={rows} />
+      <TeamSheet name={`Second half · ${FORMAT_NAME[order.daily.format]}`} tag={`${order.correct}/${order.slots.length}`} rows={rows} />
     </section>
   );
 }

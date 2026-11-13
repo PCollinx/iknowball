@@ -97,7 +97,7 @@ async function TableScreen({ searchParams }: Pick<PageProps<"/daily/table">, "se
             view.players > 3 && <Programme view={view} me={day.me} parts={day.parts} />
           )}
           <p className="mt-3 text-[13px] text-slate lg:text-sm">
-            A day scores out of 100: Part 1 up to 60, Part 2 up to 40. Level scores go to less time used.
+            A day scores out of 100: the first half up to 60, the second half up to 40. Level scores go to less time used.
           </p>
         </section>
         <div className="mt-6 lg:hidden">{actions}</div>
@@ -256,7 +256,7 @@ function Row({ row, me, parts }: { row: TableRow; me: boolean; parts: number }) 
       </span>
       <span className="min-w-0 truncate font-semibold lg:text-[17px]">
         {me ? "You" : row.name}
-        {row.parts < parts && <span className={`ml-1.5 text-[11px] font-normal lg:text-[13px] ${me ? "text-white/80" : "text-slate"}`}>Part 1 only</span>}
+        {row.parts < parts && <span className={`ml-1.5 text-[11px] font-normal lg:text-[13px] ${me ? "text-white/80" : "text-slate"}`}>First half only</span>}
       </span>
       <span className={`hidden font-display text-[15px] uppercase lg:block ${me ? "text-white/80" : "text-slate"}`}>{row.club?.short_name ?? "–"}</span>
       <span className={`text-right text-[13px] tabular-nums lg:text-[15px] ${me ? "text-white/80" : "text-slate"}`}>{duration(row.seconds)}</span>

@@ -16,6 +16,9 @@ export const FORMAT_RULE: Record<DailyFormat, (n: number) => string> = {
   era: (n) => `${n} players. Tap when they were there.`,
 };
 
+/** What each part is called on screen: the Daily is one match in two halves (Collins, 13 Nov 2026). */
+export const halfName = (part: number) => (part === 1 ? "First half" : "Second half");
+
 /** Part 1 or Part 2 rounds that are tapped, not typed or ordered. */
 export const isPick = (format: DailyFormat) => format === "pick" || format === "era";
 

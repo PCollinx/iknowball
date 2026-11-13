@@ -25,8 +25,8 @@ const STOPS = [
     go: "Play",
     lead: "One go a day, the same for everyone, themed on the day's big fixture.",
     facts: [
-      "1st half: name every player who fits, or tap the right one of four",
-      "2nd half: put them in order, or pick when they were there",
+      "First half: name every player who fits, or tap the right one of four",
+      "Second half: put them in order, or pick when they were there",
       "Scored out of 100. New at midnight Nigeria time",
     ],
   },

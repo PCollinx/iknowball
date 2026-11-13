@@ -36,7 +36,7 @@ export function DailySticker({ daily, kits, closesAt, serverNow, variant = "home
   return (
     <StickerSlot
       caption={
-        daily ? (kickoff ? `No. 01 · The Daily · Part 1 of ${daily.parts.length}` : `No. 01 · The Daily · Issue ${daily.issue}`) : "No. 01 · The Daily"
+        daily ? (kickoff ? "No. 01 · The Daily · First half" : `No. 01 · The Daily · Issue ${daily.issue}`) : "No. 01 · The Daily"
       }
       aside={
         daily?.status === "done" ? (
@@ -82,7 +82,7 @@ export function DailySticker({ daily, kits, closesAt, serverNow, variant = "home
         {daily && (
           <dl className="grid grid-cols-3 px-1.5 py-2 text-center lg:py-3">
             <Stat value={daily.status === "done" ? `${daily.points}` : `${first?.answer_count ?? 0}`} label={daily.status === "done" ? "Of 100" : first ? FORMAT_NAME[first.format] : ""} />
-            <Stat value={`${second?.answer_count ?? "–"}`} label={second ? FORMAT_NAME[second.format] : "Part 2"} className="border-x-[1.5px] border-track" />
+            <Stat value={`${second?.answer_count ?? "–"}`} label={second ? FORMAT_NAME[second.format] : "Second half"} className="border-x-[1.5px] border-track" />
             <Stat value={clock(seconds)} label="Clock" />
           </dl>
         )}

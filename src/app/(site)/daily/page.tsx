@@ -7,6 +7,7 @@ import { FullTime } from "@/components/daily/FullTime";
 import { InOrder } from "@/components/daily/InOrder";
 import { PickRound } from "@/components/daily/PickRound";
 import { KickOff } from "@/components/daily/KickOff";
+import { halfName } from "@/components/daily/formats";
 import { Masthead, shortDate } from "@/components/daily/Masthead";
 import { getHomeClash } from "@/lib/clash/data";
 import { statOfDay } from "@/lib/clash/rules";
@@ -91,7 +92,7 @@ async function DailyScreen() {
           <FreeRecall
             key={view.attemptId}
             whistle={view.daily.part === 1 ? "half" : "full"}
-            partLabel={`Part ${view.daily.part}`}
+            partLabel={halfName(view.daily.part)}
             title={view.daily.title}
             prompt={view.daily.prompt}
             answerCount={view.daily.answer_count}
@@ -113,7 +114,7 @@ async function DailyScreen() {
           <PickRound
             key={view.attemptId}
             whistle={view.daily.part === 1 ? "half" : "full"}
-            partLabel={`Part ${view.daily.part}`}
+            partLabel={halfName(view.daily.part)}
             format={view.daily.format === "era" ? "era" : "pick"}
             title={view.daily.title}
             prompt={view.daily.prompt}
@@ -137,7 +138,7 @@ async function DailyScreen() {
           <InOrder
             key={view.attemptId}
             whistle={view.daily.part === 1 ? "half" : "full"}
-            partLabel={`Part ${view.daily.part}`}
+            partLabel={halfName(view.daily.part)}
             prompt={view.daily.prompt}
             attemptId={view.attemptId}
             dailyId={view.daily.id}
