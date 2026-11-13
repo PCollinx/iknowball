@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Arrow } from "@/components/icons/Icon";
 
 // The whistle's pieces (Collins, 7 Nov 2026, options A, B and C of
 // https://claude.ai/artifact/AGqN4hg5iztkWXatKnGwab): the ref's whistle and
@@ -39,7 +40,7 @@ export function StripButton({ onClick, children, disabled = false }: { onClick: 
       className="btn-teal btn-press flex items-center gap-4 px-2.5 pt-1 pb-0.5 font-display text-[17px] uppercase disabled:opacity-60"
     >
       <span>{children}</span>
-      <span aria-hidden="true">→</span>
+      <Arrow />
     </button>
   );
 }

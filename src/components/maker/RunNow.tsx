@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { runJobNow, type RunState } from "@/app/maker/actions";
 import type { JobName } from "@/lib/control/problems";
+import { Arrow } from "@/components/icons/Icon";
 
 /** Runs one scheduled job now. The match data job spends Highlightly calls, so it says so. */
 export function RunNow({ job, note }: { job: JobName; note?: string }) {
@@ -16,7 +17,7 @@ export function RunNow({ job, note }: { job: JobName; note?: string }) {
         className="btn-white btn-press flex items-center justify-between px-3.5 py-1.5 font-display text-lg uppercase disabled:opacity-50"
       >
         <span>{running ? "Running" : "Run now"}</span>
-        <span aria-hidden>→</span>
+        <Arrow />
       </button>
       {note && <p className="text-[13px] text-slate">{note}</p>}
       <p aria-live="polite" className="text-[13px] font-semibold">

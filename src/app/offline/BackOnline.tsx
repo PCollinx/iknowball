@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { Arrow } from "@/components/icons/Icon";
 
 /** The page you were after: the service worker's ?from=, kept to this site. */
 function wanted(): string {
@@ -24,7 +25,7 @@ export function BackOnline() {
         className="btn-teal btn-press mt-[18px] flex w-full items-center justify-between px-[18px] py-3.5 font-display text-[28px] uppercase lg:max-w-[420px]"
       >
         <span>Try again</span>
-        <span aria-hidden="true">→</span>
+        <Arrow />
       </button>
       <p className="label mt-3.5 text-slate">We&apos;ll reload by ourselves when you&apos;re back</p>
     </>

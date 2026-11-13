@@ -5,7 +5,7 @@ import { Logo } from "@/components/nav/SiteNav";
 import { JOB_NAMES } from "@/lib/control/problems";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addDays, gameDate } from "@/lib/time";
-import { ArrowUpRight } from "@/components/icons/ArrowUpRight";
+import { ArrowUpRight } from "@/components/icons/Icon";
 
 export { Chip, MAKER_MAIN, MakerHead, type ChipKind } from "./ui";
 

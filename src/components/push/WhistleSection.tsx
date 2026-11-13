@@ -7,6 +7,7 @@ import { useInstall } from "@/components/pwa/useInstall";
 import type { Pref } from "@/lib/push/send";
 import { WhistleSwitch } from "./Whistle";
 import { useWhistle } from "./useWhistle";
+import { Arrow } from "@/components/icons/Icon";
 
 // Option C of the whistle (Collins, 7 Nov 2026): the switches on Your shirt.
 // The Daily sends both its buzzes (09:00 when it's up, 20:00 if you haven't
@@ -55,7 +56,7 @@ export function WhistleSection({ guest }: { guest: boolean }) {
             className="btn-teal btn-press mt-3 flex w-full items-center justify-between px-3.5 py-2.5 font-display text-2xl uppercase disabled:opacity-60"
           >
             <span>Turn on the whistle</span>
-            <span aria-hidden="true">→</span>
+            <Arrow />
           </button>
         </>
       )}

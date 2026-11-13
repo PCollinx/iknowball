@@ -19,6 +19,7 @@ import { isTestSite } from "@/lib/daily/sample";
 import { gameDate, gameDateClosesAt } from "@/lib/time";
 import { KeepyUppy } from "@/components/loading/KeepyUppy";
 import { MatchLive } from "@/components/nav/MatchLive";
+import { Arrow } from "@/components/icons/Icon";
 
 export const metadata: Metadata = {
   title: "The Daily · iKnowBall",
@@ -64,7 +65,7 @@ async function DailyScreen() {
             className="btn-teal btn-press mt-6 flex items-center justify-between px-[18px] py-3.5 font-display text-[26px] uppercase"
           >
             <span>Kick off a Clash instead</span>
-            <span aria-hidden="true">→</span>
+            <Arrow />
           </Link>
         </main>
       );

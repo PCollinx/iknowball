@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/maker/data";
 import { allClubs, upcomingClashes } from "@/lib/teaser/data";
 import { FORMATS, MAX_SHIRTS, MIN_SHIRTS, parseTeaser, playerNames, teaserQuery, withHeadline, type Teaser } from "@/lib/teaser/layout";
 import { gameDate } from "@/lib/time";
+import { Arrow } from "@/components/icons/Icon";
 
 type Search = Record<string, string | string[] | undefined>;
 
@@ -156,7 +157,7 @@ async function TeaserMaker({ searchParams }: { searchParams: Promise<Search> }) 
 
             <button type="submit" className="btn-teal btn-press flex items-center justify-between px-4 py-2 font-display text-2xl uppercase">
               <span>Draw it</span>
-              <span aria-hidden="true">→</span>
+              <Arrow />
             </button>
           </form>
 
@@ -175,7 +176,7 @@ async function TeaserMaker({ searchParams }: { searchParams: Promise<Search> }) 
                 <div className="flex flex-wrap items-center gap-4">
                   <a href={`${src}&download=1`} className="btn-white btn-press flex items-center gap-4 px-4 py-1.5 font-display text-xl uppercase">
                     <span>Download PNG</span>
-                    <span aria-hidden="true">→</span>
+                    <Arrow />
                   </a>
                   <span className="text-sm text-slate">
                     {FORMATS[t.format].width} × {FORMATS[t.format].height}

@@ -14,6 +14,7 @@ import { TabRow } from "./TabRow";
 import { chaseLine, tableView, type TableView } from "@/lib/daily/table";
 import { kitOf } from "@/lib/profile/club";
 import { gameDateClosesAt } from "@/lib/time";
+import { Arrow } from "@/components/icons/Icon";
 
 // Today's table, "Podium and programme" (picked 23 Oct 2026): tabs for
 // everyone, your leagues and your club's fans; the top three in their club's
@@ -161,7 +162,7 @@ function YourLine({ view, rows, parts, tab }: { view: TableView<TableRow>; rows:
         <span className="label">Your line</span>
         <p className="mt-1 font-display text-[30px] leading-[0.9] uppercase">You&apos;re not on it yet</p>
         <Link href="/daily" className="btn-teal btn-press mt-3 inline-block px-3 py-1 font-display text-xl uppercase">
-          Play today&apos;s Daily →
+          Play today&apos;s Daily <Arrow />
         </Link>
       </div>
     );
@@ -271,7 +272,7 @@ function Actions({ playDate }: { playDate: string }) {
         <span>
           Back to the Daily
         </span>
-        <span aria-hidden="true">←</span>
+        <Arrow dir="left" />
       </Link>
       <div className="flex items-center justify-between border-t-2 border-navy pt-2.5 lg:border-0 lg:pt-0">
         <span className="label lg:sr-only">Next Daily in</span>

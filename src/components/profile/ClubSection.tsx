@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ShirtBack } from "@/components/daily/ShirtBack";
 import { kitOf, type Club } from "@/lib/profile/club";
 import { ClubPicker } from "./ClubPicker";
+import { Check } from "@/components/icons/Icon";
 
 type Props = {
   club: Club | null;
@@ -53,7 +54,7 @@ export function ClubSection({ club, asked, switchedThisSeason, nextSeason, clubs
       )}
       {saved && (
         <p role="status" className="mt-3 inline-block -rotate-2 border-2 border-navy bg-teal-light px-3 py-1 font-display text-xl uppercase shadow-[3px_3px_0_var(--color-navy)]">
-          Saved ✓ {saved === "Neutral" ? "Neutral it is" : `${saved} it is`}
+          Saved <Check /> {saved === "Neutral" ? "Neutral it is" : `${saved} it is`}
         </p>
       )}
       {!switchedThisSeason &&

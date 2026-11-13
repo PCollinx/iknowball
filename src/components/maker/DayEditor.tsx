@@ -10,6 +10,7 @@ import { FORMAT_NAME } from "@/components/daily/formats";
 import type { DailyFormat } from "@/lib/daily/score";
 import { addDays } from "@/lib/time";
 import { Chip, MAKER_MAIN, MakerHead } from "./ui";
+import { Arrow, Chevron } from "@/components/icons/Icon";
 
 export type EditorPart = {
   part: 1 | 2;
@@ -113,10 +114,10 @@ export function DayEditor({ date, today, status, parts, options }: Props) {
           tools={
             <>
               <a href={`/maker/day?date=${addDays(date, -1)}`} className="btn-white btn-press px-3 py-1 font-display text-[15px] uppercase">
-                ← {shortDate(addDays(date, -1))}
+                <Arrow dir="left" /> {shortDate(addDays(date, -1))}
               </a>
               <a href={`/maker/day?date=${addDays(date, 1)}`} className="btn-white btn-press px-3 py-1 font-display text-[15px] uppercase">
-                {shortDate(addDays(date, 1))} →
+                {shortDate(addDays(date, 1))} <Arrow />
               </a>
             </>
           }
@@ -188,7 +189,7 @@ export function DayEditor({ date, today, status, parts, options }: Props) {
               className="btn-teal btn-press flex flex-1 items-center justify-between gap-3 px-3 py-1.5 font-display text-xl whitespace-nowrap uppercase shadow-none! disabled:bg-track disabled:text-navy/60 sm:px-4 sm:text-2xl"
             >
               <span>{saving ? "Saving…" : "Save day"}</span>
-              <span aria-hidden="true">→</span>
+              <Arrow />
             </button>
           </div>
         </div>
@@ -335,7 +336,7 @@ function Options({ saved, options, inForm, onUse }: OptionsProps) {
           <span className="label">Other drafts</span> <span className="font-display text-lg leading-none">{options.length}</span>
         </span>
         <span aria-hidden="true" className="font-display text-lg leading-none group-open:rotate-180">
-          ▾
+          <Chevron />
         </span>
       </summary>
       <ul className="grid gap-0.5 border-t-2 border-navy bg-track">
@@ -357,7 +358,7 @@ function Options({ saved, options, inForm, onUse }: OptionsProps) {
               <Chip kind="ok">In the form</Chip>
             ) : (
               <button type="button" onClick={() => onUse(key, o)} className="btn-white btn-press flex items-center gap-2 px-2.5 py-1 font-display text-[15px] uppercase">
-                Use <span aria-hidden="true">→</span>
+                Use <Arrow />
               </button>
             )}
           </li>

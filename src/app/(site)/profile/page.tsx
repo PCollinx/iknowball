@@ -16,6 +16,7 @@ import { isAdmin } from "@/lib/maker/data";
 import { clubChoices, getProfileView } from "@/lib/profile/data";
 import { gameDate, seasonLabel, seasonOf } from "@/lib/time";
 import { KeepyUppy } from "@/components/loading/KeepyUppy";
+import { Arrow } from "@/components/icons/Icon";
 
 export const metadata: Metadata = {
   title: "Your shirt · iKnowBall",
@@ -65,7 +66,7 @@ async function ProfileScreen({ searchParams }: { searchParams: SearchParams }) {
         <EmptyPeg />
         <p className="mt-3.5 text-lg">Play today&apos;s Daily and your shirt goes up. No sign-up needed.</p>
         <Link href="/daily" className="btn-navy btn-press mt-3 inline-block px-4 py-2.5 font-display text-[22px] uppercase">
-          Play today&apos;s Daily →
+          Play today&apos;s Daily <Arrow />
         </Link>
         <section className="mt-7 border-t-4 border-double border-navy pt-3">
           <span className="label">Played before?</span>
@@ -124,7 +125,7 @@ async function ProfileScreen({ searchParams }: { searchParams: SearchParams }) {
             <p>Days, lists, Clash, jobs and the waitlist. Staff only.</p>
             <Link href="/maker" className="btn-navy btn-press mt-3 flex w-full items-center justify-between px-3.5 py-2.5 font-display text-2xl uppercase">
               <span>Open the maker</span>
-              <span aria-hidden="true">→</span>
+              <Arrow />
             </Link>
           </Section>
         )}

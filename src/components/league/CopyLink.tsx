@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Check } from "@/components/icons/Icon";
 
 /** The invite link in its dashed box: tap it to copy. */
 export function CopyLink({ url }: { url: string }) {
@@ -24,7 +25,7 @@ export function CopyLink({ url }: { url: string }) {
     >
       <span className="min-w-0 break-all">{url.replace(/^https?:\/\//, "")}</span>
       <span role="status" className="label shrink-0 text-[10px]">
-        {copied ? "Copied ✓" : "Tap to copy"}
+        {copied ? <>Copied <Check /></> : "Tap to copy"}
       </span>
     </button>
   );

@@ -1,6 +1,7 @@
 "use client";
 
 import { useFormStatus } from "react-dom";
+import { Arrow } from "@/components/icons/Icon";
 
 /** The main action of a form, as a sticker button: "teal" is the one the
  * Daily's kick-off uses (21 Oct 2026); "white" is the one full time uses
@@ -15,7 +16,7 @@ export function SubmitButton({ children, pendingText, tone = "teal" }: { childre
   return (
     <button type="submit" disabled={pending} className={`flex w-full items-center justify-between font-display uppercase ${look}`}>
       <span>{pending ? pendingText : children}</span>
-      <span aria-hidden="true">→</span>
+      <Arrow />
     </button>
   );
 }

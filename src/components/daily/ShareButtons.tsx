@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowUpRight } from "@/components/icons/ArrowUpRight";
+import { ArrowUpRight } from "@/components/icons/Icon";
 
 type Image = { url: string; name: string };
 

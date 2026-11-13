@@ -9,6 +9,7 @@ import { weekLabel } from "@/components/league/format";
 import { publicEnv } from "@/lib/env";
 import { getGlobalTable } from "@/lib/league/data";
 import { dayIndex, teamOfTheWeek, XI } from "@/lib/league/standing";
+import { Arrow } from "@/components/icons/Icon";
 
 export const metadata: Metadata = {
   title: "Team of the week · The League · iKnowBall",
@@ -66,7 +67,7 @@ async function Everyone() {
           )}
           {!me?.points && (
             <Link href="/daily" className="btn-navy btn-press justify-self-start px-4 py-2.5 font-display text-[22px] leading-none uppercase">
-              Play today&apos;s Daily →
+              Play today&apos;s Daily <Arrow />
             </Link>
           )}
         </aside>

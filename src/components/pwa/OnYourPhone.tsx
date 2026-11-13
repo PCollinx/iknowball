@@ -3,6 +3,7 @@
 import { Section } from "@/components/profile/Peg";
 import { IosSteps } from "./IosSteps";
 import { useInstall } from "./useInstall";
+import { Arrow } from "@/components/icons/Icon";
 
 // "On your phone" on Your shirt (step 16, option C, Collins, 30 Oct 2026):
 // always there, so whoever said "Not now" to the full-time ticket can still
@@ -35,7 +36,7 @@ export function OnYourPhone({ guest, icon }: { guest: boolean; icon: string }) {
       ) : (
         <button type="button" onClick={() => install()} className="btn-white btn-press mt-3 flex w-full items-center justify-between px-3.5 py-2.5 font-display text-2xl uppercase">
           <span>{phone ? "Add to home screen" : "Install iKnowBall"}</span>
-          <span aria-hidden="true">→</span>
+          <Arrow />
         </button>
       )}
     </Section>

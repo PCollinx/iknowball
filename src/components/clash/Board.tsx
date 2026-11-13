@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { SET_SIZE, SPRINT_SECONDS, STATS, type Stat } from "@/lib/clash/rules";
-import { ArrowUpRight } from "@/components/icons/ArrowUpRight";
+import { ArrowUpRight } from "@/components/icons/Icon";
 
 // The kick-off's header, option D "The screen splits" (picked 28 Oct 2026, mocks
 // at https://claude.ai/artifact/KXh9PT72Dgos7NwVyzuDXS): the ground's navy

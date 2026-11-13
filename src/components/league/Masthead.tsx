@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { KeepyUppy } from "@/components/loading/KeepyUppy";
+import { Arrow } from "@/components/icons/Icon";
 
 /** `back` turns the left link into "← Your leagues", for a league's own page. */
 export function LeagueMasthead({ right, back = false }: { right: string; back?: boolean }) {
   return (
     <div className="flex items-center justify-between gap-2 border-b border-navy pt-3.5 pb-2">
       <Link href="/league" className="label shrink-0">
-        {back ? "← Your leagues" : "The League"}
+        {back ? <><Arrow dir="left" /> Your leagues</> : "The League"}
       </Link>
       <span className="label truncate">{right}</span>
     </div>

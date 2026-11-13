@@ -3,6 +3,7 @@ import { LEAGUE_MAX } from "@/lib/league/data";
 import { RATING_DAYS, ratingColours } from "@/lib/profile/rating";
 import { PLACEMENT_DAYS, TIERS } from "@/lib/profile/stats";
 import { SOCIAL } from "@/lib/site";
+import { Arrow } from "@/components/icons/Icon";
 
 // 00 Home: the welcome (Collins, 11 Nov 2026, option B "The ground tour" of
 // https://claude.ai/artifact/25xt32QEwHBPensK55ddWX, after beta players kept
@@ -208,7 +209,7 @@ function PlayButton({ className = "" }: { className?: string }) {
       href="/daily"
       className={`btn-teal btn-press flex items-center justify-between gap-3 px-3 py-2.5 font-display text-[21px] leading-none uppercase lg:text-[26px] ${className}`}
     >
-      Play today&apos;s Daily <span aria-hidden="true">→</span>
+      Play today&apos;s Daily <Arrow />
     </Link>
   );
 }
@@ -277,7 +278,7 @@ function Tour() {
                   <span
                     className={`label mt-1 block text-[9.5px] ${i === 0 ? "text-navy" : "text-white"}`}
                   >
-                    {s.go} →
+                    {s.go} <Arrow />
                   </span>
                 </span>
               </span>

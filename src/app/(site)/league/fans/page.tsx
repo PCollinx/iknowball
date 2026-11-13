@@ -8,6 +8,7 @@ import { AwayEnd, Gate, RankToggle } from "@/components/league/Ranks";
 import { weekLabel } from "@/components/league/format";
 import { getFanbaseTable } from "@/lib/league/data";
 import { dayIndex } from "@/lib/league/standing";
+import { Arrow } from "@/components/icons/Icon";
 
 export const metadata: Metadata = {
   title: "The away end · The League · iKnowBall",
@@ -54,7 +55,7 @@ async function Fans() {
               <ShirtBack state="empty" num="?" />
               <span>
                 <span className="label block text-[10px] text-royal">Your club&apos;s fans</span>
-                <span className="block font-display text-2xl leading-none uppercase">Pick a club to play for its fans →</span>
+                <span className="block font-display text-2xl leading-none uppercase">Pick a club to play for its fans <Arrow /></span>
               </span>
             </Link>
           )}

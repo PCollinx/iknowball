@@ -3,6 +3,7 @@
 import { useActionState, useMemo, useState } from "react";
 import { saveList, type ListState } from "@/app/maker/actions";
 import { LIST_FORMATS, parseList, type ListKind } from "@/lib/curated/lists";
+import { Arrow } from "@/components/icons/Icon";
 
 // The lists (maker redesign, 31 Oct 2026): a menu of the lists on the left,
 // with their rows and the templates that use them; the chosen one's editor on
@@ -85,7 +86,7 @@ function ListEditor({ kind, text, uses, hidden }: { kind: ListKind; text: string
           className="btn-teal btn-press flex items-center justify-between gap-4 px-4 py-1.5 font-display text-xl uppercase disabled:opacity-50"
         >
           <span>{saving ? "Saving" : "Save list"}</span>
-          <span aria-hidden>→</span>
+          <Arrow />
         </button>
       </div>
       <div aria-live="polite" className="mt-2 text-sm">

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { SignalLost, VarBox } from "@/components/errors/Var";
 import { Brand } from "@/components/nav/SiteNav";
 import { BackOnline } from "./BackOnline";
+import {  } from "@/components/icons/Icon";
 
 // The offline screen (step 16, option A "VAR: no signal", Collins, 30 Oct
 // 2026): the service worker (src/app/sw.js) keeps a copy and shows it when a
@@ -33,7 +34,7 @@ export default function Offline() {
           </h1>
         </div>
         <div className="mt-[18px] lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mt-0 lg:self-center">
-          <VarBox strip="VAR · Connection lost" stripClass="bg-[#F4C21B]" status="○ Off air" verdict="Waiting" verdictClass="bg-slate">
+          <VarBox strip="VAR · Connection lost" stripClass="bg-[#F4C21B]" status="Off air" live={false} verdict="Waiting" verdictClass="bg-slate">
             <SignalLost label="No signal" />
           </VarBox>
         </div>

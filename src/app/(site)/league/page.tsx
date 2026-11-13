@@ -7,6 +7,7 @@ import { EmptyBoard, LeagueAlbum, TableStickers } from "@/components/league/Hub"
 import { LeagueLoading, LeagueMasthead } from "@/components/league/Masthead";
 import { weekLabel } from "@/components/league/format";
 import { getHub } from "@/lib/league/data";
+import { Arrow } from "@/components/icons/Icon";
 
 export const metadata: Metadata = {
   title: "The League · iKnowBall",
@@ -57,7 +58,7 @@ async function Hub() {
           <TableStickers everyone={hub.everyone} club={hub.club} fanbase={hub.fanbase} />
           {first ? (
             <Link href="/daily" className="btn-navy btn-press block p-2.5 text-center font-display text-2xl uppercase">
-              Play today&apos;s Daily →
+              Play today&apos;s Daily <Arrow />
             </Link>
           ) : (
             <div id="start" className="grid scroll-mt-4 grid-cols-[minmax(0,1fr)] gap-3.5">

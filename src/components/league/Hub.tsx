@@ -6,6 +6,7 @@ import { StartOne } from "@/components/league/StartOne";
 import type { Hub, HubLine } from "@/lib/league/data";
 import type { Club } from "@/lib/profile/club";
 import { kitOf } from "@/lib/profile/club";
+import { Triangle } from "@/components/icons/Icon";
 
 // The League hub, "D" (picked 26 Oct 2026, mocks at
 // https://claude.ai/artifact/Lcqpxhr7GQS8FvB5HWJZBV): an album page with a
@@ -20,7 +21,7 @@ export function MoveTag({ moved, className = "" }: { moved: number | null; class
   const down = (moved ?? 0) < 0;
   return (
     <span className={`label border-[1.5px] border-navy px-1 leading-snug ${up ? "bg-teal-light" : "bg-white"} ${down ? "text-red-card" : ""} ${className}`}>
-      {up ? `▲ ${moved}` : down ? `▼ ${-moved!}` : "–"}
+      {up ? <><Triangle /> {moved}</> : down ? <><Triangle dir="down" /> {-moved!}</> : "–"}
       <span className="sr-only">{up ? " places up today" : down ? " places down today" : " no move today"}</span>
     </span>
   );
@@ -153,7 +154,7 @@ export function TableStickers({ everyone, club, fanbase }: Pick<Hub, "everyone" 
           {everyone.position ? (
             <>
               {share ? `Top ${share}%` : `Of ${players}`}
-              {everyone.moved ? ` · ${everyone.moved > 0 ? "▲" : "▼"} ${Math.abs(everyone.moved)}` : ""}
+              {everyone.moved ? <> · <Triangle dir={everyone.moved > 0 ? "up" : "down"} /> {Math.abs(everyone.moved)}</> : ""}
             </>
           ) : (
             `${players} playing`

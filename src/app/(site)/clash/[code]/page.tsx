@@ -15,6 +15,7 @@ import { clubsByIds, getRating } from "@/lib/profile/data";
 import { KeepyUppy } from "@/components/loading/KeepyUppy";
 import { MatchLive } from "@/components/nav/MatchLive";
 import { whistleChallenge } from "@/lib/push/challenge";
+import { Arrow } from "@/components/icons/Icon";
 
 export const metadata: Metadata = {
   title: "Clash · iKnowBall",
@@ -48,7 +49,7 @@ async function ClashScreen({ params }: { params: Params }) {
           <p className="mt-3 text-lg">That link doesn&apos;t match a sprint. Check it, or start your own.</p>
           <Link href="/clash" className="btn-teal btn-press mt-5 flex w-full items-center justify-between px-[18px] py-3.5 font-display text-[28px] uppercase">
             <span>New sprint</span>
-            <span aria-hidden="true">→</span>
+            <Arrow />
           </Link>
         </main>
       );

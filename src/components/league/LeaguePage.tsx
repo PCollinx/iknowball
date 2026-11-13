@@ -6,6 +6,7 @@ import type { League, SeasonLine, TableLine } from "@/lib/league/data";
 import { formGuide, type FormDay } from "@/lib/league/standing";
 import { CLASH_MAX, COUNTED_DAYS } from "@/lib/league/week";
 import { kitOf } from "@/lib/profile/club";
+import { Triangle } from "@/components/icons/Icon";
 
 // A league's page, "D" (picked 26 Oct 2026, mocks at
 // https://claude.ai/artifact/Lcqpxhr7GQS8FvB5HWJZBV): the top three on a
@@ -87,7 +88,7 @@ function Move({ moved, since = "today" }: { moved: number | null; since?: string
   if (!moved) return null;
   return (
     <span className={`label text-[10px] ${moved > 0 ? "text-teal" : "text-red-card"}`}>
-      {moved > 0 ? "▲" : "▼"}
+      <Triangle dir={moved > 0 ? "up" : "down"} />
       {Math.abs(moved)}
       <span className="sr-only">
         {moved > 0 ? " up" : " down"} {since}

@@ -5,6 +5,7 @@ import { chooseClub, type FormState } from "@/app/(site)/profile/actions";
 import { SubmitButton } from "@/components/daily/SubmitButton";
 import { ShirtBack } from "@/components/daily/ShirtBack";
 import { kitOf, type Club } from "@/lib/profile/club";
+import { Check } from "@/components/icons/Icon";
 
 type Props = {
   clubs: Club[];
@@ -98,7 +99,7 @@ function Option({ value, label, club, picked, onPick }: { value: string; label: 
         aria-hidden="true"
         className="absolute top-0 right-0 hidden h-6 w-6 place-items-center bg-royal font-display text-base text-white group-has-checked:grid"
       >
-        ✓
+        <Check />
       </span>
     </label>
   );
