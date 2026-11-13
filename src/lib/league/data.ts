@@ -5,7 +5,7 @@ import { clubsByIds } from "@/lib/profile/data";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isTestSite } from "@/lib/daily/sample";
 import { gapLine } from "./standing";
-import { seasonStartsOn, seasonTable, seasonWeeks, type SeasonRow, type SeasonWeek } from "./season";
+import { fanSeasonTable, seasonStartsOn, seasonTable, seasonWeeks, type FanSeasonRow, type SeasonRow, type SeasonWeek } from "./season";
 import { claimMine } from "./waitlist";
 import { addDays, gameDate, gameDateClosesAt, matchweekBounds, seasonOf } from "@/lib/time";
 import { fanbaseTable, movement, weekTable, type FanbaseRow, type WeekPart, type WeekRow, type WeekSprint } from "./week";
@@ -96,12 +96,6 @@ async function weekSprints(week: Week, userIds?: string[]): Promise<(WeekSprint 
     if (!data || data.length < PAGE) break;
   }
   return rows.map((r) => ({ userId: r.user_id, right: r.right_count, playDate: gameDate(new Date(r.started_at)), clubId: r.profiles?.favourite_club_id ?? null }));
-}
-
-/** Everyone's week: Daily days plus Clash, with each player's club. */
-async function everyoneWeek(week: Week) {
-  const [parts, sprints] = await Promise.all([weekParts(week), weekSprints(week)]);
-  return { rows: weekTable(parts, week.startsOn, sprints), clubOf: new Map([...sprints, ...parts].map((p) => [p.userId, p.clubId])) };
 }
 
 /** Names and clubs, for the shirts on a table. */
@@ -312,38 +306,132 @@ export async function getHub(): Promise<Hub> {
   };
 }
 
-/** Everyone who played this week: the top of the table plus your own row. */
-export async function getGlobalTable(): Promise<{ week: Week; top: TableLine[]; mine: TableLine | null; myClub: Club | null; players: number }> {
-  const [me, week] = [await currentUserId(), currentWeek()];
-  const { rows } = await everyoneWeek(week);
+/** Which week a page shows: `pick` is the ?w= on the address, a finished
+ * week's number or "season"; anything else is this week. */
+export type Shown = { kind: "week"; n: number | null; week: Week; final: boolean } | { kind: "season"; weeks: number };
+
+function pickShown(strip: StripWeek[], week: Week, pick?: string): Shown {
+  const n = Number(pick);
+  const picked = Number.isInteger(n) ? strip.find((w) => w.n === n && !w.current) : undefined;
+  if (pick === "season" && strip.length) return { kind: "season", weeks: strip.length };
+  if (picked) return { kind: "week", n: picked.n, week: { startsOn: picked.startsOn, endsOn: picked.endsOn, today: picked.endsOn }, final: true };
+  return { kind: "week", n: strip.at(-1)?.current ? strip.at(-1)!.n : null, week, final: false };
+}
+
+/** Everyone's season in one read, for Team of the week and the away end
+ * (Collins, 13 Nov 2026): every week's table, this week's last, and each
+ * player's club. Before the season starts, just this week. */
+async function everyoneSeason() {
+  const week = currentWeek();
+  const weeks = seasonWeeks(seasonStart(week.today), week.today);
+  const range = { startsOn: weeks[0]?.startsOn ?? week.startsOn, endsOn: week.endsOn, today: week.today };
+  const [parts, sprints] = await Promise.all([weekParts(range), weekSprints(range)]);
+  const inWeek = <T extends { playDate: string }>(xs: T[], w: { startsOn: string; endsOn: string }) =>
+    xs.filter((x) => x.playDate >= w.startsOn && x.playDate <= w.endsOn);
+  const tables = weeks.map((w) => weekTable(inWeek(parts, w), w.startsOn, inWeek(sprints, w)));
+  const current = weeks.at(-1)?.startsOn === week.startsOn ? tables.at(-1)! : weekTable(inWeek(parts, week), week.startsOn, inWeek(sprints, week));
+  const clubOf = new Map([...sprints, ...parts].map((p) => [p.userId, p.clubId]));
+  return { week, weeks, tables, current, clubOf };
+}
+
+export type GlobalView = {
+  /** The week on show (this one, or a finished one). */
+  week: Week;
+  top: TableLine[];
+  mine: TableLine | null;
+  myClub: Club | null;
+  players: number;
+  strip: StripWeek[];
+  shown: Shown;
+  /** The season table's top and your own row, when the season is on show. */
+  season: SeasonLine[];
+  seasonPlace: number | null;
+};
+
+/** Team of the week: the top of a week's table plus your own row, the
+ * matchweek strip with your place each week, and the season table. */
+export async function getGlobalTable(pick?: string): Promise<GlobalView> {
+  const me = await currentUserId();
+  const { week, weeks, tables, current } = await everyoneSeason();
+  const strip: StripWeek[] = weeks.map((w, i) => ({
+    ...w,
+    position: (me && tables[i].find((r) => r.userId === me && r.points > 0)?.position) || null,
+    current: w.startsOn === week.startsOn,
+  }));
+  const shown = pickShown(strip, week, pick);
+  const rows = shown.kind === "week" && shown.final ? tables[shown.n! - 1] : current;
   const myRow = rows.find((r) => r.userId === me) ?? null;
-  const shown = rows.slice(0, GLOBAL_TOP);
-  const people = await players([...new Set([...shown.map((r) => r.userId), ...(me ? [me] : [])])]);
-  const top = withPlayers(shown, people, me);
+  const top = rows.slice(0, GLOBAL_TOP);
+
+  const seasonRows = seasonTable(tables);
+  const before = new Map(seasonTable(tables.slice(0, -1)).map((r) => [r.userId, r.position]));
+  const mySeason = seasonRows.find((r) => r.userId === me);
+  const seasonShown = shown.kind === "season" ? [...seasonRows.slice(0, GLOBAL_TOP), ...(mySeason && mySeason.position > GLOBAL_TOP ? [mySeason] : [])] : [];
+
+  const people = await players([...new Set([...top.map((r) => r.userId), ...seasonShown.map((r) => r.userId), ...(me ? [me] : [])])]);
+  const season: SeasonLine[] = seasonShown.map((r) => ({
+    ...r,
+    ...(people.get(r.userId) ?? { userId: r.userId, name: guestName(r.userId), club: null }),
+    mine: r.userId === me,
+    moved: tables.length > 1 && before.has(r.userId) ? before.get(r.userId)! - r.position : null,
+  }));
   return {
-    week,
-    top,
+    week: shown.kind === "week" ? shown.week : week,
+    top: withPlayers(top, people, me),
     mine: myRow && myRow.position > GLOBAL_TOP ? withPlayers([myRow], people, me)[0] : null,
     myClub: me ? (people.get(me)?.club ?? null) : null,
     players: rows.length,
+    strip,
+    shown,
+    season,
+    seasonPlace: mySeason?.position ?? null,
   };
 }
 
 export type FanbaseLine = FanbaseRow & { club: Club; mine: boolean };
+export type FanSeasonLine = FanSeasonRow & { club: Club; mine: boolean };
 
-/** Clubs ranked by their fans' average week. */
-export async function getFanbaseTable(): Promise<{ week: Week; rows: FanbaseLine[]; myClub: Club | null; myClubFans: number; minFans: number }> {
-  const [me, week] = [await currentUserId(), currentWeek()];
-  const { rows, clubOf } = await everyoneWeek(week);
-  const ranked = fanbaseTable(rows.map((r) => ({ points: r.points, clubId: clubOf.get(r.userId) ?? null })), FANBASE_MIN);
+export type FanbaseView = {
+  week: Week;
+  rows: FanbaseLine[];
+  myClub: Club | null;
+  myClubFans: number;
+  minFans: number;
+  strip: StripWeek[];
+  shown: Shown;
+  season: FanSeasonLine[];
+  seasonPlace: number | null;
+};
+
+/** The away end: clubs ranked by their fans' average week, the strip with
+ * your club's place each week, and the season (each week's average added up). */
+export async function getFanbaseTable(pick?: string): Promise<FanbaseView> {
+  const me = await currentUserId();
+  const { week, weeks, tables, current, clubOf } = await everyoneSeason();
   const myClubId = me ? ((await players([me])).get(me)?.club?.id ?? null) : null;
-  const clubs = await clubsByIds([...new Set([...ranked.map((r) => r.clubId), ...(myClubId ? [myClubId] : [])])]);
+  const fanWeek = (rows: WeekRow[]) => fanbaseTable(rows.map((r) => ({ points: r.points, clubId: clubOf.get(r.userId) ?? null })), FANBASE_MIN);
+  const fanTables = tables.map(fanWeek);
+  const strip: StripWeek[] = weeks.map((w, i) => ({
+    ...w,
+    position: (myClubId && fanTables[i].find((r) => r.clubId === myClubId)?.position) || null,
+    current: w.startsOn === week.startsOn,
+  }));
+  const shown = pickShown(strip, week, pick);
+  const rows = shown.kind === "week" && shown.final ? tables[shown.n! - 1] : current;
+  const ranked = shown.kind === "week" && shown.final ? fanTables[shown.n! - 1] : fanWeek(current);
+  const fanSeason = fanSeasonTable(fanTables);
+  const seasonRows = shown.kind === "season" ? fanSeason : [];
+  const clubs = await clubsByIds([...new Set([...ranked.map((r) => r.clubId), ...seasonRows.map((r) => r.clubId), ...(myClubId ? [myClubId] : [])])]);
   return {
-    week,
+    week: shown.kind === "week" ? shown.week : week,
     rows: ranked.map((r) => ({ ...r, club: clubs.get(r.clubId)!, mine: r.clubId === myClubId })).filter((r) => r.club),
     myClub: myClubId ? (clubs.get(myClubId) ?? null) : null,
     myClubFans: myClubId ? rows.filter((r) => clubOf.get(r.userId) === myClubId).length : 0,
     minFans: FANBASE_MIN,
+    strip,
+    shown,
+    season: seasonRows.map((r) => ({ ...r, club: clubs.get(r.clubId)!, mine: r.clubId === myClubId })).filter((r) => r.club),
+    seasonPlace: (myClubId && fanSeason.find((r) => r.clubId === myClubId)?.position) || null,
   };
 }
 

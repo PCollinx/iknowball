@@ -4,7 +4,10 @@ import { Suspense } from "react";
 import { connection } from "next/server";
 import { ShirtBack } from "@/components/daily/ShirtBack";
 import { LeagueLoading, LeagueMasthead } from "@/components/league/Masthead";
+import { SeasonTable } from "@/components/league/LeaguePage";
 import { AwayEnd, Gate, RankToggle } from "@/components/league/Ranks";
+import { ShownWeek } from "@/components/league/ShownWeek";
+import { WeekStrip } from "@/components/league/WeekStrip";
 import { weekLabel } from "@/components/league/format";
 import { getFanbaseTable } from "@/lib/league/data";
 import { dayIndex } from "@/lib/league/standing";
@@ -17,18 +20,22 @@ export const metadata: Metadata = {
 
 const WEEKDAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-export default function FansPage() {
+type Search = Promise<{ w?: string }>;
+
+export default function FansPage({ searchParams }: { searchParams: Search }) {
   return (
     <Suspense fallback={<LeagueLoading />}>
-      <Fans />
+      <Fans searchParams={searchParams} />
     </Suspense>
   );
 }
 
 // Reads the session and the week, so it renders per request.
-async function Fans() {
+async function Fans({ searchParams }: { searchParams: Search }) {
   await connection();
-  const { week, rows, myClub, myClubFans, minFans } = await getFanbaseTable();
+  const { w } = await searchParams;
+  const { week, rows, myClub, myClubFans, minFans, strip, shown, season, seasonPlace } = await getFanbaseTable(w);
+  const live = shown.kind === "week" && !shown.final;
   const placed = rows.some((r) => r.mine);
   return (
     <main className="mx-auto w-full max-w-[560px] flex-1 px-4 pb-10 lg:max-w-[1040px]">
@@ -37,7 +44,9 @@ async function Fans() {
         <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-[22px]">
           <div>
             <span className="label mt-3.5 block text-[10px] text-royal lg:mt-[18px] lg:text-[11px]">
-              {rows.length} {rows.length === 1 ? "club" : "clubs"} on the table · {WEEKDAYS[dayIndex(week.startsOn, week.today)]}
+              {shown.kind === "season"
+                ? "The season"
+                : `${rows.length} ${rows.length === 1 ? "club" : "clubs"} on the table${live ? ` · ${WEEKDAYS[dayIndex(week.startsOn, week.today)]}` : ""}`}
             </span>
             <h1 className="mt-0.5 font-display text-[42px] leading-[0.86] uppercase lg:text-[50px]">
               The away end
@@ -48,8 +57,16 @@ async function Fans() {
             <div className="mt-3.5">
               <RankToggle on="fans" />
             </div>
+            <WeekStrip
+              base="/league/fans"
+              weeks={strip}
+              selected={shown.kind === "season" ? "season" : (shown.n ?? 0)}
+              seasonPlace={seasonPlace}
+              whose="your club was"
+            />
+            <ShownWeek shown={shown} today={week.today} />
           </div>
-          {myClub && !placed && <Gate club={myClub} fans={myClubFans} minFans={minFans} />}
+          {live && myClub && !placed && <Gate club={myClub} fans={myClubFans} minFans={minFans} />}
           {!myClub && (
             <Link href="/profile" className="grid grid-cols-[44px_minmax(0,1fr)] items-center gap-2.5 border-2 border-dashed border-[#8E9BD6] p-3 hover:bg-mist">
               <ShirtBack state="empty" num="?" />
@@ -61,11 +78,24 @@ async function Fans() {
           )}
         </div>
         <div className="mt-[22px] lg:mt-[18px]">
-          {rows.length ? (
+          {shown.kind === "season" ? (
+            season.length ? (
+              <SeasonTable
+                rows={season.map((r) => ({ ...r, userId: String(r.clubId), name: r.club.name, seconds: 0, moved: null }))}
+                captainId=""
+                who="Club"
+                note="Each week a club gets through the gate, its fans' average (out of 600) counts, added up. Level on points, more weeks won goes higher."
+              />
+            ) : (
+              <p className="border-y-4 border-double border-navy py-3 text-lg">No club has got through the gate yet this season.</p>
+            )
+          ) : rows.length ? (
             <AwayEnd rows={rows} />
           ) : (
             <p className="border-y-4 border-double border-navy py-3 text-lg">
-              Nobody&apos;s through the gate yet: no club has {minFans} fans playing this week. Get your lot on it.
+              {live
+                ? `Nobody's through the gate yet: no club has ${minFans} fans playing this week. Get your lot on it.`
+                : `No club had ${minFans} fans playing that week.`}
             </p>
           )}
         </div>

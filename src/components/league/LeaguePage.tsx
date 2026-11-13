@@ -188,7 +188,19 @@ const FLOOR = "label grid items-end gap-2 bg-navy px-2 pt-1.5 pb-[5px] text-[10p
 const FRAME = "border-x-2 border-b-2 border-navy";
 
 /** The season so far: every week's points added up, with weeks played and won. */
-export function SeasonTable({ rows, captainId }: { rows: SeasonLine[]; captainId: string }) {
+/** `who` heads the name column and `note` sits under the table: the away end
+ * lists clubs, with their own rule (13 Nov 2026). */
+export function SeasonTable({
+  rows,
+  captainId,
+  who = "Player",
+  note = `Each week's points, out of ${WEEK_MAX}, added up. Level on points, more weeks won goes higher.`,
+}: {
+  rows: SeasonLine[];
+  captainId: string;
+  who?: string;
+  note?: string;
+}) {
   if (!rows.length) return null;
   const cols = "grid-cols-[20px_32px_minmax(0,1fr)_30px_30px_58px] lg:grid-cols-[30px_40px_minmax(0,1fr)_60px_60px_80px]";
   return (
@@ -196,7 +208,7 @@ export function SeasonTable({ rows, captainId }: { rows: SeasonLine[]; captainId
       <div className={`${FLOOR} ${cols}`}>
         <span>#</span>
         <span />
-        <span>Player</span>
+        <span>{who}</span>
         <span className="text-right">Wks</span>
         <span className="text-right">Won</span>
         <span className="text-right">Pts</span>
@@ -219,7 +231,7 @@ export function SeasonTable({ rows, captainId }: { rows: SeasonLine[]; captainId
           </li>
         ))}
       </ol>
-      <p className="mt-2 text-xs text-slate lg:text-[13px]">Each week&apos;s points, out of {WEEK_MAX}, added up. Level on points, more weeks won goes higher.</p>
+      <p className="mt-2 text-xs text-slate lg:text-[13px]">{note}</p>
     </section>
   );
 }

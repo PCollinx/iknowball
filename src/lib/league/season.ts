@@ -1,5 +1,5 @@
 import { addDays, matchweekBounds } from "@/lib/time";
-import type { WeekRow } from "./week";
+import type { FanbaseRow, WeekRow } from "./week";
 
 // The season's table (Collins, 9 Nov 2026, option B of
 // https://claude.ai/artifact/W8WzfBiMFE3F6Lq31H8kec): every matchweek's
@@ -65,4 +65,33 @@ export function seasonTable(weeks: WeekRow[][]): SeasonRow[] {
     ...r,
     position: rows.findIndex((x) => x.points === r.points && x.won === r.won && x.seconds === r.seconds) + 1,
   }));
+}
+
+export type FanSeasonRow = {
+  clubId: number;
+  /** Each week's average, added up. */
+  points: number;
+  /** Weeks through the gate. */
+  played: number;
+  /** Weeks finished top of the away end. */
+  won: number;
+  position: number;
+};
+
+/** The away end's season (Collins, 13 Nov 2026): every week a club got
+ * through the gate, its fans' average counts; the averages are added up.
+ * Level on points, more weeks won goes higher. */
+export function fanSeasonTable(weeks: FanbaseRow[][]): FanSeasonRow[] {
+  const byClub = new Map<number, Omit<FanSeasonRow, "position">>();
+  for (const week of weeks) {
+    for (const r of week) {
+      const c = byClub.get(r.clubId) ?? { clubId: r.clubId, points: 0, played: 0, won: 0 };
+      c.points += r.average;
+      c.played += 1;
+      if (r.position === 1) c.won += 1;
+      byClub.set(r.clubId, c);
+    }
+  }
+  const rows = [...byClub.values()].sort((a, b) => b.points - a.points || b.won - a.won);
+  return rows.map((r) => ({ ...r, position: rows.findIndex((x) => x.points === r.points && x.won === r.won) + 1 }));
 }

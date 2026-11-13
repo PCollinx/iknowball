@@ -9,11 +9,21 @@ import type { StripWeek } from "@/lib/league/data";
 // https://claude.ai/artifact/W8WzfBiMFE3F6Lq31H8kec): a box a week across the
 // full width of the screen, scrolling sideways back to week 1, each with your
 // place that week (royal when you won it). Season is pinned at the right end.
-// It opens with the week you're looking at in the middle.
+// It opens with the week you're looking at in the middle. A league's page,
+// Team of the week and the away end each have one (13 Nov 2026).
 
-type Props = { code: string; weeks: StripWeek[]; selected: number | "season"; /** Your place on the season table, if you're on it. */ seasonPlace: number | null };
+type Props = {
+  /** The page it sits on: "/league/IKB7QX", "/league/everyone", "/league/fans". */
+  base: string;
+  weeks: StripWeek[];
+  selected: number | "season";
+  /** Your place on the season table (your club's, on the away end), if you're on it. */
+  seasonPlace: number | null;
+  /** Whose place each box shows, for screen readers. */
+  whose?: string;
+};
 
-export function WeekStrip({ code, weeks, selected, seasonPlace }: Props) {
+export function WeekStrip({ base, weeks, selected, seasonPlace, whose = "you were" }: Props) {
   const strip = useRef<HTMLOListElement>(null);
   useEffect(() => {
     const el = strip.current;
@@ -22,7 +32,6 @@ export function WeekStrip({ code, weeks, selected, seasonPlace }: Props) {
   }, [selected]);
   if (!weeks.length) return null;
 
-  const base = `/league/${code}`;
   return (
     <nav aria-label="Matchweeks" className="-mx-4 mt-4 border-y-2 border-navy lg:mx-0 lg:mt-5">
       <ol ref={strip} className="flex snap-x gap-[5px] overflow-x-auto px-4 py-2 lg:px-0">
@@ -43,7 +52,7 @@ export function WeekStrip({ code, weeks, selected, seasonPlace }: Props) {
                   className={`block font-display text-[22px] leading-[1.15] ${w.current && !on ? "text-teal" : w.position === 1 && !on ? "text-royal" : ""}`}
                 >
                   {w.position ?? "–"}
-                  <span className="sr-only">{w.position ? ` · you were ${w.position}` : " · you didn't score"}</span>
+                  <span className="sr-only">{w.position ? ` · ${whose} ${w.position}` : " · no place that week"}</span>
                 </span>
               </Link>
             </li>

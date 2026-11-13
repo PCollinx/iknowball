@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LAUNCH_WEEK, seasonStartsOn, seasonTable, seasonWeeks } from "./season";
+import { fanSeasonTable, LAUNCH_WEEK, seasonStartsOn, seasonTable, seasonWeeks } from "./season";
 import type { WeekRow } from "./week";
 
 const row = (userId: string, points: number, position: number, seconds = 100): WeekRow => ({
@@ -58,5 +58,26 @@ describe("seasonTable", () => {
       ["c", 2],
       ["a", 3],
     ]);
+  });
+});
+
+describe("fanSeasonTable", () => {
+  const fan = (clubId: number, average: number, position: number) => ({ clubId, fans: 30, average, position });
+
+  it("adds up each week's average for the weeks a club got through the gate", () => {
+    const table = fanSeasonTable([[fan(1, 300, 1), fan(2, 250, 2)], [fan(2, 320, 1)]]);
+    expect(table).toEqual([
+      { clubId: 2, points: 570, played: 2, won: 1, position: 1 },
+      { clubId: 1, points: 300, played: 1, won: 1, position: 2 },
+    ]);
+  });
+
+  it("puts more weeks won higher when level, and shares a place when level on both", () => {
+    const table = fanSeasonTable([[fan(1, 300, 1), fan(2, 200, 2), fan(3, 200, 3)], [fan(2, 300, 1), fan(3, 300, 2), fan(1, 200, 3)]]);
+    expect(table.map((r) => [r.clubId, r.position])).toEqual([[1, 1], [2, 1], [3, 3]]);
+  });
+
+  it("is empty with no club through the gate", () => {
+    expect(fanSeasonTable([[], []])).toEqual([]);
   });
 });
