@@ -24,7 +24,7 @@ import { ExtraTime } from "./ExtraTime";
 import { ShareCard } from "./ShareCard";
 import { FORMAT_NAME, ordinal } from "./formats";
 import type { PathClub } from "./KitTrail";
-import { shareCardData } from "./share";
+import { shareCardData, shareMessage } from "./share";
 import { ShirtBack, shirtName, type Kit } from "./ShirtBack";
 import { Arrow, Check, Cross } from "@/components/icons/Icon";
 
@@ -59,6 +59,8 @@ type Props = {
   fanOf: string | null;
   /** The fixture's kit for the answer shirts. */
   kit: Kit | null;
+  /** Each club in its own kit, for the share card. */
+  fixtureKits: [Kit | undefined, Kit | undefined];
   /** Your own shirt: your club's kit, or the neutral one. */
   myKit: Kit;
   /** Kits of the clubs in a career path In Order, by club name. */
@@ -86,18 +88,9 @@ export function FullTime(props: Props) {
   const total = recall ? found + recall.missed.length : 0;
   const seconds = props.me?.seconds ?? null;
   const card = recall
-    ? shareCardData({ issue, playDate, recall, order, points, topPercent, siteUrl, fanOf: props.fanOf, kit, rating, seconds })
+    ? shareCardData({ playDate, recall, order, points, siteUrl, name: props.me?.name ?? null, kits: props.fixtureKits })
     : null;
-  const shareText = [
-    `iKnowBall · The Daily No. ${String(issue).padStart(3, "0")}`,
-    recall?.daily.title ?? "",
-    `${points}/100`,
-    recall ? `${"■".repeat(found)}${"□".repeat(total - found)} ${found}/${total}` : "",
-    order ? `${FORMAT_NAME[order.daily.format]} ${order.correct}/${order.slots.length}` : "",
-    `Beat me: ${siteUrl.replace(/\/$/, "")}/daily`,
-  ]
-    .filter(Boolean)
-    .join("\n");
+  const shareText = card ? shareMessage(card, siteUrl) : `Beat me: ${siteUrl.replace(/\/$/, "")}/daily`;
 
   return (
     <main className="mx-auto w-full max-w-[560px] flex-1 px-4 pb-10 lg:max-w-[1280px] lg:px-8">

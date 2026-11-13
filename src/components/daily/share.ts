@@ -1,81 +1,76 @@
-import type { OrderReveal, RecallReveal } from "@/lib/daily/data";
-import { fitWidth } from "./FixtureTitle";
+import type { DailyRow, OrderReveal, RecallReveal } from "@/lib/daily/data";
+import type { DailyFormat } from "@/lib/daily/score";
+import { headlineFixture } from "./fixture";
+import { shortDate } from "./Masthead";
 import type { Kit } from "./ShirtBack";
-import { duration } from "./clock";
-import { FORMAT_NAME } from "./formats";
 
 // The share card's content and sizing, shared by the card on the full-time
 // screen and the 1080 x 1080 image drawn on the server.
+//
+// "The dare, match first" (A3 of https://claude.ai/artifact/PSd1sa2JUbFcgU4LEzcgTq,
+// Collins, 13 Nov 2026): made for someone who's never played. Today's match,
+// the score in a box beside the two clubs' shirts with question marks, both
+// halves' questions, and "Can you beat 40?" with the site. No issue number,
+// rating, round names or answers.
 
 export type ShareCardData = {
-  issue: number;
+  /** "Thu 12 Nov". */
   dateLabel: string;
-  title: string;
-  prompt: string;
-  /** The day score out of 100: the big number and the dare. */
+  /** "Man United v Norwich". */
+  fixture: string;
+  /** Each half's question, written for someone who's never played. */
+  first: string;
+  second: string | null;
+  /** The day score out of 100. */
   points: number;
-  /** Part 1's answers found, as numbered and empty shirts. */
-  found: number;
-  total: number;
-  /** Both parts' time. */
-  timeUsed: string;
-  /** Each half, then today's place; `accent` prints in teal. */
-  stats: { value: string; key: string; accent?: boolean }[];
+  /** Who scored it; null says "I scored" (a guest has no name worth printing). */
+  name: string | null;
+  /** Each club in its own kit; undefined is royal. */
+  kits: [Kit | undefined, Kit | undefined];
   host: string;
-  /** Your club, when it's in the fixture. */
-  fanOf?: string | null;
-  kit?: Kit | null;
-  /** Your overall rating out of 10, today included. */
-  rating: number | null;
 };
 
-export function stampText(short: number): string {
-  if (short === 0) return "Full squad";
-  return short <= 3 ? `${short} short. So close.` : `${short} short of a full squad`;
+/** The how-to-play tail a prompt ends on, which the card leaves out. */
+const HOW_TO = /^(Tap|Earliest|Oldest|First at)\b/;
+
+/** What each round asks, as the card prints it: the prompt without its
+ * how-to-play tail, and for the tapped and ordered rounds the count first
+ * ("5 players: when were they at Arsenal?"). Free Recall's prompt already
+ * says how many. */
+export function cardQuestion(daily: Pick<DailyRow, "format" | "prompt" | "answer_count">): string {
+  const sentences = daily.prompt.trim().match(/[^.?!]+[.?!]*/g)?.map((s) => s.trim()) ?? [daily.prompt.trim()];
+  const kept = sentences.length > 1 ? sentences.filter((s, i) => i === 0 || !HOW_TO.test(s)) : sentences;
+  const text = kept.join(" ");
+  const lead: Partial<Record<DailyFormat, string>> = {
+    pick: `${daily.answer_count} to pick`,
+    era: `${daily.answer_count} players`,
+    in_order: `${daily.answer_count} to put in order`,
+  };
+  const count = lead[daily.format];
+  return count ? `${count}: ${text.charAt(0).toLowerCase()}${text.slice(1)}` : text;
 }
 
-// Card text runs 90cqw wide; Big Shoulders 900 sets about 0.48em a character
-// across a whole line, spaces included.
-const LINE_EM = 0.48;
+// Big Shoulders 900 capitals run about 0.55em a character across a line,
+// spaces included; the fixture sits on one line 88cqw wide.
+const FIXTURE_EM = 0.55;
 
-/** Lines the fixture wraps to at a size in cqw, on a card 90cqw wide. */
-export function linesAt(fixture: string, size: number): number {
-  // Wide letters (W, M) run past the average, so wrap on a safe width.
-  const room = 90 / (size * LINE_EM * 1.15);
-  let lines = 1;
-  let used = 0;
-  for (const word of fixture.split(" ")) {
-    const need = used ? used + 1 + word.length : word.length;
-    if (need > room && used) {
-      lines++;
-      used = word.length;
-    } else used = need;
-  }
-  return lines;
-}
-
-/** The fixture's size in cqw: as big as 10.5, one line if it fits at 7 or
- * more, else two lines at most, never wider than the card. */
+/** The fixture's size in cqw: 6.4 at most, smaller when a long one needs it to stay on one line. */
 export function fixtureSize(fixture: string): number {
-  let size = Math.min(10.5, 90 / fitWidth(fixture));
-  while (size > 7 && linesAt(fixture, size) > 1) size -= 0.25;
-  while (size > 4 && linesAt(fixture, size) > 2) size -= 0.25;
-  return size;
+  return Math.min(6.4, 88 / (fixture.length * FIXTURE_EM));
 }
+
+/** "collinsCFC scored", or "I scored" without a name. */
+export const scoredBy = (name: string | null) => (name ? `${name} scored` : "I scored");
 
 export type ShareInput = {
-  issue: number;
   playDate: string;
   recall: RecallReveal;
   order: OrderReveal | null;
   points: number;
-  topPercent: number | null;
   siteUrl: string;
-  fanOf: string | null;
-  kit: Kit | null;
-  rating: number | null;
-  /** Time used on both parts, from today's table; Part 1's alone if missing. */
-  seconds: number | null;
+  /** Your name on today's table; a guest's "Guest AB12" is left off. */
+  name: string | null;
+  kits: [Kit | undefined, Kit | undefined];
 };
 
 /** "Mon 19 Oct 2026", the same on the server and in the browser. */
@@ -90,27 +85,20 @@ export function longDate(playDate: string): string {
 }
 
 /** What the card shows for a finished day. */
-export function shareCardData({ issue, playDate, recall, order, points, topPercent, siteUrl, fanOf, kit, rating, seconds }: ShareInput): ShareCardData {
-  const found = recall.found.length;
-  const total = found + recall.missed.length;
+export function shareCardData({ playDate, recall, order, points, siteUrl, name, kits }: ShareInput): ShareCardData {
   return {
-    issue,
-    dateLabel: longDate(playDate),
-    title: recall.daily.title,
-    prompt: recall.daily.prompt,
+    dateLabel: shortDate(playDate),
+    fixture: headlineFixture(recall.daily.title),
+    first: cardQuestion(recall.daily),
+    second: order ? cardQuestion(order.daily) : null,
     points,
-    found,
-    total,
-    timeUsed: duration(seconds ?? recall.timeUsedSeconds),
-    // Each half, then where the day sits (the full-time mix, 22 Oct 2026).
-    stats: [
-      { value: `${found}/${total}`, key: FORMAT_NAME[recall.daily.format] },
-      ...(order ? [{ value: `${order.correct}/${order.slots.length}`, key: FORMAT_NAME[order.daily.format] }] : []),
-      { value: topPercent ? `Top ${topPercent}%` : "Early", key: "Today", accent: true },
-    ],
+    name: name && !name.startsWith("Guest ") ? name : null,
+    kits,
     host: new URL(siteUrl).host,
-    fanOf,
-    kit,
-    rating,
   };
+}
+
+/** The message that goes with the card. */
+export function shareMessage(d: Pick<ShareCardData, "fixture" | "points">, siteUrl: string): string {
+  return [`I got ${d.points}/100 on today's iKnowBall: ${d.fixture}.`, `Can you beat ${d.points}?`, `${siteUrl.replace(/\/$/, "")}/daily`].join("\n");
 }

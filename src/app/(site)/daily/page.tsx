@@ -48,7 +48,7 @@ async function DailyScreen() {
   const [supporter, kit, kits, pathKits] = await Promise.all([
     userId && (view.kind === "kickoff" || view.kind === "fulltime") ? getSupporter(userId) : null,
     kitForFixture(fixtureTitle(view)),
-    view.kind === "kickoff" && !view.before ? kitsForFixture(view.daily.title) : ([undefined, undefined] as const),
+    view.kind === "kickoff" && !view.before ? kitsForFixture(view.daily.title) : view.kind === "fulltime" ? kitsForFixture(view.recall?.daily.title ?? null) : ([undefined, undefined] as const),
     pathClubs(careerClubNames(view)),
   ]);
 
@@ -175,6 +175,7 @@ async function DailyScreen() {
           clubChoices={choices}
           featuredClubs={choices ? featuredClubs(choices, title) : []}
           kit={kit}
+          fixtureKits={[kits[0], kits[1]]}
           myKit={kitOf(supporter?.club ?? null)}
           orderKits={pathKits}
           rating={rating}
