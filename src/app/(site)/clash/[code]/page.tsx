@@ -7,11 +7,11 @@ import { ClashKickOff } from "@/components/clash/KickOff";
 import { ClashMasthead } from "@/components/clash/Masthead";
 import { Sprint } from "@/components/clash/Sprint";
 import type { Kit } from "@/components/daily/ShirtBack";
-import { getClashView, isWeekBest, weekAfter } from "@/lib/clash/data";
+import { getClashView, weekAfter, weekBestBefore } from "@/lib/clash/data";
 import { STATS } from "@/lib/clash/rules";
 import { publicEnv } from "@/lib/env";
 import { kitOf } from "@/lib/profile/club";
-import { clubsByIds, getRating } from "@/lib/profile/data";
+import { clubsByIds } from "@/lib/profile/data";
 import { KeepyUppy } from "@/components/loading/KeepyUppy";
 import { MatchLive } from "@/components/nav/MatchLive";
 import { whistleChallenge } from "@/lib/push/challenge";
@@ -101,7 +101,7 @@ async function ClashScreen({ params }: { params: Params }) {
       // A mate's full time tells the setter (once per mate per set), after the page is served.
       const { set, run } = view;
       after(() => whistleChallenge(set, run));
-      const [rating, weekBest, week] = await Promise.all([getRating(view.run.user_id), isWeekBest(view.run), weekAfter(view.run)]);
+      const [before, week] = await Promise.all([weekBestBefore(view.run), weekAfter(view.run)]);
       return (
         <ClashFullTime
           code={view.set.code}
@@ -110,10 +110,10 @@ async function ClashScreen({ params }: { params: Params }) {
           right={view.run.right_count}
           kicks={view.run.kicks}
           bestRun={view.run.best_run}
+          items={view.set.items}
           table={view.table}
           siteUrl={publicEnv().NEXT_PUBLIC_SITE_URL}
-          rating={rating}
-          weekBest={weekBest}
+          before={before}
           week={week}
           rival={view.rival}
         />

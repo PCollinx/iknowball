@@ -115,3 +115,32 @@ export function ChallengeBoard({ code, setter, right, statLabel }: { code: strin
     </section>
   );
 }
+
+/** Full time (Collins, 14 Nov 2026, option B of
+ * https://claude.ai/artifact/SZra89xUEceo8bAE28aHcH): your score on the
+ * light-teal end against the other side's on the navy end: your best earlier
+ * this week on a solo sprint ("–" on the week's first), or the setter's on a
+ * mate's challenge. */
+export function ResultBoard({ statLabel, right, other, footer }: { statLabel: string; right: number; other: { name: string; right: number | null }; footer: string }) {
+  return (
+    <section className={BOARD} aria-label={`You ${right}, ${other.name} ${other.right ?? "none yet"}`}>
+      <div className={ROW}>
+        <span className="label truncate text-[11px] text-teal-light">{statLabel}</span>
+        <span className="bg-teal px-2 pt-1 font-display text-lg leading-none uppercase">FT</span>
+      </div>
+      <div className={`${SPLIT} h-[130px]`}>
+        <End />
+        <span className="absolute top-3 left-3.5 flex flex-col gap-1 text-navy lg:left-7">
+          <span className="label text-[10px] lg:text-[11px]">You</span>
+          <span className="font-display text-[84px] leading-[0.8] tabular-nums lg:text-[104px]">{right}</span>
+        </span>
+        <Burst>v</Burst>
+        <span className="absolute top-3 right-3.5 flex max-w-[42%] flex-col items-end gap-1 lg:right-7">
+          <span className="label max-w-full truncate text-[10px] text-teal-light lg:text-[11px]">{other.name}</span>
+          <span className="font-display text-[84px] leading-[0.8] tabular-nums lg:text-[104px]">{other.right ?? "–"}</span>
+        </span>
+      </div>
+      <p className="px-3.5 py-2 text-xs lg:px-5 lg:text-sm">{footer}</p>
+    </section>
+  );
+}

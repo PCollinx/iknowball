@@ -1,24 +1,22 @@
 import { startSprint } from "@/app/(site)/clash/actions";
 import { SubmitButton } from "@/components/daily/SubmitButton";
 import { ordinal } from "@/components/daily/formats";
-import { RatingBadge } from "@/components/profile/RatingBadge";
-import type { Result } from "@/lib/clash/data";
-import { sprintLine } from "@/lib/clash/rules";
-import { AlbumPage } from "./Album";
-import { ChallengeButton } from "./ChallengeButton";
+import { MatchStats, statRow } from "@/components/fulltime/MatchStats";
 import { TellMe } from "@/components/push/TellMe";
-import { SheetValue, TeamSheet, type SheetRow } from "@/components/sheet/TeamSheet";
-import { Kick } from "./KickRow";
+import type { Result } from "@/lib/clash/data";
+import { sprintLine, type Item } from "@/lib/clash/rules";
+import { ResultBoard } from "./Board";
+import { ChallengeButton } from "./ChallengeButton";
 import { ClashMasthead } from "./Masthead";
-import { MiniThree } from "./YourThree";
-import { banter, calledLine, cardMessage, outcomeLabel, outcomeOf, slots, toBeat, type Outcome, type Side, verdictLine } from "./result";
+import { calledLine, cardMessage, costlyCalls, outcomeOf, toBeat, type Side, verdictLine } from "./result";
 
-// Full time, option D (picked 25 Oct 2026, docs/launch-plan.md step 6): the
-// sprint as a finished album page, a slot per player with a kick in every one
-// you called, the score stuck on it; on someone's challenge, your page beside
-// theirs. Then the stickers, the challenge's table and the ticket to send it
-// on. Phone is one column; desktop puts the album on the left. The result
-// image (/clash/{code}/card) draws the same page.
+// Full time, option B (Collins, 14 Nov 2026, from
+// https://claude.ai/artifact/SZra89xUEceo8bAE28aHcH): the screen splits into
+// your score against the other side's (your best earlier this week on a solo
+// sprint, the setter on a mate's challenge), what it did to your three, match
+// stats, the calls that cost you with both numbers, then the ticket to send
+// it on and a new sprint. Phone is one column; desktop puts the result left
+// and what's next right. The result image (/clash/{code}/card) is its own design.
 
 type Props = {
   code: string;
@@ -27,196 +25,109 @@ type Props = {
   right: number;
   kicks: string;
   bestRun: number;
+  /** The set's players in order, numbers included: the calls that cost you. */
+  items: Item[];
   /** Everyone's go at this set, best first. */
   table: Result[];
   siteUrl: string;
-  /** Your overall rating out of 10. */
-  rating: number | null;
-  /** This is your best sprint of its matchweek. */
-  weekBest: boolean;
+  /** Your best sprint this week before this one, if any. */
+  before: Omit<Side, "name"> | null;
   /** What this sprint did to your three this week. */
   week: { three: number[]; added: number; replaced: number | null };
   /** On a rematch you started: the mate it's for. */
   rival?: string | null;
 };
 
-export function ClashFullTime({ code, statLabel, setSize, right, kicks, bestRun, table, siteUrl, rating, weekBest, week, rival = null }: Props) {
+export function ClashFullTime({ code, statLabel, setSize, right, kicks, bestRun, items, table, siteUrl, before, week, rival = null }: Props) {
   const mine = table.find((r) => r.mine) ?? null;
   const setter = table.find((r) => r.setter && !r.mine) ?? null;
-  const outcome = setter ? outcomeOf(right, setter.right) : null;
   const missed = kicks.length - right;
   const url = `${siteUrl.replace(/\/$/, "")}/clash/${code}`;
-
-  const board = <ChallengeTable table={table} mine={mine} right={right} />;
-  const ticket = <Ticket code={code} url={url} setSize={setSize} right={right} missed={missed} table={table} challenge={Boolean(setter)} rival={setter ? null : rival} />;
+  const other: Side | null = setter ?? (before ? { name: "Your best", ...before } : null);
+  const calls = costlyCalls(items, kicks);
+  const most = Math.max(kicks.length, other?.kicks.length ?? 0, 1);
+  // With nothing to compare against (the week's first sprint), their side reads "–".
+  const row = (label: string, mine: number, theirs: (o: Side) => number) =>
+    statRow(label, mine, other ? theirs(other) : 0, most, { theirs: other ? String(theirs(other)) : "–" });
 
   return (
     <main className="mx-auto w-full max-w-[560px] flex-1 px-4 pb-10 lg:max-w-[1180px] lg:px-12">
       <ClashMasthead left={setter ? "Clash · Challenge · Full time" : "Clash · Full time"} right={code} />
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_440px] lg:items-start lg:gap-14">
         <div className="min-w-0">
-          <section className="pt-3.5 lg:pt-6">
-            {setter && (
-              <span className="label text-[10px] text-royal lg:text-[11px]">
-                {setter.name}&apos;s challenge · {statLabel}
-              </span>
-            )}
-            <h1 className="mt-1 font-display text-[46px] leading-[0.84] uppercase lg:text-[72px] lg:leading-[0.82]">
-              Full time
-            </h1>
-            <p className="mt-1.5 text-sm lg:mt-2 lg:text-base">
-              {calledLine(kicks.length, setSize)}.{setter && outcome && <> {verdictLine(setter, outcome)}</>}
-            </p>
-          </section>
-
-          {setter ? (
-            <section className="mt-7.5 grid grid-cols-2 gap-3 lg:mt-9 lg:gap-7" aria-label="Head to head">
-              <SidePage side={{ name: "You", right, kicks, bestRun }} size={Math.max(kicks.length, setter.kicks.length)} mine />
-              <SidePage side={setter} size={Math.max(kicks.length, setter.kicks.length)} />
-            </section>
-          ) : (
-            <AlbumPage label={statLabel} className="mt-7.5 lg:mt-9">
-              <KickAlbum kicks={kicks} size={kicks.length} large />
-              <div className="mt-3.5 flex items-end justify-between gap-3 lg:mt-5">
-                <ScoreSticker right={right} />
-                <span className="mb-2.5 -rotate-[8deg] border-4 border-red-card bg-white/90 px-2 pt-0.5 pb-1 font-display text-xl leading-none min-[380px]:text-2xl whitespace-nowrap text-red-card uppercase lg:text-[30px]">
-                  {missed === 0 ? "Clean sheet" : `${missed} missed`}
-                </span>
-              </div>
-            </AlbumPage>
-          )}
-
-          <Stickers outcome={outcome} bestRun={bestRun} weekBest={weekBest} rating={rating} />
-          <section className="mt-4 grid gap-2 lg:mt-5" aria-label="Your three this week">
-            <p className={`w-fit rotate-[0.8deg] border-2 border-navy px-2.5 py-1 text-sm font-semibold shadow-[3px_3px_0_var(--color-navy)] lg:text-[15px] ${week.added > 0 ? "bg-teal-light" : "bg-white"}`}>
-              {sprintLine(right, week)}
-            </p>
-            <div className="max-w-60">
-              <MiniThree three={week.three} />
-            </div>
-          </section>
-          <p className="mt-3.5 font-display text-base leading-tight uppercase lg:mt-4 lg:text-2xl lg:leading-none">
-            <span className="text-red-card">“</span>
-            {banter(right, setter, mine)}
-            <span className="text-red-card">”</span>
+          <h1 className="sr-only">Full time</h1>
+          <ResultBoard
+            statLabel={statLabel}
+            right={right}
+            other={{ name: setter ? setter.name : "Your best this week", right: other ? other.right : null }}
+            footer={`${calledLine(kicks.length, setSize)}.`}
+          />
+          <p className="mt-4 text-[15px] leading-snug lg:text-base">
+            {setter && <>{verdictLine(setter, outcomeOf(right, setter.right))} </>}
+            {sprintLine(right, week)}
           </p>
+
+          <MatchStats
+            className="mt-5 lg:mt-6"
+            sides={["You", setter ? setter.name : "Your best"]}
+            against="slate"
+            rows={[
+              row("Right", right, (o) => o.right),
+              row("Missed", missed, (o) => o.kicks.length - o.right),
+              row("Best run", bestRun, (o) => o.bestRun),
+              row("Calls made", kicks.length, (o) => o.kicks.length),
+            ]}
+          />
+
+          {calls.length > 0 && (
+            <section className="mt-7" aria-label="The calls that cost you">
+              <div className="flex items-baseline justify-between border-b-2 border-red-card pb-1.5">
+                <h2 className="font-display text-2xl leading-none uppercase lg:text-[26px]">The calls that cost you</h2>
+                <span className="label text-red-card">{missed} missed</span>
+              </div>
+              <ol>
+                {calls.map((c, i) => (
+                  <li key={i} className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 border-b border-track py-2">
+                    <span className="min-w-0">
+                      <span className="block truncate font-display text-[17px] leading-tight text-red-card uppercase lg:text-lg">{c.fewer.name}</span>
+                      <span className="text-xs lg:text-[13px]">{c.fewer.value}</span>
+                    </span>
+                    <span className="label text-[9px] text-slate">v</span>
+                    <span className="min-w-0 text-right">
+                      <span className="block truncate font-display text-[17px] leading-tight uppercase lg:text-lg">{c.more.name}</span>
+                      <span className="text-xs lg:text-[13px]">{c.more.value} · more</span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )}
         </div>
 
-        <aside className="mt-6.5 grid gap-6.5 lg:mt-0 lg:gap-7.5 lg:pt-6">
-          {setter ? (
-            <>
-              {board}
-              {ticket}
-            </>
-          ) : (
-            <>
-              <div className="grid gap-4">
-                {ticket}
-                {/* Your own set: "Tell me when they play" (the whistle, option B). */}
-                <TellMe />
-              </div>
-              {board}
-            </>
-          )}
-          <div className="grid gap-3">
-            <form action={startSprint}>
-              <SubmitButton tone="navy" pendingText="Picking…">
-                {setter ? "Your own sprint" : "New sprint"}
-              </SubmitButton>
-            </form>
-          </div>
+        <aside className="mt-7 grid gap-6 lg:mt-0">
+          <Ticket code={code} url={url} right={right} missed={missed} table={table} challenge={Boolean(setter)} rival={setter ? null : rival} />
+          {/* Your own set: "Tell me when they play" (the whistle, option B). */}
+          {!setter && <TellMe />}
+          {(setter || table.length > 1) && <ChallengeTable table={table} mine={mine} />}
+          <form action={startSprint}>
+            <SubmitButton tone="navy" pendingText="Picking…">
+              {setter ? "Your own sprint" : "New sprint"}
+            </SubmitButton>
+          </form>
         </aside>
       </div>
     </main>
   );
 }
 
-/** A page of the album: a kick in a slot for every call made (Collins, 25 Oct
- * 2026: not the whole set, which nobody gets through in a minute). */
-function KickAlbum({ kicks, size, large = false }: { kicks: string; size: number; large?: boolean }) {
-  const right = [...kicks].filter((k) => k === "1").length;
-  return (
-    <ol
-      className={`grid grid-cols-8 ${large ? "gap-1.25 lg:gap-1.5" : "gap-0.5 lg:gap-1"}`}
-      aria-label={`${right} scored, ${kicks.length - right} missed`}
-    >
-      {slots(kicks, Math.max(1, size)).map((k, i) => (
-        <li
-          key={i}
-          className={`grid aspect-square place-items-center ${k === null ? "border-[1.5px] border-dashed border-[#8E9BD6] bg-[#E3E8FF]" : large ? "p-[3px]" : "lg:p-0.5"}`}
-        >
-          {k !== null && <Kick scored={k === "1"} />}
-        </li>
-      ))}
-    </ol>
-  );
-}
-
-function ScoreSticker({ right, small = false, ink = "text-royal", tilt = "-rotate-3" }: { right: number; small?: boolean; ink?: string; tilt?: string }) {
-  return (
-    <span
-      className={`inline-flex items-baseline gap-2 border-navy bg-white font-display uppercase ${tilt} ${
-        small
-          ? "border-2 px-2 pt-0.5 pb-1 shadow-[3px_3px_0_var(--color-navy)] lg:border-[2.5px] lg:px-3 lg:pt-1 lg:pb-1.5 lg:shadow-[4px_4px_0_var(--color-navy)]"
-          : "border-[2.5px] px-3.5 pt-1.5 pb-2 shadow-[5px_5px_0_var(--color-navy)]"
-      }`}
-    >
-      <span className={`leading-[0.8] tabular-nums ${ink} ${small ? "text-[44px] lg:text-[64px]" : "text-[84px] lg:text-[112px]"}`}>{right}</span>
-      <span className={small ? "hidden text-xl lg:inline" : "text-[26px] lg:text-[32px]"}>right</span>
-    </span>
-  );
-}
-
-/** One side of the head-to-head: a player's own page, their name on a tag. */
-function SidePage({ side, size, mine = false }: { side: Side; size: number; mine?: boolean }) {
-  const missed = side.kicks.length - side.right;
-  return (
-    <div className={`relative min-w-0 border-2 bg-mist px-[7px] pt-5.5 pb-2 lg:px-3.5 lg:pt-7 lg:pb-3.5 ${mine ? "border-royal" : "border-navy"}`}>
-      <span
-        className={`absolute -top-[11px] left-2 max-w-[85%] -rotate-3 truncate border-2 border-navy px-2 py-px font-display text-[15px] uppercase shadow-[2px_2px_0_var(--color-navy)] lg:-top-3.5 lg:left-3.5 lg:px-2.5 lg:text-xl lg:shadow-[3px_3px_0_var(--color-navy)] ${mine ? "bg-teal-light" : "bg-navy text-white"}`}
-      >
-        {side.name}
-      </span>
-      <KickAlbum kicks={side.kicks} size={size} />
-      <div className="mt-2 flex items-end justify-between gap-1 lg:mt-3">
-        <ScoreSticker right={side.right} small ink={mine ? "text-royal" : "text-navy"} tilt={mine ? "-rotate-3" : "rotate-2"} />
-        <span className="label text-right text-[9px] leading-[1.4] lg:text-[11px] lg:leading-normal">
-          {missed} missed
-          <br />
-          run {side.bestRun}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-/** The result, the best run, the week and the rating, on a team sheet (Collins, 7 Nov 2026; were tilted stickers). */
-function Stickers({ outcome, bestRun, weekBest, rating }: { outcome: Outcome | null; bestRun: number; weekBest: boolean; rating: number | null }) {
-  const rows: SheetRow[] = [
-    ...(outcome ? [{ title: "Result", value: <SheetValue className={outcome.kind === "lost" ? "text-red-card" : "text-royal"}>{outcomeLabel(outcome)}</SheetValue> }] : []),
-    { title: "Best run", value: <SheetValue>{bestRun}</SheetValue> },
-    ...(weekBest ? [{ title: "This week", value: <SheetValue className="text-teal">Your best</SheetValue> }] : []),
-    {
-      title: "Rating",
-      text: "Last 30 days",
-      value: <RatingBadge rating={rating} square className="size-10 border-2 border-white text-[19px] lg:size-12 lg:text-[22px]" />,
-      dark: true,
-    },
-  ];
-  return <TeamSheet name="Your sprint" tag="Full time" rows={rows} className="mt-4 lg:mt-5.5" />;
-}
-
-const WAITING = 3;
-
-/** Everyone who played the set, as the home page's scoreboard: your place on navy, the rows beside it. */
-function ChallengeTable({ table, mine, right }: { table: Result[]; mine: Result | null; right: number }) {
+/** Everyone who played the set: your place on navy, the rows beside it. */
+function ChallengeTable({ table, mine }: { table: Result[]; mine: Result | null }) {
   const position = mine ? table.indexOf(mine) + 1 : null;
   const top = table.slice(0, 10);
   const rows = mine && !top.includes(mine) ? [...top, mine] : top;
-  const waiting = Math.max(0, WAITING - rows.length);
   return (
     <section>
-      <span className="label text-[10px] lg:text-[11px]">This challenge{table.length > 1 ? ` · ${table.length} played` : ""}</span>
+      <span className="label text-[10px] lg:text-[11px]">This challenge · {table.length} played</span>
       <div className="mt-1.5 grid grid-cols-[96px_minmax(0,1fr)] border-2 border-navy lg:grid-cols-[120px_minmax(0,1fr)]">
         <div className="flex flex-col justify-between gap-2 bg-navy p-2.5 text-white lg:p-3">
           <span className="label text-[10px] text-teal-light lg:text-[11px]">Your place</span>
@@ -236,74 +147,35 @@ function ChallengeTable({ table, mine, right }: { table: Result[]; mine: Result 
               <b className="font-display tabular-nums">{r.right}</b>
             </li>
           ))}
-          {!rows.length && (
-            <li className="-mx-1.5 flex justify-between bg-mist px-1.5 py-1 font-semibold lg:-mx-2 lg:px-2">
-              <span>
-                <b className="font-display">1</b>&nbsp; You
-              </span>
-              <b className="font-display tabular-nums">{right}</b>
-            </li>
-          )}
-          {Array.from({ length: rows.length ? waiting : WAITING - 1 }, (_, i) => (
-            <li key={`wait-${i}`} className="flex justify-between border-b border-dashed border-track py-1 text-slate lg:py-[5px]">
-              <span>
-                <b className="font-display">{Math.max(rows.length, 1) + i + 1}</b>&nbsp; Waiting on a mate
-              </span>
-              <b className="font-display">–</b>
-            </li>
-          ))}
         </ol>
       </div>
     </section>
   );
 }
 
-/** The home page's ticket for sending the set on: the score to beat on the stub. */
-function Ticket({ code, url, setSize, right, missed, table, challenge, rival }: { code: string; url: string; setSize: number; right: number; missed: number; table: Result[]; challenge: boolean; rival: string | null }) {
+/** The ticket for sending the set on, said plainly (Collins, 14 Nov 2026): the score to beat on the stub. */
+function Ticket({ code, url, right, missed, table, challenge, rival }: { code: string; url: string; right: number; missed: number; table: Result[]; challenge: boolean; rival: string | null }) {
   const beat = toBeat(table, right);
+  const whose = beat.name === "You" ? "your" : `${beat.name}'s`;
+  const heading = challenge ? "Pass it on" : rival ? `Send it to ${rival}` : "Challenge a friend";
+  const line = rival ? `New set, same stat. One go to beat your ${beat.right}.` : `Same players, same order. One go to beat ${whose} ${beat.right}.`;
   return (
-    <section className="grid rotate-[0.8deg] grid-cols-[minmax(0,1fr)_96px] border-[3px] border-navy bg-white shadow-[5px_5px_0_var(--color-navy)] lg:grid-cols-[minmax(0,1fr)_120px] lg:shadow-[7px_7px_0_var(--color-navy)]">
+    <section className="grid grid-cols-[minmax(0,1fr)_92px] border-[3px] border-navy bg-white shadow-[5px_5px_0_var(--color-navy)] lg:grid-cols-[minmax(0,1fr)_112px] lg:shadow-[7px_7px_0_var(--color-navy)]">
       <div className="min-w-0 py-3 pr-3 pl-3.5 lg:py-3.5 lg:pr-3.5 lg:pl-4.5">
-        <div className="label flex justify-between gap-2 text-[10px] lg:text-[11px]">
-          <span>Admit one · Challenge</span>
-          <span className="hidden text-royal min-[380px]:inline">{setSize} players</span>
-        </div>
-        <h2 className="mt-1 mb-1.5 font-display text-[34px] leading-[0.9] uppercase lg:mt-1.5 lg:mb-2 lg:text-[40px]">
-          {challenge ? (
-            <>
-              Pass it on
-            </>
-          ) : rival ? (
-            <>
-              For {rival}
-            </>
-          ) : (
-            <>
-              Settle it
-            </>
-          )}
-        </h2>
-        <p className="mb-3 text-[13px] lg:text-[15px]">
-          {challenge
-            ? `Same link, same ${setSize} players. Whoever plays next has to beat ${beat.right}.`
-            : rival
-              ? `A new set of ${setSize}, same stat. ${rival} has to beat your ${beat.right}.`
-              : `Your mates get the same ${setSize} players in the same order, one go each.`}
-        </p>
+        <h2 className="font-display text-[32px] leading-[0.9] uppercase lg:text-[38px]">{heading}</h2>
+        <p className="mt-1.5 mb-3 text-[13px] lg:text-[15px]">{line}</p>
         <div className="mr-1.5">
           <ChallengeButton
             url={url}
             text={cardMessage({ right, missed, toBeat: beat.right })}
-            label={challenge ? "Pass it on" : rival ? `Send to ${rival}` : "Send it"}
-            code={code}
+            label={challenge ? "Pass it on" : rival ? `Send to ${rival}` : "Send to a friend"}
             image={{ url: `/clash/${code}/card`, name: `iknowball-clash-${code}.png` }}
           />
         </div>
       </div>
-      <div className="flex flex-col items-center justify-between gap-2 border-l-[3px] border-dashed border-navy bg-teal px-1.5 py-3 text-navy lg:px-2 lg:py-4">
+      <div className="flex flex-col items-center justify-center gap-1 border-l-[3px] border-dashed border-navy bg-teal px-1.5 py-3 text-navy lg:px-2">
         <span className="label text-[9px] lg:text-[10px]">To beat</span>
         <span className="font-display text-[60px] leading-[0.85] tabular-nums lg:text-[76px]">{beat.right}</span>
-        <span className="max-w-full truncate bg-navy px-1.5 py-0.5 font-display text-[13px] tracking-[0.08em] text-white uppercase lg:text-[15px]">{beat.name}</span>
       </div>
     </section>
   );

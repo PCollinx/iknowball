@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Result } from "@/lib/clash/data";
-import { calledLine, cardMessage, fitSlots, outcomeLabel, outcomeOf, resultCardData, slots, toBeat, verdict, verdictLine } from "./result";
+import { calledLine, cardMessage, costlyCalls, fitSlots, outcomeLabel, outcomeOf, resultCardData, slots, toBeat, verdict, verdictLine } from "./result";
 
 const row = (name: string, right: number, extra: Partial<Result> = {}): Result => ({ name, right, bestRun: 0, kicks: "", mine: false, setter: false, ...extra });
 
@@ -92,5 +92,20 @@ describe("resultCardData", () => {
     expect(cardMessage({ right: 14, missed: 5, toBeat: 14 })).toBe(
       "14 right, 5 missed in 60 seconds of Higher or Lower on iKnowBall. Same players, one go. Can you beat 14?",
     );
+  });
+});
+
+describe("costlyCalls", () => {
+  const items = [
+    { name: "Henry", club_id: 1, value: 175 },
+    { name: "Shearer", club_id: 2, value: 148 },
+    { name: "Agüero", club_id: 3, value: 184 },
+    { name: "Lampard", club_id: 4, value: 147 },
+  ];
+  it("lists each miss with the lower number first", () => {
+    expect(costlyCalls(items, "101")).toEqual([{ fewer: { name: "Shearer", value: 148 }, more: { name: "Agüero", value: 184 } }]);
+  });
+  it("ignores calls past the end of the set", () => {
+    expect(costlyCalls(items.slice(0, 2), "00")).toHaveLength(1);
   });
 });

@@ -7,7 +7,22 @@ type Image = { url: string; name: string };
 
 /** The card as an image: the share sheet on phones (with the result as its
  * text), a download on desktop. The only share button (Collins, 19 Oct 2026). */
-export function ShareButtons({ text, image, className = "mt-4" }: { text: string; image: Image | null; className?: string }) {
+export function ShareButtons({
+  text,
+  image,
+  className = "mt-4",
+  label = "Share the card",
+  sub,
+  tone = "white",
+}: {
+  text: string;
+  image: Image | null;
+  className?: string;
+  label?: string;
+  /** A line under the label ("Can they beat 65?"). */
+  sub?: string;
+  tone?: "white" | "teal";
+}) {
   const [note, setNote] = useState("");
   const file = useRef<Promise<File | null> | null>(null);
   const url = image?.url;
@@ -47,10 +62,11 @@ export function ShareButtons({ text, image, className = "mt-4" }: { text: string
       <button
         type="button"
         onClick={shareImage}
-        className={`btn-white btn-press ${className} mb-1 flex w-full items-center justify-between px-4 py-3 font-display text-[24px] uppercase lg:text-[26px]`}
+        className={`btn-${tone} btn-press ${className} mb-1 flex w-full items-center justify-between px-4 py-3 text-left font-display text-[24px] uppercase lg:text-[26px]`}
       >
         <span>
-          Share the card
+          <span className="block leading-none">{label}</span>
+          {sub && <span className="mt-1 block font-sans text-[13px] font-semibold normal-case">{sub}</span>}
         </span>
         <ArrowUpRight className="size-[0.75em]" />
       </button>
