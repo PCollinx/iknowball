@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Arrow } from "@/components/icons/Icon";
 
 type Image = { url: string; name: string };
 
@@ -73,7 +74,7 @@ export function ChallengeButton({
         className="btn-teal btn-press flex w-full items-center justify-between gap-2 px-3 py-2.5 font-display text-[22px] leading-none uppercase lg:px-3.5 lg:text-2xl"
       >
         <span className="min-w-0 truncate">{label}</span>
-        {code && <span className="bg-navy px-1.5 py-0.5 text-[13px] tracking-[0.08em] text-white lg:text-[15px]">{code}</span>}
+        {code ? <span className="bg-navy px-1.5 py-0.5 text-[13px] tracking-[0.08em] text-white lg:text-[15px]">{code}</span> : <Arrow />}
       </button>
       <p role="status" className="min-h-[22px] pt-1 text-[15px] font-semibold text-royal">
         {note}

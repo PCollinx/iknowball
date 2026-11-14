@@ -228,6 +228,25 @@ async function weekBests(userId: string, date: string, exceptRun?: number): Prom
   return (data ?? []).map((r) => r.right_count);
 }
 
+/** Your best sprint this matchweek before this one, any stat: the other end
+ * of a solo full time's scoreline (Collins, 14 Nov 2026). Null on the week's first. */
+export async function weekBestBefore(run: RunRow): Promise<{ right: number; bestRun: number; kicks: string } | null> {
+  const { startsOn } = matchweekBounds(gameDate(new Date(run.started_at)));
+  const { data, error } = await createAdminClient()
+    .from("clash_runs")
+    .select("right_count, best_run, kicks")
+    .eq("user_id", run.user_id)
+    .neq("id", run.id)
+    .gte("started_at", gameDateClosesAt(addDays(startsOn, -1)).toISOString())
+    .lt("started_at", run.started_at)
+    .order("right_count", { ascending: false })
+    .order("started_at")
+    .limit(1);
+  if (error) throw error;
+  const best = data?.[0];
+  return best ? { right: best.right_count, bestRun: best.best_run, kicks: best.kicks } : null;
+}
+
 /** What a finished run did to its week's three (see afterSprint). */
 export async function weekAfter(run: RunRow) {
   return afterSprint(await weekBests(run.user_id, gameDate(new Date(run.started_at)), run.id), run.right_count);

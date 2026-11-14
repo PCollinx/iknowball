@@ -83,6 +83,23 @@ export function toBeat(table: Result[], right: number): { right: number; name: s
   return { right: top.right, name: top.mine ? "You" : top.name };
 }
 
+/** A miss and both its players: the one with fewer (whom you backed) and the one with more. */
+export type CostlyCall = { fewer: { name: string; value: number }; more: { name: string; value: number } };
+
+/** The calls that cost you (Collins, 14 Nov 2026, option B), in the order they
+ * were made. Call i sets the set's player i + 1 against player i, and a tie is
+ * always right, so on a miss you backed the lower number. */
+export function costlyCalls(items: Item[], kicks: string): CostlyCall[] {
+  const out: CostlyCall[] = [];
+  [...kicks].forEach((k, i) => {
+    const [a, b] = [items[i], items[i + 1]];
+    if (k !== "0" || !a || !b) return;
+    const [low, high] = a.value <= b.value ? [a, b] : [b, a];
+    out.push({ fewer: { name: low.name, value: low.value }, more: { name: high.name, value: high.value } });
+  });
+  return out;
+}
+
 /** One side of the head-to-head: a player's page in the album. */
 export type Side = { name: string; right: number; kicks: string; bestRun: number };
 

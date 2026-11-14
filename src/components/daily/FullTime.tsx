@@ -1,18 +1,15 @@
 import Link from "next/link";
-import { MiniThree } from "@/components/clash/YourThree";
 import { ClubPicker } from "@/components/profile/ClubPicker";
 import { SeasonTicket } from "@/components/pwa/SeasonTicket";
 import { WhistleStrip } from "@/components/push/WhistleStrip";
 import { APP_ICON_SRC } from "@/lib/og/logo";
-import { RatingBadge } from "@/components/profile/RatingBadge";
 import { SheetValue, TeamSheet, type SheetRow } from "@/components/sheet/TeamSheet";
-import { scoreInk } from "@/lib/profile/rating";
 import type { Club } from "@/lib/profile/club";
 import { gameDate, gameDateClosesAt, seasonLabel, seasonOf } from "@/lib/time";
 import type { OrderReveal, RecallReveal, TableRow } from "@/lib/daily/data";
-import { halfRating } from "@/lib/daily/score";
-import { handoffHeading, STATS, type Stat } from "@/lib/clash/rules";
-import { duration } from "./clock";
+import { PART_MAX } from "@/lib/daily/score";
+import { MatchStats, statRow, type StatRow } from "@/components/fulltime/MatchStats";
+import type { Stat } from "@/lib/clash/rules";
 import { headlineFixture } from "./fixture";
 import { Masthead, shortDate } from "./Masthead";
 import { NextDaily } from "./NextDaily";
@@ -21,19 +18,19 @@ import { Pitch } from "./InPlay";
 import { fullTimeLineup } from "./lineup";
 import { ShareButtons } from "./ShareButtons";
 import { ExtraTime } from "./ExtraTime";
-import { ShareCard } from "./ShareCard";
 import { FORMAT_NAME, ordinal } from "./formats";
 import type { PathClub } from "./KitTrail";
 import { shareCardData, shareMessage } from "./share";
 import { ShirtBack, shirtName, type Kit } from "./ShirtBack";
 import { Arrow, Check, Cross } from "@/components/icons/Icon";
 
-// Full time (step 3 of docs/launch-plan.md, Collins's mix of 22 Oct 2026):
-// the match report's headline, score, line and ratings; the scoreboard's 1st
-// half squad on the pitch; the album's 2nd half stickers, today's table and
-// the club question; the share card; then Clash, your shirt and the next
-// Daily. Phone is one column in that order; desktop puts the report and the
-// halves on the left, the card and what's next on the right.
+// Full time, option B "You v the lost points" (Collins, 14 Nov 2026, from
+// https://claude.ai/artifact/SZra89xUEceo8bAE28aHcH): the scoreline of points
+// won against points lost, your place, match stats, the first half's players
+// on the pitch with the misses off it, the second half as a VAR review, then
+// the card to send, today's table and the next Daily, with Clash pinned to the
+// foot (Extra time). Phone is one column in that order; desktop puts the
+// score, stats and what's next left, the halves right.
 
 type Props = {
   issue: number;
@@ -83,139 +80,47 @@ export function banter(recall: RecallReveal): string {
 }
 
 export function FullTime(props: Props) {
-  const { issue, playDate, recall, order, points, topPercent, position, players, siteUrl, kit, rating, testSite = false } = props;
-  const found = recall?.found.length ?? 0;
-  const total = recall ? found + recall.missed.length : 0;
-  const seconds = props.me?.seconds ?? null;
+  const { issue, playDate, recall, order, points, topPercent, position, players, siteUrl, kit, testSite = false } = props;
   const card = recall
     ? shareCardData({ playDate, recall, order, points, siteUrl, name: props.me?.name ?? null, kits: props.fixtureKits })
     : null;
   const shareText = card ? shareMessage(card, siteUrl) : `Beat me: ${siteUrl.replace(/\/$/, "")}/daily`;
 
   return (
-    <main className="mx-auto w-full max-w-[560px] flex-1 px-4 pb-10 lg:max-w-[1280px] lg:px-8">
+    <main className="mx-auto w-full max-w-[560px] flex-1 px-4 pb-10 lg:max-w-[1180px] lg:px-8">
       <Masthead issue={issue} right={shortDate(playDate)} />
 
-      {/* Phone: one column, ordered with `order`. Desktop: two columns. */}
-      <div className="flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_480px] lg:items-start lg:gap-x-12">
+      {/* Phone: one column, ordered with `order`. Desktop: the score and the stats left, the halves right. */}
+      <div className="flex flex-col lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] lg:items-start lg:gap-x-12">
         <div className="contents lg:block">
           <section className="order-1 pt-3 lg:pt-5">
-            <span className="label text-royal">Match report · {recall ? headlineFixture(recall.daily.title) : "The Daily"}</span>
-            <h1 className="mt-1 font-display text-[44px] leading-[0.86] uppercase lg:hidden">
-              Full time
-            </h1>
-            {/* One even band: (desktop) the headline | the score in its rating colour | where it leaves you. */}
-            <div className="mt-3 grid grid-cols-[auto_minmax(0,1fr)] border-t-[3px] border-b-4 border-navy [border-bottom-style:double] lg:mt-2 lg:grid-cols-[auto_auto_minmax(0,1fr)]">
-              <div className="hidden items-center border-r-2 border-track py-3.5 pr-6 lg:flex">
-                <h1 className="font-display text-[64px] leading-[0.84] uppercase">
-                  Full
-                  <br />
-                  time
-                </h1>
-              </div>
-              <div className="border-r-2 border-track py-3 pr-4 lg:px-6 lg:py-3.5">
-                <DayScore points={points} />
-                <span className="label mt-1.5 block lg:mt-2">Day score</span>
-              </div>
-              <div className="flex flex-col justify-center gap-2 py-3 pl-4 lg:gap-2.5 lg:pl-6">
-                <span className="self-start bg-navy px-2 py-1 font-display text-[22px] leading-none text-white uppercase lg:px-2.5 lg:text-[26px]">
-                  {position ? `${ordinal(position)} of ${players}` : "Early doors"}
-                </span>
-                <span className="label leading-relaxed text-navy/80">
-                  {topPercent ? `Top ${topPercent}% today` : "First in today"}
-                  {seconds !== null && (
-                    <>
-                      <br />
-                      {duration(seconds)} used
-                    </>
-                  )}
-                </span>
-              </div>
-            </div>
-            {recall && (
-              <p className="mt-2.5 font-display text-[20px] leading-none uppercase lg:mt-3 lg:text-2xl">
-                <span className="text-red-card">“</span>
-                {banterParts(recall)}
-                <span className="text-red-card">”</span>
-              </p>
-            )}
+            <h1 className="sr-only">Full time</h1>
+            <Scoreline title={recall ? headlineFixture(recall.daily.title) : "The Daily"} points={points} kit={props.myKit} />
+            <p className="mt-4 text-[15px] leading-snug lg:text-base">
+              {position ? `${ordinal(position)} of ${players}${topPercent ? `, top ${topPercent}% today` : ""}.` : "First in today."}{" "}
+              {recall && banterParts(recall)}
+            </p>
           </section>
 
-          <section className="order-2 pt-3 lg:pt-4">
-            <TeamSheet
-              name="Player ratings"
-              tag="Out of 10"
-              rows={[
-                ...(recall
-                  ? [{ title: "First half", text: `${FORMAT_NAME[recall.daily.format]} ${found}/${total}`, value: <SheetBadge rating={halfRating(1, recall.score)} /> }]
-                  : []),
-                ...(order
-                  ? [{ title: "Second half", text: `${FORMAT_NAME[order.daily.format]} ${order.correct}/${order.slots.length}`, value: <SheetBadge rating={halfRating(2, order.score)} /> }]
-                  : []),
-                { title: "Overall", text: "Last 30 days", value: <SheetBadge rating={rating} dark />, dark: true },
-              ]}
+          <MatchStats className="order-2 mt-5 lg:mt-6" sides={["Won", "Lost"]} rows={dayStats(points, recall, order)} />
+
+          <div className="order-5 mt-5 lg:mt-6">
+            <ShareButtons
+              text={shareText}
+              tone="teal"
+              label="Send the card"
+              sub={`Can they beat ${points}?`}
+              className=""
+              image={card ? { url: "/daily/card", name: `iknowball-daily-${String(issue).padStart(3, "0")}.png` } : null}
             />
-          </section>
-
-          {recall && <Squad recall={recall} kit={kit} />}
-          {order && <SecondHalf order={order} kits={props.orderKits} />}
-
-          {props.clubChoices && (
-            <section className="order-4 mt-6 border-y-4 border-double border-navy py-3.5 lg:mt-7 lg:py-4">
-              <h2 className="font-display text-[40px] leading-[0.9] uppercase lg:text-[48px]">
-                Who do you support?
-              </h2>
-              <p className="mt-1.5 text-sm leading-snug lg:text-[15px]">
-                Your club dresses your shirt and puts you in the fanbase table. It never changes your questions or your score. You can switch once a
-                season.
-              </p>
-              <ClubPicker clubs={props.clubChoices} current={null} mode="prompt" featured={props.featuredClubs} />
-            </section>
-          )}
-        </div>
-
-        <div className="contents lg:sticky lg:top-[88px] lg:block lg:pt-5">
-          <aside className="order-3 mt-5 lg:mt-0">
-            {card && (
-              <div className="-rotate-1 shadow-[5px_5px_0_var(--color-navy)] lg:shadow-[7px_7px_0_var(--color-navy)]">
-                <ShareCard {...card} />
-              </div>
-            )}
-            <ShareButtons text={shareText} image={card ? { url: "/daily/card", name: `iknowball-daily-${String(issue).padStart(3, "0")}.png` } : null} />
             {/* Not on a first full time, which asks "Who do you support?" instead. */}
             {!props.clubChoices && <SeasonTicket guest={props.guest} icon={APP_ICON_SRC} season={seasonLabel(seasonOf(gameDate()))} />}
             {!props.clubChoices && <WhistleStrip guest={props.guest} className="mt-6" />}
-          </aside>
+          </div>
 
-          <TodaysTable top={props.top} me={props.me} position={position} players={players} />
+          <TodaysTable top={props.top} me={props.me} players={players} />
 
-          <section className="order-8 mt-5 grid gap-2.5 lg:grid-cols-2 lg:gap-3">
-            {/* The hand-off to Clash (Collins, 31 Oct 2026): your three and what they still need. */}
-            <Link href="/clash" className="btn-white btn-press group grid grid-cols-[minmax(0,1fr)_74px] lg:grid-cols-1">
-              <span className="grid gap-1.5 px-3 py-2.5">
-                <span className="block font-display text-[26px] leading-[0.9] uppercase lg:text-[24px]">{handoffHeading(props.clash.three)}</span>
-                <MiniThree three={props.clash.three} />
-                <span className="block text-[13px] text-navy/80">
-                  Today&apos;s stat is <b>{STATS[props.clash.stat].short.toLowerCase()}</b>. Try a sprint <Arrow />
-                </span>
-              </span>
-              <span className="grid place-items-center border-l-[2.5px] border-dashed border-navy bg-navy font-display text-xl text-sky uppercase lg:hidden">
-                60s
-              </span>
-            </Link>
-            <Link href="/profile" className="group grid grid-cols-[48px_minmax(0,1fr)_auto] items-center gap-2.5 bg-navy px-3 py-2 text-white">
-              <span className="block -rotate-[4deg] transition-transform duration-150 group-hover:-translate-y-0.5">
-                <ShirtBack kit={props.myKit} lettering="tag" />
-              </span>
-              <span className="min-w-0">
-                <span className="block font-display text-2xl leading-[0.9] uppercase">Your shirt</span>
-                <span className="block text-xs text-white/80">Rating, streak, this week</span>
-              </span>
-              <RatingBadge rating={rating} className="w-10 border-2 border-white text-lg" />
-            </Link>
-          </section>
-
-          <div className="order-9 mt-5 flex items-center justify-between border-t-2 border-navy pt-3">
+          <div className="order-9 mt-6 flex items-center justify-between border-t-2 border-navy pt-3">
             <span className="label">Next Daily in</span>
             <NextDaily
               closesAt={gameDateClosesAt(playDate).toISOString()}
@@ -247,10 +152,73 @@ export function FullTime(props: Props) {
             </div>
           )}
         </div>
+
+        <div className="contents lg:block lg:pt-5">
+          {recall && <Squad recall={recall} kit={kit} />}
+          {order && <SecondHalf order={order} kits={props.orderKits} />}
+
+          {props.clubChoices && (
+            <section className="order-6 mt-6 border-y-4 border-double border-navy py-3.5 lg:mt-7 lg:py-4">
+              <h2 className="font-display text-[40px] leading-[0.9] uppercase lg:text-[44px]">
+                Who do you support?
+              </h2>
+              <p className="mt-1.5 text-sm leading-snug lg:text-[15px]">
+                Your club dresses your shirt and puts you in the fanbase table. It never changes your questions or your score. You can switch once a
+                season.
+              </p>
+              <ClubPicker clubs={props.clubChoices} current={null} mode="prompt" featured={props.featuredClubs} />
+            </section>
+          )}
+        </div>
       </div>
       <ExtraTime three={props.clash.three} stat={props.clash.stat} />
     </main>
   );
+}
+
+/** The scoreline (option B): your points against the ones that got away, on the broadcast's navy bar. */
+function Scoreline({ title, points, kit }: { title: string; points: number; kit: Kit }) {
+  return (
+    <div className="border-[2.5px] border-navy bg-navy text-white shadow-[5px_5px_0_var(--color-teal-light)] lg:shadow-[7px_7px_0_var(--color-teal-light)]">
+      <div className="flex items-center justify-between gap-3 border-b-[1.5px] border-slate px-3 py-2 lg:px-4">
+        <span className="label truncate text-[10px] text-teal-light lg:text-[11px]">{title} · the Daily</span>
+        <span className="bg-teal px-2 pt-1 font-display text-lg leading-none uppercase">FT</span>
+      </div>
+      <div className="grid grid-cols-[64px_minmax(0,1fr)_64px] items-center gap-2 px-3 pt-3 pb-2.5 lg:grid-cols-[84px_minmax(0,1fr)_84px] lg:px-4">
+        <span className="block w-[52px] lg:w-[70px]">
+          <ShirtBack kit={kit} name="You" />
+        </span>
+        <span className="flex items-baseline justify-center gap-2 font-display leading-[0.85] tabular-nums" aria-label={`${points} won, ${100 - points} lost`}>
+          <span className="text-[76px] text-teal-light lg:text-[96px]">{points}</span>
+          <span className="text-[40px] text-slate lg:text-[48px]">–</span>
+          <span className="text-[76px] lg:text-[96px]">{100 - points}</span>
+        </span>
+        <span className="block w-[52px] justify-self-end lg:w-[70px]">
+          <ShirtBack state="miss" num="×" name="Lost" />
+        </span>
+      </div>
+      <div className="flex justify-between border-t-[1.5px] border-slate px-3 py-2 text-xs lg:px-4 lg:text-sm">
+        <span className="text-teal-light">Points won</span>
+        <span>Points lost</span>
+      </div>
+    </div>
+  );
+}
+
+/** What you won against what got away: the day, each half's points, then each half's answers. */
+function dayStats(points: number, recall: RecallReveal | null, order: OrderReveal | null): StatRow[] {
+  const rows = [statRow("Points", points, 100 - points, 100)];
+  if (recall) rows.push(statRow("1st half points", recall.score, PART_MAX[1] - recall.score, PART_MAX[1]));
+  if (order) rows.push(statRow("2nd half points", order.score, PART_MAX[2] - order.score, PART_MAX[2]));
+  if (recall) {
+    const total = recall.found.length + recall.missed.length;
+    rows.push(statRow(recall.daily.format === "pick" ? "1st half right · wrong" : "Found · got away", recall.found.length, recall.missed.length, total));
+  }
+  if (order) {
+    const wrong = order.slots.length - order.correct;
+    rows.push(statRow(order.daily.format === "era" ? "2nd half right · wrong" : "In place · out of place", order.correct, wrong, order.slots.length));
+  }
+  return rows;
 }
 
 /** The line with the first one who got away in red. */
@@ -268,80 +236,60 @@ function banterParts(recall: RecallReveal) {
   );
 }
 
-/** The day score in its rating's colour with a hard navy shadow; yellow gets a navy edge. */
-function DayScore({ points }: { points: number }) {
-  const { ink, edge } = scoreInk(points);
-  return (
-    <span
-      className="block font-display text-[96px] leading-[0.8] tabular-nums [text-shadow:3px_3px_0_var(--color-navy)] lg:text-[120px] lg:[text-shadow:4px_4px_0_var(--color-navy)]"
-      style={{ color: ink, WebkitTextStroke: edge ? "1.5px var(--color-navy)" : undefined }}
-    >
-      {points}
-      <span className="text-[32px] text-navy [-webkit-text-stroke:0] [text-shadow:2px_2px_0_var(--color-track)] lg:text-[40px] lg:[text-shadow:3px_3px_0_var(--color-track)]">/100</span>
-    </span>
-  );
-}
-
-/** A rating on the team sheet: square, with a navy edge (white on the dark row). */
-function SheetBadge({ rating, dark = false }: { rating: number | null; dark?: boolean }) {
-  return <RatingBadge rating={rating} square className={`size-10 border-2 text-[19px] lg:size-12 lg:text-[22px] ${dark ? "border-white" : ""}`} />;
-}
-
-/** Part 1's squad (22 Oct 2026): found players on the pitch by position, then
- * the missed ones in the gaps with an ×; whoever doesn't fit goes on the bench
- * (found) or under "Got away" (missed). Names sit on the shirts' nameplates. */
+/** The first half (Collins, 14 Nov 2026, option B): the players you found on
+ * the pitch by position, whoever doesn't fit on the bench, and the ones who got
+ * away off the pitch as "Missed chances", the same size as the shirts on it. */
 function Squad({ recall, kit }: { recall: RecallReveal; kit: Kit | null }) {
   const found = recall.found.length;
-  const team = fullTimeLineup(recall.found, recall.missed);
+  const total = found + recall.missed.length;
+  const team = fullTimeLineup(recall.found, []);
   return (
-    <section className="order-5 mt-6" aria-label={`First half squad: ${found} found, ${recall.missed.length} got away`}>
+    <section className="order-3 mt-7 lg:mt-0" aria-label={`First half: ${found} of ${total} found, ${recall.missed.length} got away`}>
       <div className="flex items-baseline justify-between border-b-2 border-navy pb-1.5">
-        <h2 className="label">First half · the squad</h2>
+        <h2 className="font-display text-2xl leading-none uppercase lg:text-[26px]">1st half · {recall.daily.format === "pick" ? "Right" : "Goals"}</h2>
         <span className="label text-royal">
-          {found} found · <span className="text-red-card">{recall.missed.length} got away</span>
+          {found} of {total}
         </span>
       </div>
-      <div className="mt-2.5 lg:grid lg:grid-cols-[minmax(0,1fr)_170px] lg:gap-4">
-        <Pitch half="attack" className="aspect-[358/400] lg:aspect-[4/3]">
-          {team.pitch.map((spot) => (
+      <Pitch half="attack" className="mt-2.5 aspect-[358/400] lg:aspect-[4/3]">
+        {team.pitch
+          .filter((spot) => spot.player)
+          .map((spot) => (
             <div key={`${spot.x}-${spot.y}`} className="absolute w-[19cqw] -translate-1/2 lg:w-[14cqw]" style={{ left: `${spot.x}%`, top: `${spot.y}%` }}>
-              {!spot.player ? (
-                <ShirtBack state="empty" />
-              ) : spot.missed ? (
-                <ShirtBack name={shirtName(spot.player.text)} num="×" state="miss" />
-              ) : (
-                <ShirtBack kit={kit ?? undefined} name={shirtName(spot.player.text)} num={spot.player.num} />
-              )}
+              <ShirtBack kit={kit ?? undefined} name={shirtName(spot.player!.text)} num={spot.player!.num} />
             </div>
           ))}
-        </Pitch>
-        <div className="lg:content-start">
-          {team.bench.length > 0 && (
-            <OffPitch label="Bench">
-              {team.bench.map((p) => (
-                <ShirtBack key={p.id} kit={kit ?? undefined} name={shirtName(p.text)} num={p.num} />
-              ))}
-            </OffPitch>
-          )}
-          {team.away.length > 0 && (
-            <OffPitch label="Got away" miss>
-              {team.away.map((m) => (
-                <ShirtBack key={m.id} name={shirtName(m.text)} num="×" state="miss" />
-              ))}
-            </OffPitch>
-          )}
-        </div>
-      </div>
+      </Pitch>
+      {team.bench.length > 0 && (
+        <OffPitch label="Bench">
+          {team.bench.map((p) => (
+            <ShirtBack key={p.id} kit={kit ?? undefined} name={shirtName(p.text)} num={p.num} />
+          ))}
+        </OffPitch>
+      )}
+      {recall.missed.length > 0 && (
+        <>
+          <div className="mt-4 flex items-baseline justify-between border-b-2 border-red-card pb-1.5">
+            <h3 className="font-display text-2xl leading-none uppercase lg:text-[26px]">Missed chances</h3>
+            <span className="label text-red-card">{recall.missed.length} got away</span>
+          </div>
+          <div className="mt-2.5 grid grid-cols-5 gap-x-[4.5%] gap-y-2 px-[1%] lg:grid-cols-7 lg:gap-x-[3.3%]">
+            {recall.missed.map((m) => (
+              <ShirtBack key={m.id} name={shirtName(m.text)} num="×" state="miss" />
+            ))}
+          </div>
+        </>
+      )}
     </section>
   );
 }
 
-/** A labelled row of shirts under the pitch (beside it on desktop). */
-function OffPitch({ label, miss = false, children }: { label: string; miss?: boolean; children: React.ReactNode }) {
+/** A labelled row of shirts under the pitch. */
+function OffPitch({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="mt-2.5 grid grid-cols-[62px_minmax(0,1fr)] items-center gap-2 lg:mt-0 lg:mb-3 lg:grid-cols-1">
-      <span className={`label text-[10px] lg:text-xs ${miss ? "text-red-card" : "text-navy/80"}`}>{label}</span>
-      <div className="grid grid-cols-5 gap-x-2 gap-y-1.5 lg:grid-cols-2">{children}</div>
+    <div className="mt-2.5 grid grid-cols-[62px_minmax(0,1fr)] items-center gap-2">
+      <span className="label text-[10px] text-navy/80 lg:text-xs">{label}</span>
+      <div className="grid grid-cols-5 gap-x-2 gap-y-1.5">{children}</div>
     </div>
   );
 }
@@ -361,28 +309,32 @@ function stickerName(name: string): string {
   return words.length > 1 ? words.slice(1).join(" ") : name;
 }
 
-/** Part 2 on a team sheet (Collins, 9 Nov 2026, option A of
- * https://claude.ai/artifact/W8WzfBiMFE3F6Lq31H8kec): a row a question with a
- * dotted leader to the answer, misses on a red rule with what you said, and a
- * navy row summing the half up. */
+/** The second half as a VAR review (Collins, 14 Nov 2026, option B): only
+ * the answers that went wrong, each with what you said, then a line naming
+ * the ones that stood. */
 function SecondHalf({ order, kits }: { order: OrderReveal; kits?: Record<string, PathClub> }) {
   const era = order.daily.format === "era";
   // A career path's answers are clubs: each wears its shirt and keeps its whole name.
   const career = order.daily.template === "career-path";
   const nameOf = career ? (name: string) => name : shirtName;
   const yours = order.slots.map((s) => s.placed);
-  const rows: SheetRow[] = order.slots.map((s, i) => {
+  const rows: SheetRow[] = [];
+  const stood: string[] = [];
+  order.slots.forEach((s, i) => {
     if (era) {
       const { player, club } = eraParts(s.note);
-      return {
+      if (s.right) return void stood.push(stickerName(player));
+      rows.push({
         title: stickerName(player),
-        value: <SheetAnswer right={s.right}>{period(s.correct)}</SheetAnswer>,
-        text: s.right ? club : <span className="font-semibold text-red-card">{club && <>{club} · </>}You said {s.placed ? period(s.placed) : "nothing"}</span>,
-        warn: !s.right,
-      };
+        value: <SheetAnswer right={false}>{period(s.correct)}</SheetAnswer>,
+        text: <span className="font-semibold text-red-card">{club && <>{club} · </>}You said {s.placed ? period(s.placed) : "nothing"}</span>,
+        warn: true,
+      });
+      return;
     }
+    if (s.right) return void stood.push(nameOf(s.correct));
     const at = yours.indexOf(s.correct);
-    return {
+    rows.push({
       title: (
         <span className="inline-flex items-center gap-2">
           {career && (
@@ -390,20 +342,23 @@ function SecondHalf({ order, kits }: { order: OrderReveal; kits?: Record<string,
               <ShirtBack kit={kits?.[s.correct]?.kit} />
             </span>
           )}
-          {i + 1} · {nameOf(s.correct)}
+          {nameOf(s.correct)} · {ordinal(i + 1)}
         </span>
       ),
-      value: <SheetAnswer right={s.right}>{s.note ?? ""}</SheetAnswer>,
-      text: s.right ? undefined : (
-        <span className="font-semibold text-red-card">{at >= 0 ? `You had ${career ? "it" : "him"} ${ordinal(at + 1)}` : "You didn't place him"}</span>
-      ),
-      warn: !s.right,
-    };
+      value: <SheetAnswer right={false}>{s.note ?? ""}</SheetAnswer>,
+      text: <span className="font-semibold text-red-card">{at >= 0 ? `You had ${career ? "it" : "him"} ${ordinal(at + 1)}` : "You didn't place him"}</span>,
+      warn: true,
+    });
   });
-  rows.push({ title: secondHalfLine(order, nameOf), value: <SheetValue className="text-teal-light">{order.correct}/{order.slots.length}</SheetValue>, dark: true });
+  rows.push({
+    title: stood.length === order.slots.length ? "Every one stood" : stood.length ? `Decision stands on ${stood.length === 1 ? "one" : `the other ${stood.length}`}` : "None stood",
+    text: stood.length && stood.length < order.slots.length ? stood.join(", ") : undefined,
+    value: <SheetValue className="text-teal-light">{order.correct}/{order.slots.length}</SheetValue>,
+    dark: true,
+  });
   return (
-    <section className="order-6 mt-6">
-      <TeamSheet name={`Second half · ${FORMAT_NAME[order.daily.format]}`} tag={`${order.correct}/${order.slots.length}`} rows={rows} />
+    <section className="order-4 mt-6">
+      <TeamSheet name={`VAR review · 2nd half · ${FORMAT_NAME[order.daily.format]}`} tag={`${order.correct}/${order.slots.length}`} rows={rows} />
     </section>
   );
 }
@@ -429,42 +384,31 @@ function period(choice: string): React.ReactNode {
   return to === undefined ? choice : <>{from} <Arrow /> {to || "now"}</>;
 }
 
-/** The half in a line, on the sheet's navy row. */
-function secondHalfLine(order: OrderReveal, nameOf: (name: string) => string): string {
-  const wrong = order.slots.filter((s) => !s.right);
-  if (!wrong.length) return "Every one in its place";
-  if (order.daily.format === "era") return wrong.length === 1 ? "One got away" : `${wrong.length} got away`;
-  if (wrong.length === 2 && wrong[0].placed === wrong[1].correct && wrong[1].placed === wrong[0].correct) {
-    return `You swapped ${nameOf(wrong[0].correct)} and ${nameOf(wrong[1].correct)}`;
-  }
-  return `${wrong.length} out of place`;
-}
-
-/** Today's table as the home page's scoreboard: your place, the top three and you. */
-function TodaysTable({ top, me, position, players }: { top: TableRow[]; me: TableRow | null; position: number | null; players: number }) {
+/** Elsewhere today (option B): the top three and you, printed plain. */
+function TodaysTable({ top, me, players }: { top: TableRow[]; me: TableRow | null; players: number }) {
   const rows = me && !top.some((r) => r.userId === me.userId) ? [...top, me] : top;
+  if (!rows.length) return null;
   return (
-    <Link href="/daily/table" className="order-7 mt-6 block border-[2.5px] border-navy bg-navy text-white shadow-[5px_5px_0_var(--color-sky)] lg:mt-6">
-      <span className="flex justify-between border-b-[1.5px] border-[#3a4466] px-3 py-2">
-        <span className="label text-teal-light">Today&apos;s table</span>
-        <span className="label">{players} played <Arrow /></span>
-      </span>
-      <span className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3.5 px-3 pt-2 pb-2.5">
-        <span className="font-display text-[70px] leading-[0.85] text-teal-light tabular-nums">
-          {position ?? "–"}
-          {position && <span className="text-[28px]">{ordinal(position).replace(String(position), "")}</span>}
-        </span>
-        <span className="grid gap-0.5 text-[13px]">
-          {rows.map((r) => (
-            <span key={r.userId} className={`flex justify-between gap-2 ${r.userId === me?.userId ? "-mx-1.5 bg-slate px-1.5" : ""}`}>
-              <span className="truncate">
-                {r.position} · {r.userId === me?.userId ? "You" : r.name}
-              </span>
-              <span className="font-display text-base tabular-nums">{r.score}</span>
+    <section className="order-8 mt-7">
+      <div className="flex items-baseline justify-between border-b-2 border-navy pb-1.5">
+        <h2 className="font-display text-2xl leading-none uppercase lg:text-[26px]">Elsewhere today</h2>
+        <Link href="/daily/table" className="label underline-offset-2 hover:underline">
+          {players} played · whole table <Arrow />
+        </Link>
+      </div>
+      <ol className="mt-1 text-sm lg:text-[15px]">
+        {rows.map((r) => (
+          <li
+            key={r.userId}
+            className={`flex justify-between gap-2 py-1.5 ${r.userId === me?.userId ? "-mx-2 bg-slate px-2 text-white" : "border-b border-track"}`}
+          >
+            <span className="min-w-0 truncate">
+              {r.position} · {r.userId === me?.userId ? "You" : r.name}
             </span>
-          ))}
-        </span>
-      </span>
-    </Link>
+            <b className="font-display text-[17px] tabular-nums">{r.score}</b>
+          </li>
+        ))}
+      </ol>
+    </section>
   );
 }
