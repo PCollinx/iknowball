@@ -215,12 +215,13 @@ Production, a pair each), the live migration, and a real buzz on an Android phon
 The launch day posts (LinkedIn, X and WhatsApp) and the ones after (Product Hunt on Tue 1 Dec, Show HN on
 Thu 3 Dec, Nairaland, the short videos) have their own plan: `docs/launch-posts.md`.
 
-After launch: step 14 (Support, with Vercel Pro), Rate mode (18 Dec).
+After launch: step 14 (Support, with Vercel Pro), automated posts on X every day (below), Rate mode (18 Dec).
 
 ## Also on the list
 
-- **Automated posts on X** (Collins, 30 Oct, "in the near future"): the app posts to @playiKnowBall by itself,
-  such as the team of the week card and matchday teasers. Not built; needs X API access.
+- **Automated posts on X, every day** (Collins, 30 Oct, "in the near future"; after launch, every day, Collins,
+  17 Nov): the app posts to @playiKnowBall by itself each day, such as matchday teasers and the team of the
+  week card. Not built; needs X API access. Never a question from an upcoming Daily.
 - **Fixture history** (Collins, 30 Oct): head-to-head results and scorers for the fixtures we theme on, so
   the Daily and teasers can ask fixture questions ("most goals in Chelsea v Man United"). Part of template
   build D: Highlightly's box scores give every new match's scorers; the matches before the sync need a
