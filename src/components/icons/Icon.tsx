@@ -79,3 +79,12 @@ export function Dot({ on = true, className = "" }: Props & { on?: boolean }) {
     </Svg>
   );
 }
+
+/** ▶, for a video: a touch bigger than the arrows, as it sits alone on a button. */
+export function Play({ className = "" }: Props) {
+  return (
+    <Svg className={className} size="size-[1.1em]">
+      <path fill="currentColor" d="M4.5 2.5v11l9-5.5z" />
+    </Svg>
+  );
+}

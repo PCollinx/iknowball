@@ -5,12 +5,14 @@ import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { SiteFooter } from "@/components/nav/SiteFooter";
 import { Logo } from "@/components/nav/SiteNav";
+import { Demo } from "@/components/waitlist/Demo";
 import { TeamSheet } from "@/components/waitlist/TeamSheet";
 import { isTestSite } from "@/lib/daily/sample";
 import { publicEnv } from "@/lib/env";
 import { clubChoices } from "@/lib/profile/data";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { GATES_OPEN_LABEL, waitlistUp } from "@/lib/waitlist";
+import { SOCIAL } from "@/lib/site";
+import { DEMO_POST_URL, DEMO_VIDEO, demoUp, GATES_OPEN_LABEL, waitlistUp } from "@/lib/waitlist";
 
 // The waitlist (step 13 of docs/launch-plan.md, option A "Team sheet"). On
 // the live site the proxy shows it in place of the games from 1 Nov until the
@@ -77,6 +79,9 @@ export default function WaitlistPage() {
           <Suspense fallback={<div className="h-[440px] border-[2.5px] border-navy bg-mist" aria-busy="true" />}>
             <Sheet />
           </Suspense>
+          <Suspense fallback={null}>
+            <DemoSlot />
+          </Suspense>
         </section>
       </main>
       <SiteFooter />
@@ -91,6 +96,20 @@ async function Sheet() {
   if (!isTestSite() && !waitlistUp()) redirect("/");
   const [clubs, { count }] = await Promise.all([clubChoices(), createAdminClient().from("waitlist").select("id", { count: "exact", head: true })]);
   return <TeamSheet clubs={clubs} count={count && count >= SHOW_COUNT_FROM ? count : null} siteUrl={publicEnv().NEXT_PUBLIC_SITE_URL} />;
+}
+
+/** The demo, on the waitlist's last day (Thu 19 Nov). */
+async function DemoSlot() {
+  await connection();
+  if (!DEMO_VIDEO || !demoUp(new Date(), isTestSite())) return null;
+  return (
+    <Demo
+      src={DEMO_VIDEO.src}
+      poster={DEMO_VIDEO.poster}
+      xUrl={DEMO_POST_URL ?? SOCIAL.x.url}
+      xLabel={DEMO_POST_URL ? "Repost it on X" : `Pinned on X · ${SOCIAL.x.handle}`}
+    />
+  );
 }
 
 /** Test sites never switch to the waitlist, so the games stay a tap away. */

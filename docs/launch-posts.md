@@ -16,7 +16,7 @@ Rules that hold for every post:
 | When | What | Where |
 | --- | --- | --- |
 | From Mon 9 Nov | Make a Nairaland account and take part in Sports threads (no links yet) | Nairaland |
-| Mon 16 Nov | Build story: "I'm launching on Friday" | LinkedIn |
+| ~~Mon 16 Nov~~ | ~~Build story: "I'm launching on Friday"~~ (skipped, Collins, 17 Nov) | LinkedIn |
 | Thu 19 Nov | Demo video, and pinned on the waitlist page for its last day (step 19 of the launch plan) | X, WhatsApp, TikTok, Reels, Shorts, waitlist |
 | Fri 20 Nov | Launch day, all three at 07:00, when the gates open and the launch email goes | LinkedIn, X, WhatsApp |
 | Fri 20 Nov, 12:00 | The launch thread | Nairaland |
@@ -87,6 +87,8 @@ Three posts, written in the first person by Collins, each with one image or vide
 first comment, not the post: LinkedIn shows posts with links to fewer people.
 
 ### 1. Mon 16 Nov: the build story
+
+Skipped (Collins, 17 Nov 2026): it didn't go out on the day, so launch day is the first LinkedIn post.
 
 Image: the logo canvas with three screens (home, a Daily, a Clash sprint), or a 20 s screen capture.
 
