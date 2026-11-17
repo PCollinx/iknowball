@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { betaPass, gated, waitlistUp } from "./waitlist";
+import { betaPass, demoUp, gated, waitlistUp } from "./waitlist";
 
 describe("waitlistUp", () => {
   it("runs from midnight WAT on 1 Nov to midnight WAT on 20 Nov", () => {
@@ -27,5 +27,19 @@ describe("betaPass", () => {
     expect(betaPass(undefined, "matchday26")).toBe(false);
     expect(betaPass("short", "short")).toBe(false);
     expect(betaPass(undefined, undefined)).toBe(false);
+  });
+});
+
+describe("demoUp", () => {
+  const video = { src: "/demo/launch-demo.mp4" };
+  it("shows on the waitlist's last day, Thu 19 Nov WAT", () => {
+    expect(demoUp(new Date("2026-11-18T22:59:59Z"), false, video)).toBe(false);
+    expect(demoUp(new Date("2026-11-18T23:00:00Z"), false, video)).toBe(true);
+    expect(demoUp(new Date("2026-11-19T22:59:59Z"), false, video)).toBe(true);
+    expect(demoUp(new Date("2026-11-19T23:00:00Z"), false, video)).toBe(false);
+  });
+  it("shows any day on test sites, and never without the video", () => {
+    expect(demoUp(new Date("2026-11-17T12:00:00Z"), true, video)).toBe(true);
+    expect(demoUp(new Date("2026-11-19T12:00:00Z"), true, null)).toBe(false);
   });
 });

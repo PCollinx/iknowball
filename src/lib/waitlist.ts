@@ -30,3 +30,21 @@ export function gated(pathname: string): boolean {
 export function betaPass(cookie: string | undefined, code: string | undefined): boolean {
   return Boolean(code && code.length >= 8 && cookie === code);
 }
+
+// The demo on the waitlist (step 19 of docs/launch-plan.md, option A of
+// https://claude.ai/artifact/L1f9AX5XwQseXvASBT27iw): the 30-second LaunchDemo
+// plays under the team sheet on the waitlist's last day, Thu 19 Nov, the day
+// it goes out on X. Test sites show it whenever the video is set.
+
+export const DEMO_FROM = new Date("2026-11-19T00:00:00+01:00");
+
+/** The square cut of LaunchDemo, saved in public/demo/. null until it's made, which hides the slot. */
+export const DEMO_VIDEO: { src: string; poster: string } | null = null;
+
+/** The demo's post on X, once it's out. Until then the link goes to the account. */
+export const DEMO_POST_URL: string | null = null;
+
+export function demoUp(at: Date = new Date(), testSite = false, video: { src: string } | null = DEMO_VIDEO): boolean {
+  if (!video) return false;
+  return testSite || (at >= DEMO_FROM && at < GATES_OPEN);
+}
