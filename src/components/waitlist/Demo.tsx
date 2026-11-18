@@ -18,7 +18,7 @@ export function Demo({ src, poster, xUrl, xLabel }: { src: string; poster: strin
         <h2 id="demo-heading" className="font-display text-[30px] leading-[0.9] uppercase lg:text-[36px]">
           See it before kick-off
         </h2>
-        <span className="label text-[11px]">0:30</span>
+        <span className="label text-[11px]">0:45</span>
       </div>
       <div className="mt-2.5 border-[2.5px] border-navy bg-navy shadow-[5px_5px_0_var(--color-teal-light)] lg:shadow-[6px_6px_0_var(--color-teal-light)]">
         <div className="label flex justify-between bg-teal-light px-2.5 py-1.5 text-[10px] text-navy">
@@ -51,7 +51,7 @@ export function Demo({ src, poster, xUrl, xLabel }: { src: string; poster: strin
           )}
         </div>
       </div>
-      <p className="mt-3.5 text-[15px] leading-snug">The Daily, Clash and the League in 30 seconds. Plays here, no sign-up.</p>
+      <p className="mt-3.5 text-[15px] leading-snug">The Daily, Clash and the League in 45 seconds. Plays here, no sign-up.</p>
       <a href={xUrl} target="_blank" rel="noopener" className="mt-1.5 inline-flex items-center gap-1 text-sm font-semibold underline underline-offset-[3px]">
         {xLabel}
         <ArrowUpRight />
