@@ -39,7 +39,7 @@ export function betaPass(cookie: string | undefined, code: string | undefined): 
 export const DEMO_FROM = new Date("2026-11-19T00:00:00+01:00");
 
 /** The square cut of LaunchDemo, saved in public/demo/. null until it's made, which hides the slot. */
-export const DEMO_VIDEO: { src: string; poster: string } | null = null;
+export const DEMO_VIDEO: { src: string; poster: string } | null = { src: "/demo/launch-demo.mp4", poster: "/demo/launch-demo.jpg" };
 
 /** The demo's post on X, once it's out. Until then the link goes to the account. */
 export const DEMO_POST_URL: string | null = null;

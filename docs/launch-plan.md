@@ -178,9 +178,9 @@ under the team sheet (a link to the post on X, or the video itself), switched on
 By Wed 18 Nov. **Built 17 Nov** (option A "The screen" of https://claude.ai/artifact/L1f9AX5XwQseXvASBT27iw):
 "See it before kick-off", the video on a navy screen with a light-teal play button, playing on the page,
 then a link to X (`src/components/waitlist/Demo.tsx`). It shows from midnight WAT Thu 19 Nov (`demoUp()` in
-`src/lib/waitlist.ts`), test sites any day. To switch it on: save the square cut of `LaunchDemo` as
-`public/demo/launch-demo.mp4` with a still as `public/demo/launch-demo.jpg`, set `DEMO_VIDEO` to them, and once
-the post is out set `DEMO_POST_URL` (until then the link goes to @playiKnowBall).
+`src/lib/waitlist.ts`), test sites any day. **Switched on 18 Nov**: the square cut of `LaunchDemo` (45 s, with a
+placeholder soundtrack) is `public/demo/launch-demo.mp4` with a still `public/demo/launch-demo.jpg`. Once the post
+is out, set `DEMO_POST_URL` (until then the link goes to @playiKnowBall).
 
 ### 20. The whistle (push notifications)
 Notifications for the Daily (09:00 when it's up, 20:00 if you haven't played), Clash challenges (the moment a
@@ -206,8 +206,8 @@ Production, a pair each), the live migration, and a real buzz on an Android phon
 - [x] **9 to 15 Nov checkpoint** (international break): a real league plays a full week of Dailies and the
   table is right. Played (Collins, 17 Nov). Its final table can't be opened on live, since the live season
   starts at launch week (`LAUNCH_WEEK`); Collins chose to leave it so.
-- [ ] **During the beta:** ~~tune the tier cut-offs on real ratings~~ (done 13 Nov: 3 + 0.07 × score, tiers from 4.5, a colour each); make the demo video (Remotion, `LaunchDemo` in
-  `video/`, by Wed 18 Nov; see `docs/launch-posts.md`).
+- [x] **During the beta:** ~~tune the tier cut-offs on real ratings~~ (done 13 Nov: 3 + 0.07 × score, tiers from 4.5, a colour each); ~~make the demo video~~ (done 18 Nov: Remotion, `LaunchDemo` in
+  `video/`, 45 s in tall, wide and square cuts with a placeholder soundtrack; see `docs/launch-posts.md`).
 - [ ] **Thu 19 Nov:** publish the demo video on X, WhatsApp, TikTok, Reels and Shorts, and pin it on the waitlist
   page (step 19).
 - [ ] **Fri 20 Nov:** the waitlist comes down at midnight WAT by itself; send the launch email (step 17).
@@ -251,5 +251,5 @@ After launch: step 14 (Support, with Vercel Pro), automated posts on X every day
 - [x] Extra: Clash every day (today's stat, your three, beaten challenges) and the maker redesigned (31 Oct, `claude/clash-maker`)
 - [x] 17. The launch email (built 4 Nov, `claude/launch-email`; sends itself from 07:00 WAT 20 Nov; test send passed on live)
 - [x] 18. Waitlist leagues on day one (built 31 Oct)
-- [ ] 19. The demo video on the waitlist (slot built 17 Nov; switched on once `LaunchDemo` is made)
+- [x] 19. The demo video on the waitlist (slot built 17 Nov; `LaunchDemo` made and switched on 18 Nov)
 - [x] 20. The whistle (PR #77, merged 7 Nov; keys and live migration done, a test notification arrived on Collins's phone)
