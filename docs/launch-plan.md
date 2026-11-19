@@ -215,13 +215,19 @@ Production, a pair each), the live migration, and a real buzz on an Android phon
 The launch day posts (LinkedIn, X and WhatsApp) and the ones after (Product Hunt on Tue 1 Dec, Show HN on
 Thu 3 Dec, Nairaland, the short videos) have their own plan: `docs/launch-posts.md`.
 
-After launch: step 14 (Support, with Vercel Pro), automated posts on X every day (below), Rate mode (18 Dec).
+After launch: step 14 (Support, with Vercel Pro), automated posts on X every day (below), well-known nations only in the Daily (below), Rate mode (18 Dec).
 
 ## Also on the list
 
 - **Automated posts on X, every day** (Collins, 30 Oct, "in the near future"; after launch, every day, Collins,
   17 Nov): the app posts to @playiKnowBall by itself each day, such as matchday teasers and the team of the
   week card. Not built; needs X API access. Never a question from an upcoming Daily.
+- **Well-known nations only** (Collins, 19 Nov 2026, after launch): the nation templates (`nation-at-club`,
+  `nation-picks` in `src/lib/drafts/templates.ts`) should only pick a nation whose players at the club are
+  mostly well known (Wikipedia editions, `players.sitelinks`, as `MIN_FAME` does for Rapid picks), so a list
+  is one people can name. The redraft of 19 Nov gave "the 16 players from Wales who've played for Sheffield
+  United since 1992", almost all unknown, and before that "Welsh players at Man United" with Craig Lawton and
+  Regan Poole. Free Recall still asks for the whole list; the rule picks the nation, it doesn't trim names.
 - **Fixture history** (Collins, 30 Oct): head-to-head results and scorers for the fixtures we theme on, so
   the Daily and teasers can ask fixture questions ("most goals in Chelsea v Man United"). Part of template
   build D: Highlightly's box scores give every new match's scorers; the matches before the sync need a
