@@ -6,6 +6,8 @@ import { captainsOf, captainYears, goldenBootPicks, goldenBootSeasons, goldenBoo
 import {
   eraPicks,
   hash,
+  MAX_SHARED,
+  MIN_SHARED,
   ORDER_SECONDS,
   orderAnswers,
   pickSeconds,
@@ -186,6 +188,11 @@ function recallPart(template: string, title: string, prompt: (n: number) => stri
   };
 }
 
+/** A day whose first half is a shared list too short or too long to play:
+ * only a fixture pair with few shared players and no other template gives one. */
+export const unplayable = (day: DraftDay) =>
+  day.part1.template === "played-for-both" && (day.part1.answers.length < MIN_SHARED || day.part1.answers.length > MAX_SHARED);
+
 /**
  * Part 1 is Rapid picks or Free Recall, Part 2 Era picks or In Order, by
  * `pairingFor`. Within a round type the templates take turns; a picks round
@@ -213,8 +220,12 @@ export function draftDay(
     lines.length ? { format: "era", template, title: "Era picks", prompt, time: pickSeconds(lines.length, true), answers: pickAnswers(lines), source: FROM_LISTS } : null;
 
   const build: Record<Template, () => DraftPart | null> = {
+    // A day's own fixture can come with too few or too many shared players
+    // (Liverpool and Man United share 3), so the list is checked here too.
     "played-for-both": () =>
-      recallPart("played-for-both", title, (n) => `Name the ${n} players who've played for both ${home.name} and ${away.name} since 1992.`, players),
+      players.length >= MIN_SHARED && players.length <= MAX_SHARED
+        ? recallPart("played-for-both", title, (n) => `Name the ${n} players who've played for both ${home.name} and ${away.name} since 1992.`, players)
+        : null,
 
     "dressing-room": () => {
       for (const club of sides("dressing-room")) {
@@ -558,7 +569,12 @@ export function draftDay(
   const recall1 = filled(order(TEMPLATES.free_recall));
   const era2 = picks ? filled(order(TEMPLATES.era)) : [];
   const order2 = filled(order(TEMPLATES.in_order));
-  const part1 = (pairing.rapid && picks1[0]) || recall1[0] || build["played-for-both"]()!;
+  // Nothing filled: the shared list however long, which the job treats as a
+  // day this pair can't make (`unplayable()`).
+  const part1 =
+    (pairing.rapid && picks1[0]) ||
+    recall1[0] ||
+    recallPart("played-for-both", title, (n) => `Name the ${n} players who've played for both ${home.name} and ${away.name} since 1992.`, players);
   const part2 = (pairing.era && era2[0]) || order2[0] || null;
   const others = (all: DraftPart[], chosen: DraftPart | null) => all.filter((p) => p.template !== chosen?.template);
   return {

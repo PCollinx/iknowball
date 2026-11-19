@@ -3,7 +3,7 @@ import { getLists } from "@/lib/curated/data";
 import { normalizeName } from "@/lib/daily/match";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { addDays, gameDate, matchweekBounds, seasonOf } from "@/lib/time";
-import { draftDay, LONG_REST_DAYS, type DraftPart, type PickData, type TemplateData } from "./day";
+import { draftDay, LONG_REST_DAYS, unplayable, type DraftDay, type DraftPart, type PickData, type TemplateData } from "./day";
 import { pairKey, pickPair, type Club, type PairRules, type SharedPlayer } from "./generate";
 import type { MatchData, MatchPlayer, PlayedMatch } from "./matchday";
 import type { CareerSpell, ClubSpell, FamousPlayer, Ground, ManagerStay } from "./templates";
@@ -14,6 +14,9 @@ export const DRAFT_DAYS_AHEAD = 8;
 const CLUB_REST_DAYS = 3;
 /** A club pair isn't reused within this many days. */
 const PAIR_COOLDOWN_DAYS = 90;
+/** A fixture's own day can have its pair even if a day this close before it
+ * used it, and a day without a fixture leaves alone the games this close after. */
+const FIXTURE_CLAIM_DAYS = 7;
 /** Players from this many recent days are avoided in Part 2. */
 const PLAYER_COOLDOWN_DAYS = 14;
 /** A template isn't used again within this many days either side. */
@@ -72,14 +75,22 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
 
   // Pairs already used recently or still to come, read from the titles ("A v B").
   const used = new Set<string>();
+  const usedOn = new Map<string, string[]>();
   const clubsOn = new Map<string, number[]>();
+  const markUsed = (key: string, date: string) => {
+    used.add(key);
+    usedOn.set(key, [...(usedOn.get(key) ?? []), date]);
+  };
   for (const d of existing ?? []) {
     const [a, b] = String(d.title).split(" v ").map((n) => clubByName.get(n));
     if (a && b) {
-      used.add(pairKey(a, b));
+      markUsed(pairKey(a, b), d.play_date as string);
       clubsOn.set(d.play_date as string, [a, b]);
     }
   }
+  // For a fixture on its own day: used unless every use was in the days just before.
+  const usedBefore = (key: string, date: string) =>
+    (usedOn.get(key) ?? []).some((d) => d >= date || d < addDays(date, -FIXTURE_CLAIM_DAYS));
   // Templates by date, to keep one from running twice within a week.
   const templatesOn = new Map<string, string[]>();
   for (const d of existing ?? []) if (d.template) templatesOn.set(d.play_date as string, [...(templatesOn.get(d.play_date as string) ?? []), d.template]);
@@ -95,41 +106,64 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
   for (const date of [...empty, ...needOptions].sort()) {
     const optionsOnly = filled.has(date);
     const week = matchweekBounds(date);
-    const sameWeek = fixtures.filter(([d, , c]) => c === "PL" && d >= week.startsOn && d <= week.endsOn);
-    const preferred = [...sameWeek.filter(([d]) => d === date), ...sameWeek.filter(([d]) => d !== date)].map(([, pair]) => pair);
+    const league = fixtures.filter(([, , c]) => c === "PL");
+    // The day's own games first; then the week's games already played (a
+    // midweek round the day after); the games still to come are kept for
+    // their own day (Collins, 19 Nov 2026).
+    const own = league.filter(([d]) => d === date).map(([, pair]) => pair);
+    const preferred = league.filter(([d]) => d >= week.startsOn && d < date).map(([, pair]) => pair);
+    const comingUp = league.filter(([d]) => d > date && d <= addDays(date, FIXTURE_CLAIM_DAYS)).map(([, [h, a]]) => pairKey(h, a));
     // Cup nights (Collins, 29 Oct 2026): an FA Cup or League Cup tie with one of
     // the big six counts like a Champions League tie.
     const cup = fixtures.filter(([d, [h, a], c]) => (c === "FAC" || c === "EFL") && d === date && (rules.bigSix.has(h) || rules.bigSix.has(a)));
     const ucl = [...fixtures.filter(([d, , c]) => c === "UCL" && d === date), ...cup].map(([, pair]) => pair);
-    // A day drafted before options were kept keeps its clubs: only its options are made.
-    const pair = optionsOnly ? (clubsOn.get(date) as [number, number] | undefined) : pickPair(date, pairs, preferred, used, restedNear(date), rules, ucl);
-    if (!pair) {
+    const draftPair = async ([homeId, awayId]: [number, number]) => {
+      const [home, away] = [clubs.get(homeId)!, clubs.get(awayId)!];
+      const [players, picks, spellsAt] = await Promise.all([
+        sharedPlayers(home.id, away.id),
+        pickData(home.id, away.id, date),
+        Promise.all([clubSpells(home.id), clubSpells(away.id)]),
+      ]);
+      const more: TemplateData = {
+        clubs,
+        spellsAt: new Map([
+          [home.id, spellsAt[0]],
+          [away.id, spellsAt[1]],
+        ]),
+        careers: await careersOf([...players.map((p) => p.id), ...spellsAt.flatMap(bestKnownIds)]),
+        recentTemplates: templatesNear(date),
+        managers,
+        famous,
+        grounds,
+        lists,
+        restedTemplates: templatesBefore(date, LONG_REST_DAYS),
+        matchday: await withMeetings(season, home.id, away.id, spellsAt, clubs),
+      };
+      return { home, away, day: draftDay(date, home, away, players, recent, picks, more) };
+    };
+    // A fixture pair that can't make a day (too few shared players and no
+    // other template) is passed over for the next pick.
+    const passed = new Set<string>();
+    let drafted: { home: Club; away: Club; day: DraftDay } | null = null;
+    for (let tries = 0; tries < 3 && !drafted; tries++) {
+      // A day drafted before options were kept keeps its clubs: only its options are made.
+      const pair = optionsOnly
+        ? (clubsOn.get(date) as [number, number] | undefined)
+        : pickPair(date, pairs, preferred, new Set([...used, ...comingUp, ...passed]), restedNear(date), rules, ucl, {
+            fixtures: own,
+            used: new Set([...own.map(([h, a]) => pairKey(h, a)).filter((k) => usedBefore(k, date)), ...passed]),
+          });
+      if (!pair) break;
+      const made = await draftPair(pair);
+      if (optionsOnly || !unplayable(made.day)) drafted = made;
+      else passed.add(pairKey(pair[0], pair[1]));
+    }
+    if (!drafted) {
       if (optionsOnly) continue;
       result.skipped.push({ date, reason: "No club pair with one of the big six and a good list. Import more clubs." });
       continue;
     }
-    const [home, away] = pair.map((id) => clubs.get(id)!);
-    const [players, picks, spellsAt] = await Promise.all([
-      sharedPlayers(home.id, away.id),
-      pickData(home.id, away.id, date),
-      Promise.all([clubSpells(home.id), clubSpells(away.id)]),
-    ]);
-    const more: TemplateData = {
-      clubs,
-      spellsAt: new Map([
-        [home.id, spellsAt[0]],
-        [away.id, spellsAt[1]],
-      ]),
-      careers: await careersOf([...players.map((p) => p.id), ...spellsAt.flatMap(bestKnownIds)]),
-      recentTemplates: templatesNear(date),
-      managers,
-      famous,
-      grounds,
-      lists,
-      restedTemplates: templatesBefore(date, LONG_REST_DAYS),
-      matchday: await withMeetings(season, home.id, away.id, spellsAt, clubs),
-    };
-    const day = draftDay(date, home, away, players, recent, picks, more);
+    const { home, away, day } = drafted;
     const { error: optionsError } = await admin.from("draft_options").upsert({
       play_date: date,
       part1: day.options.part1.map(saved),
@@ -152,7 +186,7 @@ export async function draftEmptyDays(today = gameDate()): Promise<DraftResult> {
       result.skipped.push({ date, reason: saveError.message });
       continue;
     }
-    used.add(pairKey(home.id, away.id));
+    markUsed(pairKey(home.id, away.id), date);
     clubsOn.set(date, [home.id, away.id]);
     templatesOn.set(date, [day.part1.template, ...(day.part2 ? [day.part2.template] : [])]);
     for (const a of [...day.part1.answers, ...(day.part2?.answers ?? [])]) recent.add(normalizeName(playerIn(a)));
