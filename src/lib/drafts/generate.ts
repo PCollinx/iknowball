@@ -50,6 +50,14 @@ export function hash(text: string): number {
  * League's big six, and Europe's giants for Champions League nights. */
 export type PairRules = { bigSix: Set<number>; europe: Set<number> };
 
+/** The day's own Premier League fixtures (Collins, 19 Nov 2026, after the
+ * break's weekdays took Round 11's games and left its Saturday and Sunday
+ * random pairs): they come before the week's other games, `used` holds only
+ * the pairs used outside the days just before (a preview a few days earlier
+ * doesn't stop the real game), and a pair with fewer shared players than
+ * Free Recall needs still counts, since most templates don't need them. */
+export type OwnDay = { fixtures: [number, number][]; used: Set<string> };
+
 /**
  * The club pair for a day, picked by the date so a rerun picks the same one.
  * Without rules: the first of the fixtures that makes a good list and hasn't
@@ -67,6 +75,7 @@ export function pickPair(
   rested: Set<number> = new Set(),
   rules?: PairRules,
   ucl: [number, number][] = [],
+  own?: OwnDay,
 ): [number, number] | null {
   const good = new Map(
     candidates.filter((c) => c.players >= MIN_SHARED && c.players <= MAX_SHARED).map((c) => [pairKey(c.a, c.b), c]),
@@ -80,6 +89,7 @@ export function pickPair(
     const ties = [...ucl.filter(([h, a]) => big(h) || big(a)), ...ucl.filter(([h, a]) => !big(h) && !big(a))];
     for (const [home, away] of ties) if ((top(home) || top(away)) && free(home, away)) return [home, away];
   }
+  for (const [home, away] of own?.fixtures ?? []) if (popular(home, away) && !own!.used.has(pairKey(home, away))) return [home, away];
   for (const [home, away] of fixtures) if (popular(home, away) && free(home, away)) return [home, away];
 
   const byKey = (x: [string, PairCandidate], y: [string, PairCandidate]) => (x[0] < y[0] ? -1 : 1);

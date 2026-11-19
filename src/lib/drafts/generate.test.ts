@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { recallIssues } from "@/lib/maker/parse";
-import { draftDay, pairingFor } from "./day";
+import { draftDay, pairingFor, unplayable } from "./day";
 import { eraDecoys, eraPicks, KNOWN_POOL, orderAnswers, pickPair, rapidPicks, recallAnswers, recallSeconds, type SharedPlayer } from "./generate";
 
 const player = (id: number, name: string, aliases: string[] = [], joinedA: string | null = null, joinedB: string | null = null): SharedPlayer => ({
@@ -70,6 +70,17 @@ describe("pickPair with the popular-games rules", () => {
     expect(pickPair("2026-10-21", pairs, [[1, 2]], new Set(["1-9"]), new Set(), rules, [[3, 9], [9, 1]])).toEqual([3, 9]);
   });
 
+  it("gives a day its own fixture first, even with few shared players or a preview days before", () => {
+    const own = (fixtures: [number, number][], used: string[] = []) => ({ fixtures, used: new Set(used) });
+    // 1 and 4 share nobody, but it's the day's game.
+    expect(pickPair("2026-11-22", pairs, [[1, 2]], new Set(["1-4"]), new Set(), rules, [], own([[1, 4]]))).toEqual([1, 4]);
+    // Its own day's game, used further back, gives way to the week's others.
+    expect(pickPair("2026-11-22", pairs, [[1, 3]], new Set(["1-4"]), new Set(), rules, [], own([[1, 4]], ["1-4"]))).toEqual([1, 3]);
+    // Still popular games only, and a UCL night still comes first.
+    expect(pickPair("2026-11-22", pairs, [], new Set(), new Set(), rules, [], own([[4, 5]]))).toEqual([1, 2]);
+    expect(pickPair("2026-11-24", pairs, [], new Set(), new Set(), rules, [[9, 1]], own([[1, 2]]))).toEqual([9, 1]);
+  });
+
   it("reuses a popular pair rather than going obscure", () => {
     expect(pickPair("2026-10-17", pairs, [], new Set(["1-2", "1-3"]), new Set(), rules)).not.toEqual([4, 5]);
     expect(pickPair("2026-10-17", pairs, [], new Set(["1-2", "1-3"]), new Set(), rules)).not.toBeNull();
@@ -131,6 +142,13 @@ describe("orderAnswers", () => {
 });
 
 describe("draftDay", () => {
+  it("marks a day whose only first half is a shared list too short to play", () => {
+    const three = [1, 2, 3].map((i) => player(i, `Player ${i}`, [], "2001-07-01", "2005-07-01"));
+    expect(unplayable(draftDay("2026-11-22", { id: 1, name: "Liverpool" }, { id: 2, name: "Man United" }, three, new Set()))).toBe(true);
+    const six = [1, 2, 3, 4, 5, 6].map((i) => player(i, `Player ${i}`, [], `${1995 + i}-07-01`, `${2005 + i}-07-01`));
+    expect(unplayable(draftDay("2026-11-22", { id: 1, name: "Liverpool" }, { id: 2, name: "Man United" }, six, new Set()))).toBe(false);
+  });
+
   it("writes both parts with fixture wording", () => {
     const players = ["1993", "1997", "2001", "2004", "2008", "2012"].map((y, i) => player(i + 1, `Player ${i + 1}`, [], `${y}-07-01`, `${y}-08-01`));
     const day = draftDay("2026-10-17", { id: 1, name: "Chelsea" }, { id: 2, name: "Arsenal" }, players, new Set());
