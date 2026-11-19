@@ -42,7 +42,7 @@ export const DEMO_FROM = new Date("2026-11-19T00:00:00+01:00");
 export const DEMO_VIDEO: { src: string; poster: string } | null = { src: "/demo/launch-demo.mp4", poster: "/demo/launch-demo.jpg" };
 
 /** The demo's post on X, once it's out. Until then the link goes to the account. */
-export const DEMO_POST_URL: string | null = null;
+export const DEMO_POST_URL: string | null = "https://x.com/playiKnowBall/status/2123423139954827532";
 
 export function demoUp(at: Date = new Date(), testSite = false, video: { src: string } | null = DEMO_VIDEO): boolean {
   if (!video) return false;
