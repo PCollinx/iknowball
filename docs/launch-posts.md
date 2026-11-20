@@ -46,7 +46,9 @@ The launch post below (LinkedIn post 2), with the demo video's 16:9 cut.
 ### X (@playiKnowBall)
 
 Pin the first post until Round 11 ends. Video: the demo video, 9:16, on the first post only. The rest go
-as replies under it, so the thread reads top to bottom.
+as replies under it, so the thread reads top to bottom. X shows posts with outside links to fewer people,
+so no post carries the link itself: it goes in the first reply, posted straight after (the same rule as
+LinkedIn's first comment).
 
 **1. 07:00, pinned (with the video):**
 
@@ -55,12 +57,12 @@ as replies under it, so the thread reads top to bottom.
 > Daily No. 01 is Man City v Man United. Two halves, a clock, and one go. Nobody gets a second try, me
 > included.
 >
-> Everyone says they know ball. Here's where you prove it.
+> Everyone says they know ball. Here's where you prove it. Link below.
+
+**2. Reply, straight after:**
+
+> Play it here, free, no sign-up: playiknowball.com/?utm_source=x
 >
-> playiknowball.com/?utm_source=x
-
-**2. Reply:**
-
 > The Daily: a new one every midnight, built around a real fixture. First half you name players, second
 > half you put them in order or pick the right answer. Out of 100.
 >
@@ -90,14 +92,14 @@ as replies under it, so the thread reads top to bottom.
 Then, through the day, from @playiKnowBall:
 
 - **12:00**, with your score card:
-  > Played Daily No. 01. I built the thing and I got [score]. Embarrass me.
-  >
-  > playiknowball.com/daily?utm_source=x
+  > Played Daily No. 01. I built the thing and I got [score]. Embarrass me. Link below.
+
+  Reply: `playiknowball.com/daily?utm_source=x`
 - **17:00**, with your Clash card:
   > 60 seconds, higher or lower. I got [N]. Same players, same order, one go. First person to beat it
-  > gets a shout-out here tonight.
-  >
-  > [challenge link]
+  > gets a shout-out here tonight. Challenge link below.
+
+  Reply: the challenge link.
 - **21:00:**
   > Three hours left on Daily No. 01. It closes at midnight, and so does your chance at the first table
   > iKnowBall ever printed.
