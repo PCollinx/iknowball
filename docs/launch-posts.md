@@ -45,6 +45,101 @@ The launch post below (LinkedIn post 2), with the demo video's 16:9 cut.
 
 ### X (@playiKnowBall)
 
+Pin the first post until Round 11 ends. Video: the demo video, 9:16, on the first post only. The rest go
+as replies under it, so the thread reads top to bottom.
+
+**1. 07:00, pinned (with the video):**
+
+> iKnowBall is live.
+>
+> Daily No. 01 is Man City v Man United. Two halves, a clock, and one go. Nobody gets a second try, me
+> included.
+>
+> Everyone says they know ball. Here's where you prove it.
+>
+> playiknowball.com/?utm_source=x
+
+**2. Reply:**
+
+> The Daily: a new one every midnight, built around a real fixture. First half you name players, second
+> half you put them in order or pick the right answer. Out of 100.
+>
+> The answers come from player records, not opinion, so there's nothing to argue with.
+
+**3. Reply:**
+
+> Clash: 60 seconds of higher or lower. Who scored more, who played more, who's taller. A wrong call costs
+> you five seconds.
+>
+> Every sprint makes a link. Your mate gets the same players in the same order, and one go to beat you.
+
+**4. Reply:**
+
+> The League: start one, send the code to your guys, and the table runs Monday to Sunday. Your best five
+> Dailies plus Clash, out of 600.
+>
+> The week resets. The season table doesn't forget.
+
+**5. Reply:**
+
+> Free, no sign-up to play. Add it to your home screen and it opens like an app.
+>
+> After three Dailies you get a rating and a tier: Plastic, Casual, Supporter, Ball Knower, Pundit, Ball
+> God. Very few people will like where they land.
+
+Then, through the day, from @playiKnowBall:
+
+- **12:00**, with your score card:
+  > Played Daily No. 01. I built the thing and I got [score]. Embarrass me.
+  >
+  > playiknowball.com/daily?utm_source=x
+- **17:00**, with your Clash card:
+  > 60 seconds, higher or lower. I got [N]. Same players, same order, one go. First person to beat it
+  > gets a shout-out here tonight.
+  >
+  > [challenge link]
+- **21:00:**
+  > Three hours left on Daily No. 01. It closes at midnight, and so does your chance at the first table
+  > iKnowBall ever printed.
+  >
+  > Top three right now: [1st], [2nd], [3rd].
+  >
+  > (Only players who've picked a name. Guests, save your shirt.)
+
+Repost from your own account and ask the beta testers to quote it with their score.
+
+### WhatsApp
+
+Three pieces, all sent by you:
+
+1. **Status, 07:00:** the demo video (9:16), with:
+   > iKnowBall is live. Today's Daily is Man City v Man United. One go. playiknowball.com
+2. **Your groups (football and friends), 07:30:** one message, not a forward, and only to groups where it
+   fits:
+
+> Guys, the football game I've been building is live this morning. It's called iKnowBall.
+>
+> Today's Daily is Man City v Man United. You get one go, it's timed, and it takes about two minutes. No
+> sign-up, it works on any phone.
+>
+> playiknowball.com/daily?utm_source=whatsapp
+>
+> Send me your score when you're done. I'll know who's been lying about knowing ball.
+>
+> I've also started a league for this group. Join it and we'll see who's top on Sunday night:
+> [league invite link]
+
+3. **Status, after you play:** your Daily share card with "Beat it."
+
+Start a league before the day ("IKB…" code) and drop its invite link in the groups too: a league keeps a
+group coming back every week.
+
+## LinkedIn
+
+The launch post below (LinkedIn post 2), with the demo video's 16:9 cut.
+
+### X (@playiKnowBall)
+
 Pin the first post until Round 11 ends. Video: the demo video, 9:16 for the post itself.
 
 > iKnowBall is live. ⚽
@@ -111,16 +206,42 @@ Image: the logo canvas with three screens (home, a Daily, a Clash sprint), or a 
 
 ### 2. Fri 20 Nov: launch day (with X and WhatsApp, above)
 
-Video: the demo video (16:9 cut).
+Video: the demo video (16:9 cut). The link goes in the first comment.
 
-> iKnowBall is live.
+> 38 days ago I opened an empty folder and started building a football game. This morning it went live.
 >
-> A football knowledge game: a Daily, Clash sprints, and leagues with your mates. Free, in the browser,
-> installs to your phone.
+> It's called iKnowBall. The football quizzes I kept finding were either about cup finals from before I
+> was born, or buried under so many ads you couldn't find the question. I wanted one about the players we
+> actually watched: short enough to play on the bus, and sharp enough to start an argument in the group
+> chat.
 >
-> Today's Daily is [fixture]. My score is [score]. Beat it.
+> So there are three games. The Daily is one go a day, against the clock, built around that day's
+> fixture. Clash is 60 seconds of higher or lower that you can send to a friend. The League runs a table
+> for you and your friends every Premier League week.
 >
-> [link in the comments]
+> A few things I'd do the same way again:
+>
+> The questions write themselves. Every night a job reads player histories from Wikidata and the week's
+> fixtures, and drafts the Dailies a week ahead. I review every one, and the answers always come from the
+> data. AI never decides what's right.
+>
+> The clock lives on the server. It starts when the question is on your screen, not when you press start,
+> and every answer is checked there too. You can't pause it and you can't peek.
+>
+> It's built for a phone in Lagos first. Each answer is one trip to the database, because on a mobile
+> connection here every extra trip costs you about half a second, and in a 60-second game that's a lot.
+>
+> Every shirt is drawn in code from a club's colours and pattern. No crests, no photos.
+>
+> Today's Daily is Man City v Man United. If you know someone who says they know ball, send it to them and
+> see what happens.
+
+**First comment:**
+
+> Play here, free, no sign-up: playiknowball.com/?utm_source=linkedin
+>
+> Built with Next.js, Supabase and Vercel, with player data from Wikidata. Happy to answer anything about
+> how it works.
 
 ### 3. Tue 8 Dec: two weeks in
 
@@ -229,20 +350,41 @@ for iKnowBall. Collins hasn't used it before, so this is step by step.
 Lead with the quiz, not the app: a question people want to answer in the replies, then the link.
 
 - **Title:** `Can You Name Every Player Who Played For Both Arsenal And Chelsea Since 1992?`
-  (use a past Daily's pair, never an upcoming one; a big-six pair gets more replies).
+  (use a past Daily's pair, never an upcoming one: `/maker/teaser` warns if the clubs are in a Daily in the
+  next 14 days, so make the image there and change the pair if it does. A big-six pair gets more replies.)
 - **Body:**
 
-> Football fans, test yourself. How many can you name before checking? Drop your number below.
+> Oga football fans, small test. How many can you name before you check anywhere? Write your number below
+> and be honest.
 >
 > [image: a Name them teaser from /maker/teaser, numbered shirts with "?" on the tags]
 >
-> I built a game around questions like this: **iKnowBall**. A new Daily every day, timed, one go. Then
-> Clash, 60 seconds of higher or lower you can send to your guy. Then leagues with your friends, scored
-> every Premier League week.
+> Most people get to five and their head goes blank. Some people swear Ashley Cole is the only one.
 >
-> Free, no sign-up to play, works on any phone: playiknowball.com/?utm_source=nairaland
+> I've spent the last six weeks building a game around questions like this, and it went live this
+> morning. It's called iKnowBall:
 >
-> Post your score here. Answers to the question above on page 2 tomorrow.
+> **The Daily.** A new one every midnight, built around a real fixture (today's is Man City v Man
+> United). Two halves, timed, one go. First half you name players, second half you put them in order or
+> pick the right answer. Out of 100.
+>
+> **Clash.** 60 seconds of higher or lower: who scored more, who played more, who's taller. Every sprint
+> makes a link, so you can send it to your guy and he gets the same players in the same order. No
+> excuses.
+>
+> **The League.** Start one for your group, share the code, and the table runs Monday to Sunday. There's
+> a table for everyone too, and one for each club's fans, so we'll finally see which fanbase actually knows
+> ball.
+>
+> It's free, no sign-up to play, and it's light on data. It works in the browser on any phone, and you can
+> add it to your home screen like an app. I built it for Nigerian fans first.
+>
+> playiknowball.com/?utm_source=nairaland
+>
+> Drop your Daily score here when you play. I'll post the answers to the question above tomorrow, and
+> every Monday I'll put the week's top players in this thread.
+>
+> If something breaks or you want something added, tell me here. I read everything.
 
 - Upload images through Nairaland's own image button so they show in the thread.
 - Answer every reply that day. Post the answers the next day (a second image with the names), which brings
