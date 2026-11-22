@@ -20,6 +20,7 @@ describe("levenshtein", () => {
   it("counts edits", () => {
     expect(levenshtein("fabregas", "fabregaz")).toBe(1);
     expect(levenshtein("kitten", "sitting")).toBe(3);
+    expect(levenshtein("mbuemo", "mbeumo")).toBe(1);
   });
 });
 
@@ -41,6 +42,29 @@ describe("matchAnswer", () => {
     expect(matchAnswer("Lampard", answers)).toBeNull();
     expect(matchAnswer("cesk", answers)).toBeNull(); // short keys get no typo allowance
     expect(matchAnswer("", answers)).toBeNull();
+  });
+
+  it("matches a lone first name or surname, swapped letters included", () => {
+    const united = buildKeys([
+      { id: 1, text: "Bruno Fernandes", aliases: [] },
+      { id: 2, text: "Bryan Mbeumo", aliases: ["Bryan Tetsadong Marceau Mbeumo"] },
+    ]);
+    expect(matchAnswer("bruno", united)).toBe(1);
+    expect(matchAnswer("Mbeumo", united)).toBe(2);
+    expect(matchAnswer("mbuemo", united)).toBe(2);
+    expect(matchAnswer("bryan", united)).toBe(2);
+  });
+
+  it("does not give a shared first name to either player", () => {
+    const keys = buildKeys([
+      { id: 1, text: "Bruno Fernandes", aliases: [] },
+      { id: 2, text: "Bruno Guimarães", aliases: [] },
+      { id: 3, text: "Reece James", aliases: [] },
+      { id: 4, text: "James Milner", aliases: [] },
+    ]);
+    expect(matchAnswer("bruno", keys)).toBeNull();
+    expect(matchAnswer("guimaraes", keys)).toBe(2);
+    expect(matchAnswer("james", keys)).toBe(3); // a surname, not a first name, since Milner's first name is shared
   });
 
   it("does not give a shared surname to either player", () => {
