@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } fro
 import { Arrow } from "@/components/icons/Icon";
 import { IosSteps } from "@/components/pwa/IosSteps";
 import { useInstall } from "@/components/pwa/useInstall";
-import { askCopy, doneCopy, whatToAsk, type Ask, type Game } from "@/lib/push/ask";
+import { askCopy, doneCopy, forcedAsk, whatToAsk, type Ask, type Game } from "@/lib/push/ask";
 import { isPhone, ticketDue } from "@/lib/pwa/platform";
 import { useWhistle } from "./useWhistle";
 
@@ -37,6 +37,11 @@ function notNow() {
 
 const noChange = () => () => {};
 
+/** A preview or this computer. Fails safe: if Vercel's variable is missing, it's the live site. */
+function testSite(): boolean {
+  return process.env.NEXT_PUBLIC_VERCEL_ENV === "preview" || ["localhost", "127.0.0.1"].includes(window.location.hostname);
+}
+
 type Phase = { kind: "waiting" } | { kind: "open"; ask: Ask } | { kind: "done"; ask: "install" | "whistle" } | { kind: "closed" };
 
 export function WhistleAsk({ game, score, guest }: { game: Game; score: number; guest: boolean }) {
@@ -46,7 +51,9 @@ export function WhistleAsk({ game, score, guest }: { game: Game; score: number; 
   const [phase, setPhase] = useState<Phase>({ kind: "waiting" });
   const [busy, setBusy] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
-  const decision = whatToAsk({ phone, way, whistle: state.kind });
+  // Test sites: ?ask=whistle, ?ask=install or ?ask=ios shows that one, whatever this browser's state.
+  const forced = useSyncExternalStore(noChange, () => forcedAsk(window.location.search, !testSite()), () => null);
+  const decision = forced ?? whatToAsk({ phone, way, whistle: state.kind });
 
   // Decided once a page: what it finds first is what it asks, or it asks nothing.
   const settled = useRef(false);
@@ -54,9 +61,9 @@ export function WhistleAsk({ game, score, guest }: { game: Game; score: number; 
   useEffect(() => {
     if (settled.current || phase.kind !== "waiting" || decision === "wait") return;
     settled.current = true;
-    if (decision === null || !due()) return;
+    if (decision === null || (!forced && !due())) return;
     timer.current = setTimeout(() => setPhase({ kind: "open", ask: decision }), DELAY_MS);
-  }, [phase.kind, decision]);
+  }, [phase.kind, decision, forced]);
   useEffect(() => () => clearTimeout(timer.current), []);
 
   const open = phase.kind === "open" || phase.kind === "done";

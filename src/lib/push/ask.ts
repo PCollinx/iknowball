@@ -26,6 +26,15 @@ export function whatToAsk({ phone, way, whistle }: Seen): Ask | null | "wait" {
   return whistle === "off" ? "whistle" : null;
 }
 
+/** Test sites only (Collins, 23 Nov 2026): `?ask=whistle`, `?ask=install` or
+ * `?ask=ios` shows that ask at full time whatever this browser's state, Not
+ * now or not. `install` needs the browser's own offer to do anything. */
+export function forcedAsk(search: string, live: boolean): Ask | null {
+  if (live) return null;
+  const ask = new URLSearchParams(search).get("ask");
+  return ask === "whistle" || ask === "install" || ask === "ios" ? ask : null;
+}
+
 export type Game = "daily" | "clash";
 
 export type AskCopy = { on: string; off: string; title: string; line: string; button: string };

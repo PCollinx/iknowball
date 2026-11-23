@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { askCopy, doneCopy, whatToAsk } from "./ask";
+import { askCopy, doneCopy, forcedAsk, whatToAsk } from "./ask";
 
 describe("whatToAsk", () => {
   it("asks a phone in the browser to save it first, whatever the whistle", () => {
@@ -44,5 +44,19 @@ describe("askCopy", () => {
   it("says what happens next once it's done", () => {
     expect(doneCopy("install", "daily").title).toBe("Saved on your phone");
     expect(doneCopy("whistle", "clash").line).toContain("when a mate plays");
+  });
+});
+
+describe("forcedAsk", () => {
+  it("shows the asked-for pop-up on a test site", () => {
+    expect(forcedAsk("?ask=whistle", false)).toBe("whistle");
+    expect(forcedAsk("?t=abc&ask=ios", false)).toBe("ios");
+    expect(forcedAsk("?ask=install", false)).toBe("install");
+  });
+
+  it("ignores anything else, and everything on the live site", () => {
+    expect(forcedAsk("?ask=phone", false)).toBeNull();
+    expect(forcedAsk("", false)).toBeNull();
+    expect(forcedAsk("?ask=whistle", true)).toBeNull();
   });
 });
