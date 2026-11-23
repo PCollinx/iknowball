@@ -4,6 +4,7 @@ import { shortDate } from "@/components/daily/Masthead";
 import { Logo } from "@/components/nav/SiteNav";
 import { JOB_NAMES } from "@/lib/control/problems";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { hasPost } from "@/lib/posts/data";
 import { gameHour, POSTS, postsOn } from "@/lib/posts/plan";
 import { addDays, gameDate } from "@/lib/time";
 import { ArrowUpRight } from "@/components/icons/Icon";
@@ -49,10 +50,11 @@ async function counts(): Promise<{ days: number; jobs: number; waitlist: number;
     return parts.length > 0 && parts.every((p) => p.status === "scheduled");
   };
   const last = JOB_NAMES.map((job) => (runs.data ?? []).find((r) => r.job === job)?.status);
-  // Posts due by now and not yet posted or skipped (whether there's anything to say is the tab's to work out).
+  // Posts due by now, not yet posted or skipped, with something to say: the tab's "to post".
   const hour = gameHour();
   const handled = new Set((done.data ?? []).map((p) => p.kind as string));
-  const posts = postsOn(today).filter((k) => hour >= POSTS[k].hour && !handled.has(k)).length;
+  const due = postsOn(today).filter((k) => hour >= POSTS[k].hour && !handled.has(k));
+  const posts = (await Promise.all(due.map((k) => hasPost(k, today)))).filter(Boolean).length;
   return { days: dates.filter((d) => !ready(d)).length, jobs: last.filter((s) => s === "warning" || s === "failed").length, waitlist: waitlist.count ?? 0, posts };
 }
 
