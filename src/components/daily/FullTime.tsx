@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ClubPicker } from "@/components/profile/ClubPicker";
 import { SeasonTicket } from "@/components/pwa/SeasonTicket";
+import { WhistleAsk } from "@/components/push/WhistleAsk";
 import { WhistleStrip } from "@/components/push/WhistleStrip";
 import { APP_ICON_SRC } from "@/lib/og/logo";
 import { SheetValue, TeamSheet, type SheetRow } from "@/components/sheet/TeamSheet";
@@ -109,6 +110,7 @@ export function FullTime(props: Props) {
               text={shareText}
               tone="teal"
               label="Send the card"
+              preview
               sub={`Can they beat ${points}?`}
               className=""
               image={card ? { url: "/daily/card", name: `iknowball-daily-${String(issue).padStart(3, "0")}.png` } : null}
@@ -116,6 +118,7 @@ export function FullTime(props: Props) {
             {/* Not on a first full time, which asks "Who do you support?" instead. */}
             {!props.clubChoices && <SeasonTicket guest={props.guest} icon={APP_ICON_SRC} season={seasonLabel(seasonOf(gameDate()))} />}
             {!props.clubChoices && <WhistleStrip guest={props.guest} className="mt-6" />}
+            {!props.clubChoices && <WhistleAsk game="daily" score={points} guest={props.guest} />}
           </div>
 
           <TodaysTable top={props.top} me={props.me} players={players} />
@@ -390,9 +393,10 @@ function TodaysTable({ top, me, players }: { top: TableRow[]; me: TableRow | nul
   if (!rows.length) return null;
   return (
     <section className="order-8 mt-7">
-      <div className="flex items-baseline justify-between border-b-2 border-navy pb-1.5">
-        <h2 className="font-display text-2xl leading-none uppercase lg:text-[26px]">Elsewhere today</h2>
-        <Link href="/daily/table" className="label underline-offset-2 hover:underline">
+      <div className="flex items-baseline justify-between gap-2 border-b-2 border-navy pb-1.5 min-[380px]:gap-3">
+        {/* 18px under 380px wide, so the heading and the link share one line (Collins, 23 Nov 2026). */}
+        <h2 className="font-display text-lg leading-none whitespace-nowrap uppercase min-[380px]:text-2xl lg:text-[26px]">Elsewhere today</h2>
+        <Link href="/daily/table" className="label whitespace-nowrap underline-offset-2 hover:underline">
           {players} played · whole table <Arrow />
         </Link>
       </div>

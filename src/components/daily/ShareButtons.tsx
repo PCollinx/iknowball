@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight } from "@/components/icons/Icon";
+import { CardSheet, saveCard } from "@/components/share/CardSheet";
 
 type Image = { url: string; name: string };
 
@@ -14,6 +15,7 @@ export function ShareButtons({
   label = "Share the card",
   sub,
   tone = "white",
+  preview = false,
 }: {
   text: string;
   image: Image | null;
@@ -22,8 +24,11 @@ export function ShareButtons({
   /** A line under the label ("Can they beat 65?"). */
   sub?: string;
   tone?: "white" | "teal";
+  /** Full time: the button opens the card first (CardSheet), and Send it shares it. */
+  preview?: boolean;
 }) {
   const [note, setNote] = useState("");
+  const [peek, setPeek] = useState(false);
   const file = useRef<Promise<File | null> | null>(null);
   const url = image?.url;
   const name = image?.name;
@@ -38,6 +43,7 @@ export function ShareButtons({
   }, [url, name]);
 
   async function shareImage() {
+    setPeek(false);
     const f = await file.current;
     if (!f) return setNote("Couldn't draw the card. Try again.");
     if (navigator.canShare?.({ files: [f] })) {
@@ -48,11 +54,15 @@ export function ShareButtons({
       }
       return;
     }
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(f);
-    a.download = f.name;
-    a.click();
-    URL.revokeObjectURL(a.href);
+    saveCard(f);
+    setNote("Card saved. Post it and watch them try.");
+  }
+
+  async function savePicture() {
+    setPeek(false);
+    const f = await file.current;
+    if (!f) return setNote("Couldn't draw the card. Try again.");
+    saveCard(f);
     setNote("Card saved. Post it and watch them try.");
   }
 
@@ -61,7 +71,7 @@ export function ShareButtons({
     <div>
       <button
         type="button"
-        onClick={shareImage}
+        onClick={preview ? () => setPeek(true) : shareImage}
         className={`btn-${tone} btn-press ${className} mb-1 flex w-full items-center justify-between px-4 py-3 text-left font-display text-[24px] uppercase lg:text-[26px]`}
       >
         <span>
@@ -73,6 +83,9 @@ export function ShareButtons({
       <p role="status" className="min-h-[22px] text-[15px] font-semibold text-royal">
         {note}
       </p>
+      {preview && (
+        <CardSheet open={peek} src={image.url} alt="Your share card" message={text} onSend={shareImage} onSave={savePicture} onClose={() => setPeek(false)} />
+      )}
     </div>
   );
 }

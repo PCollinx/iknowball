@@ -13,6 +13,12 @@ export function isIos(ua: string, touchPoints: number): boolean {
   return /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && touchPoints > 1);
 }
 
+/** A phone or tablet, where iKnowBall belongs on the home screen; anything
+ * else is a laptop or desktop, which goes straight to the whistle. */
+export function isPhone(ua: string, touchPoints: number): boolean {
+  return isIos(ua, touchPoints) || /Android|Mobi/i.test(ua);
+}
+
 /** X, WhatsApp, Instagram and Facebook open links in a browser of their own,
  * which can't add to the home screen. */
 export function inAppBrowser(ua: string): boolean {

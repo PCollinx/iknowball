@@ -339,3 +339,18 @@ body:has([data-full-screen]) [data-site-body] {
     transition: none;
   }
 }
+
+/* The full-time ask (WhistleAsk, 23 Nov 2026): the board pops in. */
+@keyframes whistle-ask {
+  from {
+    scale: 0.92;
+    opacity: 0;
+  }
+}
+
+/* See the card first (CardSheet, 23 Nov 2026): the sheet slides up from the foot. */
+@keyframes card-sheet {
+  from {
+    translate: 0 100%;
+  }
+}

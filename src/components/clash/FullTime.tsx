@@ -3,6 +3,7 @@ import { SubmitButton } from "@/components/daily/SubmitButton";
 import { ordinal } from "@/components/daily/formats";
 import { MatchStats, statRow } from "@/components/fulltime/MatchStats";
 import { TellMe } from "@/components/push/TellMe";
+import { WhistleAsk } from "@/components/push/WhistleAsk";
 import type { Result } from "@/lib/clash/data";
 import { sprintLine, type Item } from "@/lib/clash/rules";
 import { ResultBoard } from "./Board";
@@ -36,9 +37,11 @@ type Props = {
   week: { three: number[]; added: number; replaced: number | null };
   /** On a rematch you started: the mate it's for. */
   rival?: string | null;
+  /** Signed in as a guest: the iPhone steps say to save the shirt first. */
+  guest?: boolean;
 };
 
-export function ClashFullTime({ code, statLabel, setSize, right, kicks, bestRun, items, table, siteUrl, before, week, rival = null }: Props) {
+export function ClashFullTime({ code, statLabel, setSize, right, kicks, bestRun, items, table, siteUrl, before, week, rival = null, guest = false }: Props) {
   const mine = table.find((r) => r.mine) ?? null;
   const setter = table.find((r) => r.setter && !r.mine) ?? null;
   const missed = kicks.length - right;
@@ -108,6 +111,7 @@ export function ClashFullTime({ code, statLabel, setSize, right, kicks, bestRun,
           <Ticket code={code} url={url} right={right} missed={missed} table={table} challenge={Boolean(setter)} rival={setter ? null : rival} />
           {/* Your own set: "Tell me when they play" (the whistle, option B). */}
           {!setter && <TellMe />}
+          <WhistleAsk game="clash" score={right} guest={guest} />
           {(setter || table.length > 1) && <ChallengeTable table={table} mine={mine} />}
           <form action={startSprint}>
             <SubmitButton tone="navy" pendingText="Picking…">
@@ -170,6 +174,7 @@ function Ticket({ code, url, right, missed, table, challenge, rival }: { code: s
             text={cardMessage({ right, missed, toBeat: beat.right })}
             label={challenge ? "Pass it on" : rival ? `Send to ${rival}` : "Send to a friend"}
             image={{ url: `/clash/${code}/card`, name: `iknowball-clash-${code}.png` }}
+            preview
           />
         </div>
       </div>

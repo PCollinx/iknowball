@@ -9,6 +9,7 @@ import { Sprint } from "@/components/clash/Sprint";
 import type { Kit } from "@/components/daily/ShirtBack";
 import { getClashView, weekAfter, weekBestBefore } from "@/lib/clash/data";
 import { STATS } from "@/lib/clash/rules";
+import { currentIsGuest } from "@/lib/daily/data";
 import { publicEnv } from "@/lib/env";
 import { kitOf } from "@/lib/profile/club";
 import { clubsByIds } from "@/lib/profile/data";
@@ -101,7 +102,7 @@ async function ClashScreen({ params }: { params: Params }) {
       // A mate's full time tells the setter (once per mate per set), after the page is served.
       const { set, run } = view;
       after(() => whistleChallenge(set, run));
-      const [before, week] = await Promise.all([weekBestBefore(view.run), weekAfter(view.run)]);
+      const [before, week, guest] = await Promise.all([weekBestBefore(view.run), weekAfter(view.run), currentIsGuest()]);
       return (
         <ClashFullTime
           code={view.set.code}
@@ -116,6 +117,7 @@ async function ClashScreen({ params }: { params: Params }) {
           before={before}
           week={week}
           rival={view.rival}
+          guest={guest}
         />
       );
     }

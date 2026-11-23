@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Arrow } from "@/components/icons/Icon";
+import { CardSheet, saveCard } from "@/components/share/CardSheet";
 
 type Image = { url: string; name: string };
 
@@ -17,14 +18,18 @@ export function ChallengeButton({
   label = "Send the challenge",
   code,
   image,
+  preview = false,
 }: {
   url: string;
   text: string;
   label?: string;
   code?: string;
   image?: Image;
+  /** Full time: the button opens the card first (CardSheet), and Send it sends it. */
+  preview?: boolean;
 }) {
   const [note, setNote] = useState("");
+  const [peek, setPeek] = useState(false);
   const file = useRef<Promise<File | null> | null>(null);
   const imageUrl = image?.url;
   const imageName = image?.name;
@@ -39,6 +44,7 @@ export function ChallengeButton({
   }, [imageUrl, imageName]);
 
   async function send() {
+    setPeek(false);
     const card = file.current ? await file.current : null;
     if (card && navigator.canShare?.({ files: [card] })) {
       try {
@@ -57,7 +63,7 @@ export function ChallengeButton({
       }
       return;
     }
-    if (card) save(card);
+    if (card) saveCard(card);
     try {
       await navigator.clipboard.writeText(`${text} ${url}`);
       setNote(card ? "Link copied and card saved. Post them both." : "Link copied. Drop it in the group chat.");
@@ -70,7 +76,7 @@ export function ChallengeButton({
     <>
       <button
         type="button"
-        onClick={send}
+        onClick={preview && image ? () => setPeek(true) : send}
         className="btn-teal btn-press flex w-full items-center justify-between gap-2 px-3 py-2.5 font-display text-[22px] leading-none uppercase lg:px-3.5 lg:text-2xl"
       >
         <span className="min-w-0 truncate">{label}</span>
@@ -79,14 +85,23 @@ export function ChallengeButton({
       <p role="status" className="min-h-[22px] pt-1 text-[15px] font-semibold text-royal">
         {note}
       </p>
+      {preview && image && (
+        <CardSheet
+          open={peek}
+          src={image.url}
+          alt="Your Clash card"
+          message={`${text} ${url}`}
+          onSend={send}
+          onSave={async () => {
+            setPeek(false);
+            const card = file.current ? await file.current : null;
+            if (!card) return setNote("Couldn't draw the card. Try again.");
+            saveCard(card);
+            setNote("Card saved. The link's in the message when you send it.");
+          }}
+          onClose={() => setPeek(false)}
+        />
+      )}
     </>
   );
-}
-
-function save(card: File) {
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(card);
-  a.download = card.name;
-  a.click();
-  URL.revokeObjectURL(a.href);
 }
