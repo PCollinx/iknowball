@@ -174,6 +174,17 @@ describe("build B", () => {
     expect(nationAtClub(squad.slice(5), 3)?.nation).toBe("France");
   });
 
+  it("skips a nation whose list is mostly unknown players", () => {
+    // 7 Nigerians, only 5 of them in 12+ Wikipedias: under 3 in 4, so France it is.
+    const squad = [
+      ...Array.from({ length: 7 }, (_, i) => at(i + 1, `Naija ${i}`, 2000 + i, 2002 + i, { nationality: "Nigeria", fame: i < 5 ? 30 : 4 })),
+      ...Array.from({ length: 8 }, (_, i) => at(20 + i, `French ${i}`, 2000 + i, 2002 + i, { nationality: "France", fame: i < 6 ? 30 : 4 })),
+    ];
+    expect(nationAtClub(squad, 3)?.nation).toBe("France");
+    // Nobody well known at all: no list.
+    expect(nationAtClub(squad.map((p) => ({ ...p, fame: 3 })), 3)).toBeNull();
+  });
+
   it("leaves caretakers out of a club's managers", () => {
     const stays = [stay(1, "Graham", "1986-05-14", "1995-02-21"), stay(1, "Houston", "1995-02-22", "1995-06-08"), stay(1, "Rioch", "1995-06-08", "1996-08-12"), stay(1, "Wenger", "1996-10-01", "2018-05-21")];
     expect(permanentManagers(stays, 1, today).map((m) => m.name)).toEqual(["Graham", "Rioch", "Wenger"]);
