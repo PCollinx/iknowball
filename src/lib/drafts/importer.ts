@@ -138,6 +138,7 @@ async function saveClub(admin: ReturnType<typeof createAdminClient>, club: Track
         apps: s.apps,
         goals: s.goals,
         on_loan: s.onLoan,
+        end_unknown: s.endUnknown,
         source_ref: s.statement,
         updated_at: new Date().toISOString(),
       })),

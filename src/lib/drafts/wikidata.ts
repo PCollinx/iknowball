@@ -13,14 +13,16 @@ export const ERA_START_YEAR = 1992;
 /** Every footballer with a "member of sports team" statement for one club in the PL era. */
 export function clubPlayersQuery(wikipediaTitle: string): string {
   const title = wikipediaTitle.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-  return `SELECT ?club ?player ?playerLabel ?playerAltLabel ?st ?start ?end ?dob ?apps ?goals ?links ?how WHERE {
+  return `SELECT ?club ?player ?playerLabel ?playerAltLabel ?st ?start ?end ?endHidden ?dob ?apps ?goals ?links ?how WHERE {
   ?article schema:about ?club; schema:isPartOf <https://en.wikipedia.org/>; schema:name "${title}"@en.
   ?player p:P54 ?st. ?st ps:P54 ?club.
   ?player wdt:P106 wd:${ASSOCIATION_FOOTBALL_PLAYER}.
   # The men's game only: Wikidata files women's team players under the same club.
   FILTER NOT EXISTS { ?player wdt:P21 wd:${FEMALE}. }
   OPTIONAL { ?st pq:P580 ?start. }
-  OPTIONAL { ?st pq:P582 ?end. }
+  OPTIONAL { ?st pq:P582 ?end. FILTER(isLiteral(?end)) }
+  # "Unknown value" as the end (Wesley Fofana at Chelsea): kept and flagged, since he did play there.
+  OPTIONAL { ?st pq:P582 ?endHidden. FILTER(!isLiteral(?endHidden)) }
   # League appearances and goals for the spell, where Wikidata has them (Clash facts).
   OPTIONAL { ?st pq:P1350 ?apps. }
   OPTIONAL { ?st pq:P1351 ?goals. }
@@ -51,6 +53,10 @@ export type Spell = {
   sitelinks: number | null;
   /** Wikidata says the spell was a loan. Many loans aren't marked, so the drafts check dates too. */
   onLoan: boolean;
+  /** Wikidata gives the end as "unknown value": `leftOn` stays null, but he isn't
+   * taken to be still there. Lists of who played for a club use the spell;
+   * questions that need its dates don't (player_spells.end_unknown). */
+  endUnknown: boolean;
 };
 
 /** Wikidata's item for a loan, as an "acquisition transaction" (P1642). */
@@ -90,6 +96,7 @@ export function parseClubPlayers(json: { results: { bindings: Binding[] } }): Sp
       goals: count(b.goals?.value),
       sitelinks: count(b.links?.value),
       onLoan: b.how ? qid(b.how.value) === LOAN : false,
+      endUnknown: Boolean(b.endHidden) && !b.end,
     });
   }
   // A statement repeats when a player has two birth dates or two transaction
@@ -219,12 +226,25 @@ export function heightCm(amount?: string, unit?: string): number | null {
   return cm !== null && cm >= 150 && cm <= 215 ? Math.round(cm) : null;
 }
 
+/** Wikidata names some countries two ways ("Kingdom of the Netherlands" for
+ * some players, "Netherlands" for others); one name each, so a country's
+ * players make one list (Collins, 23 Nov 2026). */
+const SAME_NATION: Record<string, string> = {
+  "Kingdom of the Netherlands": "Netherlands",
+  "Kingdom of Denmark": "Denmark",
+};
+
+export function nationName(raw: string | null | undefined): string | null {
+  const name = (raw ?? "").trim();
+  return name ? (SAME_NATION[name] ?? name) : null;
+}
+
 export function parsePlayerFacts(facts: { results: { bindings: Binding[] } }, clubs: { results: { bindings: Binding[] } }): Map<string, PlayerFacts> {
   const out = new Map<string, PlayerFacts>();
   for (const b of facts.results.bindings) {
     if (!b.player) continue;
     out.set(qid(b.player.value), {
-      nationality: (b.nat?.value ?? b.cit?.value ?? "").trim() || null,
+      nationality: nationName(b.nat?.value ?? b.cit?.value),
       heightCm: heightCm(b.height?.value, b.heightUnit?.value),
       careerClubs: null,
     });

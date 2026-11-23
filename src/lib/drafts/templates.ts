@@ -1,7 +1,7 @@
 import { PATH_ARROW } from "@/components/daily/formats";
 import { normalizeName } from "@/lib/daily/match";
 import { pickIssues, type OrderLine, type PickLine } from "@/lib/maker/parse";
-import { eraDecoys, hash, KNOWN_POOL, MAX_SHARED, MIN_ERAS, MIN_PICKS, MIN_SHARED, ORDER_SIZE, ERA_SIZE, PICK_SIZE, type Club, type SharedPlayer } from "./generate";
+import { eraDecoys, hash, KNOWN_POOL, MAX_SHARED, MIN_ERAS, MIN_FAME, MIN_PICKS, MIN_SHARED, ORDER_SIZE, ERA_SIZE, PICK_SIZE, type Club, type SharedPlayer } from "./generate";
 
 // The Daily's newer templates (Collins kept 43 of 66 on 29 Oct 2026; these are
 // build A, the ones our club spells already answer). Pure, like generate.ts:
@@ -18,6 +18,10 @@ export type ClubSpell = {
   joined: string | null;
   left: string | null;
   loan: boolean;
+  /** Wikidata gives the end as "unknown value" (player_spells.end_unknown): he
+   * played there, but `left` being null doesn't mean he still does, so
+   * questions that need the dates leave the spell out. */
+  endUnknown?: boolean;
   /** Build B's facts, from Wikidata; missing when unknown. */
   nationality?: string | null;
   heightCm?: number | null;
@@ -96,7 +100,8 @@ function overlapDays(a: ClubSpell, b: ClubSpell, today: string): number {
  * club's best known whose list is a fair length.
  */
 export function dressingRoom(spells: ClubSpell[], recent: Set<string>, seed: number, today: string): { player: ClubSpell; teammates: SharedPlayer[] } | null {
-  const dated = spells.filter((s) => s.joined && (s.joined >= "1992-08-15" || (s.left ?? today) >= "1993-08-15"));
+  // An unknown end isn't "still there", so those spells can't say who overlapped.
+  const dated = spells.filter((s) => s.joined && !s.endUnknown && (s.joined >= "1992-08-15" || (s.left ?? today) >= "1993-08-15"));
   const stars = [...new Map(dated.map((s) => [s.id, s])).values()].sort(byFame).slice(0, KNOWN_POOL);
   const options = stars
     .filter((star) => !recent.has(normalizeName(star.name)))
@@ -374,20 +379,29 @@ export type Ground = { club: number; name: string; capacity: number };
 
 /** Nigeria first when it fits (Nigeria-first, Collins), then the rest by the seed. */
 const NIGERIA = "Nigeria";
+/** Nations never asked about: Wales's players are too little known (Collins, 23 Nov 2026). */
+export const LEFT_OUT_NATIONS = new Set(["Wales"]);
 function nationsFirst(nations: string[], seed: number): string[] {
-  const rest = rotate(nations.filter((n) => n !== NIGERIA).sort(), seed);
+  const rest = rotate(nations.filter((n) => n !== NIGERIA && !LEFT_OUT_NATIONS.has(n)).sort(), seed);
   return nations.includes(NIGERIA) ? [NIGERIA, ...rest] : rest;
 }
 
 /** Each player once, with what we know of them. */
 const uniquePlayers = (spells: ClubSpell[]) => [...new Map(spells.map((s) => [s.id, s])).values()];
 
-/** Part 1 #2: the players from one country who've played for the club since 1992, a list of fair length. */
+/** A nation's list is only drafted when this share of it is well known (MIN_FAME
+ * Wikipedia editions or more), so nobody is asked for nine Dutchmen at Ipswich
+ * (Collins, 23 Nov 2026: on dev, 211 of 364 club lists pass, 126 at top clubs). */
+export const NATION_KNOWN_SHARE = 0.75;
+
+const wellKnown = (ps: ClubSpell[]) => ps.filter((p) => p.fame >= MIN_FAME).length >= ps.length * NATION_KNOWN_SHARE;
+
+/** Part 1 #2: the players from one country who've played for the club since 1992, a list of fair length, mostly well known. */
 export function nationAtClub(spells: ClubSpell[], seed: number): { nation: string; players: SharedPlayer[] } | null {
   const byNation = new Map<string, ClubSpell[]>();
   for (const p of uniquePlayers(spells.filter((s) => (s.left ?? "9999") >= "1992-08-15")))
     if (p.nationality) byNation.set(p.nationality, [...(byNation.get(p.nationality) ?? []), p]);
-  const fits = [...byNation].filter(([, ps]) => ps.length >= MIN_SHARED && ps.length <= MAX_SHARED).map(([n]) => n);
+  const fits = [...byNation].filter(([, ps]) => ps.length >= MIN_SHARED && ps.length <= MAX_SHARED && wellKnown(ps)).map(([n]) => n);
   const nation = nationsFirst(fits, seed)[0];
   if (!nation) return null;
   return { nation, players: byNation.get(nation)!.map((p) => ({ id: p.id, name: p.name, aliases: p.aliases, joinedA: p.joined, joinedB: null, fame: p.fame })) };
