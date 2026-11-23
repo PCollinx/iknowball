@@ -1,12 +1,13 @@
 # Launch posts
 
-The plan for the posts outside the app: launch day on LinkedIn, X and WhatsApp, then Product Hunt, Hacker
+The plan for the posts outside the app: launch day on LinkedIn and X, then Product Hunt, Hacker
 News, Nairaland and the short videos (Collins, 7 Nov 2026). Times are WAT.
 
 Rules that hold for every post:
 - Never post a question from an upcoming Daily. Videos and examples use past Dailies only.
 - Every link carries its source so PostHog can tell the channels apart:
-  `https://playiknowball.com/?utm_source=<linkedin|producthunt|hackernews|nairaland|tiktok|instagram|youtube|x>`.
+  `https://playiknowball.com/?utm_source=<linkedin|producthunt|hackernews|nairaland|youtube|x>`.
+- X (@playiKnowBall) is the app's only social account: no TikTok, Instagram or WhatsApp for iKnowBall (Collins, 19 Nov 2026).
 - The site takes no money while it's on Vercel Hobby, so nothing says "support us", "donate" or "pro".
 - Use real numbers only. Anything in [brackets] below gets filled in on the day from the maker, PostHog or
   Supabase, or comes out.
@@ -17,10 +18,10 @@ Rules that hold for every post:
 | --- | --- | --- |
 | From Mon 9 Nov | Make a Nairaland account and take part in Sports threads (no links yet) | Nairaland |
 | ~~Mon 16 Nov~~ | ~~Build story: "I'm launching on Friday"~~ (skipped, Collins, 17 Nov) | LinkedIn |
-| Thu 19 Nov | Demo video, and pinned on the waitlist page for its last day (step 19 of the launch plan) | X, WhatsApp, TikTok, Reels, Shorts, waitlist |
-| Fri 20 Nov | Launch day, all three at 07:00, when the gates open and the launch email goes | LinkedIn, X, WhatsApp |
+| Thu 19 Nov | Demo video, and pinned on the waitlist page for its last day (step 19 of the launch plan) | X, Shorts, waitlist |
+| Fri 20 Nov | Launch day, both at 07:00, when the gates open and the launch email goes | LinkedIn, X |
 | Fri 20 Nov, 12:00 | The launch thread | Nairaland |
-| From Sat 21 Nov | Short videos, three a week | TikTok, Reels, Shorts, X, WhatsApp Status |
+| From Sat 21 Nov | Short videos, three a week | X, Shorts |
 | Mondays from 23 Nov | The thread's weekly update: team of the week and the hardest Daily | Nairaland |
 | Tue 1 Dec | Product Hunt launch (09:01 WAT, when PH's day starts) | Product Hunt, LinkedIn, X |
 | Thu 3 Dec | Show HN (about 14:00 WAT, 8 am in New York) | Hacker News |
@@ -35,9 +36,9 @@ properly.
 
 The waitlist comes down at midnight and the launch email job runs at 07:00 (`docs/launch-plan.md`). On Vercel
 Hobby it starts any time between 07:00 and 07:59, and Resend's free plan sends 100 a day, so a waitlist over
-100 gets the email over more than one morning; check the maker's Jobs page once it has run. Post on all
-three at 07:00 so the email, the posts and the first Daily land around the same time, then play the Daily yourself and
-post your score at lunchtime. Each post links with its own `utm_source` (`linkedin`, `x`, `whatsapp`).
+100 gets the email over more than one morning; check the maker's Jobs page once it has run. Post on both
+at 07:00 so the email, the posts and the first Daily land around the same time, then play the Daily yourself and
+post your score at lunchtime. Each post links with its own `utm_source` (`linkedin`, `x`).
 
 ### LinkedIn
 
@@ -110,31 +111,6 @@ Then, through the day, from @playiKnowBall:
 
 Repost from your own account and ask the beta testers to quote it with their score.
 
-### WhatsApp
-
-Three pieces, all sent by you:
-
-1. **Status, 07:00:** the demo video (9:16), with:
-   > iKnowBall is live. Today's Daily is Man City v Man United. One go. playiknowball.com
-2. **Your groups (football and friends), 07:30:** one message, not a forward, and only to groups where it
-   fits:
-
-> Guys, the football game I've been building is live this morning. It's called iKnowBall.
->
-> Today's Daily is Man City v Man United. You get one go, it's timed, and it takes about two minutes. No
-> sign-up, it works on any phone.
->
-> playiknowball.com/daily?utm_source=whatsapp
->
-> Send me your score when you're done. I'll know who's been lying about knowing ball.
->
-> I've also started a league for this group. Join it and we'll see who's top on Sunday night:
-> [league invite link]
-
-3. **Status, after you play:** your Daily share card with "Beat it."
-
-Start a league before the day ("IKB…" code) and drop its invite link in the groups too: a league keeps a
-group coming back every week.
 
 ## LinkedIn
 
@@ -159,24 +135,6 @@ Then, through the day, from @playiKnowBall:
 
 Repost from your own account and ask the beta testers to quote it with their score.
 
-### WhatsApp
-
-Three pieces, all sent by you:
-
-1. **Status, 07:00:** the demo video (9:16), with the line "iKnowBall is live. Today's Daily is [fixture]. playiknowball.com".
-2. **Your groups (football and friends), 07:30:** one message, not a forward, and only to groups where it fits:
-
-> It's live 🙌 iKnowBall, the football game I've been building.
->
-> Today's Daily is [fixture]. One go, timed. Play it and send me your score:
-> playiknowball.com/daily
->
-> Or try this Clash and beat my [score]: [challenge link]
-
-3. **Status, after you play:** your Daily share card with "Beat it."
-
-Start a league before the day ("IKB…" code) and drop its invite link in the groups too: a league keeps a
-group coming back every week.
 
 ## LinkedIn
 
@@ -206,7 +164,7 @@ Image: the logo canvas with three screens (home, a Daily, a Clash sprint), or a 
 >
 > If you think you know ball, the waitlist is in the comments.
 
-### 2. Fri 20 Nov: launch day (with X and WhatsApp, above)
+### 2. Fri 20 Nov: launch day (with X, above)
 
 Video: the demo video (16:9 cut). The link goes in the first comment.
 
@@ -402,8 +360,7 @@ Lead with the quiz, not the app: a question people want to answer in the replies
 ## Short videos
 
 Made in code with Remotion (`video/`, on `claude/clash-video`): the app's own shirts, fonts and logo, so
-every video looks like the app. Each one is rendered as 9:16 (1080 × 1920) for TikTok, Reels, Shorts and
-WhatsApp Status, and as 16:9 (1920 × 1080) for X and LinkedIn. Add trending music when posting, not in the
+every video looks like the app. Each one is rendered as 9:16 (1080 × 1920) for Shorts, and as 16:9 (1920 × 1080) for X and LinkedIn. Add trending music when posting, not in the
 render.
 
 ### The series
@@ -414,7 +371,7 @@ render.
 | **Name them** | 15–20 s | Fri or Sat, before the weekend's big game | A past Daily's Free Recall: the shirts fill one by one with a clock running, then "How many would you get?". Uses a Daily that has already been played. |
 | **Clash chain** | 15 s | Wed | A real sprint's chain building up (like the PL goals chain in `ClashIntro`), ending on the miss and "Beat 14". |
 | **Team of the week** | 10 s | Mon | The week's top 11 dropping onto the pitch from `/league/everyone/card`, the matchweek stamp, "Make the XI". |
-| **The group chat** | 20 s | Now and then | `ClashChat`: a challenge landing in a WhatsApp-style chat. Good for WhatsApp Status. |
+| **The group chat** | 20 s | Now and then | `ClashChat`: a challenge landing in a group chat. |
 
 Three a week from Sat 21 Nov: Monday team of the week, Wednesday Clash chain, and Friday or Saturday Name
 them. Rate mode on Fri 18 Dec gets its own demo-style video and a week of extra posts.
