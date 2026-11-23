@@ -48,12 +48,13 @@ export function useInstall() {
   return { way, inApp, install };
 }
 
-/** Opens the browser's own "Install app?" sheet. It can be used once. */
-async function install() {
+/** Opens the browser's own "Install app?" sheet. It can be used once. True if they installed. */
+async function install(): Promise<boolean> {
   const offer = window.__ikbPrompt;
-  if (!offer) return;
+  if (!offer) return false;
   await offer.prompt();
-  await offer.userChoice;
+  const { outcome } = await offer.userChoice;
   window.__ikbPrompt = null;
   window.dispatchEvent(new Event(EVENT));
+  return outcome === "accepted";
 }

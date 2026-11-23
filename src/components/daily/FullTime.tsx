@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ClubPicker } from "@/components/profile/ClubPicker";
 import { SeasonTicket } from "@/components/pwa/SeasonTicket";
+import { WhistleAsk } from "@/components/push/WhistleAsk";
 import { WhistleStrip } from "@/components/push/WhistleStrip";
 import { APP_ICON_SRC } from "@/lib/og/logo";
 import { SheetValue, TeamSheet, type SheetRow } from "@/components/sheet/TeamSheet";
@@ -116,6 +117,7 @@ export function FullTime(props: Props) {
             {/* Not on a first full time, which asks "Who do you support?" instead. */}
             {!props.clubChoices && <SeasonTicket guest={props.guest} icon={APP_ICON_SRC} season={seasonLabel(seasonOf(gameDate()))} />}
             {!props.clubChoices && <WhistleStrip guest={props.guest} className="mt-6" />}
+            {!props.clubChoices && <WhistleAsk game="daily" score={points} guest={props.guest} />}
           </div>
 
           <TodaysTable top={props.top} me={props.me} players={players} />
