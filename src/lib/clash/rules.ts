@@ -134,6 +134,9 @@ export function threeLine(three: number[]): string {
 export function sprintLine(right: number, after: { three: number[]; added: number; replaced: number | null }): string {
   if (after.added > 0) return after.replaced !== null ? `+${after.added} this week. Your ${right} replaces your ${after.replaced}.` : `+${after.added} this week. It fills a slot.`;
   if (threeTotal(after.three) >= CLASH_MAX) return "Full marks this week already.";
+  const open = COUNTED_SPRINTS - after.three.length;
+  // A sprint that added nothing while a slot is still open (a 0): there's no third score to beat yet.
+  if (open > 0) return `Nothing added. ${threeLine(after.three)}`;
   return `Your three stay ${after.three.join(" · ")}. Beat ${after.three[COUNTED_SPRINTS - 1]} next time.`;
 }
 

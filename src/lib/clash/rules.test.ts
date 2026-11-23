@@ -100,6 +100,8 @@ describe("sprintLine", () => {
     expect(sprintLine(12, afterSprint([], 12))).toBe("+12 this week. It fills a slot.");
     expect(sprintLine(7, afterSprint([18, 14, 9], 7))).toBe("Your three stay 18 · 14 · 9. Beat 9 next time.");
     expect(sprintLine(20, afterSprint([40, 38, 30], 20))).toBe("Full marks this week already.");
+    // A 0 with slots still open has no third score to beat.
+    expect(sprintLine(0, afterSprint([], 0))).toBe("Nothing added. 2 slots empty. Any score counts.");
   });
 });
 
