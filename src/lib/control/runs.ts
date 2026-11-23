@@ -4,6 +4,7 @@ import { draftEmptyDays, publishDueDrafts } from "@/lib/drafts/draft-job";
 import { importDueClubs } from "@/lib/drafts/import-job";
 import { sendLaunchEmails } from "@/lib/launch/send";
 import { eveningWhistle, morningWhistle } from "@/lib/push/jobs";
+import { postsBuzz } from "@/lib/posts/buzz";
 import { syncFixtures } from "@/lib/fixtures/sync";
 import { syncMatchData } from "@/lib/matchdata/sync";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -15,6 +16,7 @@ import {
   importProblems,
   JOB_NAMES,
   matchDataProblems,
+  postBuzzProblems,
   staleRuns,
   whistleProblems,
   type JobName,
@@ -64,6 +66,14 @@ const WORK: Record<JobName, () => Promise<Outcome>> = {
   "whistle-evening": async () => {
     const summary = await eveningWhistle();
     return { summary, problems: whistleProblems(summary) };
+  },
+  "posts-morning": async () => {
+    const summary = await postsBuzz("morning");
+    return { summary, problems: postBuzzProblems(summary) };
+  },
+  "posts-evening": async () => {
+    const summary = await postsBuzz("evening");
+    return { summary, problems: postBuzzProblems(summary) };
   },
 };
 

@@ -7,7 +7,7 @@ import { dayLabel } from "@/lib/drafts/matchday";
 // The control room (Collins, 30 Oct 2026): what counts as a problem in each
 // scheduled job's result, and in the runs themselves. Pure, so it's tested.
 
-export const JOB_NAMES = ["fixtures", "match-data", "import-wikidata", "drafts", "launch-email", "whistle-morning", "whistle-evening"] as const;
+export const JOB_NAMES = ["fixtures", "match-data", "import-wikidata", "drafts", "launch-email", "whistle-morning", "whistle-evening", "posts-morning", "posts-evening"] as const;
 export type JobName = (typeof JOB_NAMES)[number];
 
 /** Times are WAT, as vercel.json has them in UTC. On Vercel Hobby a job runs any time within its hour. */
@@ -29,6 +29,8 @@ export const JOBS: Record<JobName, { label: string; at: string; does: string; ma
     maxSeconds: 120,
   },
   "whistle-evening": { label: "Whistle · evening", at: "20:00", does: "Push notifications: 4 hours left, for anyone yet to start today's Daily.", maxSeconds: 120 },
+  "posts-morning": { label: "Posts · morning", at: "09:00", does: "Buzzes the admins' phones with the day's X posts on the Posts tab.", maxSeconds: 60 },
+  "posts-evening": { label: "Posts · evening", at: "22:00", does: "Buzzes the admins' phones when the full time X post is ready.", maxSeconds: 60 },
 };
 
 /** A job whose last run started longer ago than this has missed a night (a day plus the hour Hobby may run it in, and some). */
@@ -39,6 +41,12 @@ export function whistleProblems(r: { skipped: string } | { daily: { failed: numb
   if ("skipped" in r) return [];
   const failed = r.daily.failed + (r.league?.failed ?? 0);
   return failed ? [`${failed} ${failed === 1 ? "buzz" : "buzzes"} refused by the push service.`] : [];
+}
+
+/** A push service that refused the Posts tab's buzz. */
+export function postBuzzProblems(r: { skipped: string } | { sent: { failed: number } }): string[] {
+  if ("skipped" in r || !r.sent.failed) return [];
+  return [`${r.sent.failed} posts ${r.sent.failed === 1 ? "buzz" : "buzzes"} refused by the push service.`];
 }
 
 export type ImportJobResult = { results: ImportResult[]; failed: number; left: string[] };

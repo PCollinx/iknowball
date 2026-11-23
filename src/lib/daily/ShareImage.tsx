@@ -88,9 +88,9 @@ export function ShareImage({ d }: { d: ShareCardData }) {
               marginRight: 0.03 * rowW,
             }}
           >
-            <span style={{ fontSize: 0.026 * rowW, color: C.tealLight, ...label }}>{scoredBy(d.name)}</span>
+            <span style={{ fontSize: 0.026 * rowW, color: C.tealLight, ...label }}>{d.open ? "Your score" : scoredBy(d.name)}</span>
             <div style={{ display: "flex", alignItems: "baseline", marginTop: 0.01 * row, fontFamily: DISPLAY, lineHeight: 0.8 }}>
-              <span style={{ fontSize: n }}>{String(d.points)}</span>
+              <span style={{ fontSize: n }}>{d.open ? "?" : String(d.points)}</span>
               <span style={{ fontSize: n * 0.38, color: C.track }}>/100</span>
             </div>
           </div>
@@ -133,7 +133,7 @@ export function ShareImage({ d }: { d: ShareCardData }) {
         }}
       >
         <div style={{ display: "flex", flexDirection: "column" }}>
-          <span style={{ fontFamily: DISPLAY, fontSize: 7 * u, lineHeight: 0.88, textTransform: "uppercase" }}>{`Can you beat ${d.points}?`}</span>
+          <span style={{ fontFamily: DISPLAY, fontSize: 7 * u, lineHeight: 0.88, textTransform: "uppercase" }}>{d.open ? "Your go" : `Can you beat ${d.points}?`}</span>
           <span style={{ marginTop: 1 * u, fontSize: 2.5 * u, fontWeight: 600 }}>Free · 2 minutes · no sign-up</span>
         </div>
         <span style={{ display: "flex", fontFamily: DISPLAY, fontSize: 3.4 * u, lineHeight: 1, background: C.navy, color: "#FFFFFF", padding: `${1.4 * u}px ${2 * u}px` }}>{d.host}</span>

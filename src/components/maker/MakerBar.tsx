@@ -4,6 +4,7 @@ import { shortDate } from "@/components/daily/Masthead";
 import { Logo } from "@/components/nav/SiteNav";
 import { JOB_NAMES } from "@/lib/control/problems";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { gameHour, POSTS, postsOn } from "@/lib/posts/plan";
 import { addDays, gameDate } from "@/lib/time";
 import { ArrowUpRight } from "@/components/icons/Icon";
 
@@ -14,7 +15,7 @@ export { Chip, MAKER_MAIN, MakerHead, type ChipKind } from "./ui";
 // a tab per page, the one you're on underlined in light teal. Days carries a
 // red count of the next seven days not yet scheduled; Jobs carries OK, or a red
 // count of jobs whose last run had problems; Waitlist carries the names down in
-// teal. On phones the tabs sit behind a Menu button.
+// teal; Posts carries today's posts still to go in teal. On phones the tabs sit behind a Menu button.
 
 const PAGES = [
   ["days", "Days", "/maker"],
@@ -23,29 +24,36 @@ const PAGES = [
   ["jobs", "Jobs", "/maker/jobs"],
   ["waitlist", "Waitlist", "/maker/waitlist"],
   ["teaser", "Teasers", "/maker/teaser"],
+  ["posts", "Posts", "/maker/posts"],
 ] as const;
 
 export type MakerPageName = (typeof PAGES)[number][0];
 
 /** Days in the next seven (today on) that aren't fully scheduled, jobs whose last run had problems, and names on the waitlist. */
-async function counts(): Promise<{ days: number; jobs: number; waitlist: number }> {
+async function counts(): Promise<{ days: number; jobs: number; waitlist: number; posts: number }> {
   const admin = createAdminClient();
   const today = gameDate();
   const dates = Array.from({ length: 7 }, (_, i) => addDays(today, i));
-  const [dailies, runs, waitlist] = await Promise.all([
+  const [dailies, runs, waitlist, done] = await Promise.all([
     admin.from("dailies").select("play_date, status").gte("play_date", dates[0]).lte("play_date", dates[6]),
     admin.from("job_runs").select("job, status").order("started_at", { ascending: false }).limit(60),
     admin.from("waitlist").select("id", { count: "exact", head: true }),
+    admin.from("x_posts").select("kind").eq("play_date", today).not("status", "is", null),
   ]);
   if (dailies.error) throw dailies.error;
   if (runs.error) throw runs.error;
   if (waitlist.error) throw waitlist.error;
+  if (done.error) throw done.error;
   const ready = (date: string) => {
     const parts = (dailies.data ?? []).filter((d) => d.play_date === date);
     return parts.length > 0 && parts.every((p) => p.status === "scheduled");
   };
   const last = JOB_NAMES.map((job) => (runs.data ?? []).find((r) => r.job === job)?.status);
-  return { days: dates.filter((d) => !ready(d)).length, jobs: last.filter((s) => s === "warning" || s === "failed").length, waitlist: waitlist.count ?? 0 };
+  // Posts due by now and not yet posted or skipped (whether there's anything to say is the tab's to work out).
+  const hour = gameHour();
+  const handled = new Set((done.data ?? []).map((p) => p.kind as string));
+  const posts = postsOn(today).filter((k) => hour >= POSTS[k].hour && !handled.has(k)).length;
+  return { days: dates.filter((d) => !ready(d)).length, jobs: last.filter((s) => s === "warning" || s === "failed").length, waitlist: waitlist.count ?? 0, posts };
 }
 
 /** Red for something to fix; `good` counts (the waitlist) are teal. */
@@ -55,8 +63,8 @@ function Badge({ n, ok, good }: { n: number; ok?: string; good?: boolean }) {
 }
 
 export async function MakerBar({ active }: { active?: MakerPageName }) {
-  const { days, jobs, waitlist } = await counts();
-  const badge = { days: <Badge n={days} />, jobs: <Badge n={jobs} ok="OK" />, waitlist: <Badge n={waitlist} good /> } as Partial<Record<MakerPageName, React.ReactNode>>;
+  const { days, jobs, waitlist, posts } = await counts();
+  const badge = { days: <Badge n={days} />, jobs: <Badge n={jobs} ok="OK" />, waitlist: <Badge n={waitlist} good />, posts: <Badge n={posts} good /> } as Partial<Record<MakerPageName, React.ReactNode>>;
   const tabs = (className: string) =>
     PAGES.map(([key, name, href]) => (
       <Link key={key} href={href} aria-current={key === active ? "page" : undefined} className={className}>
