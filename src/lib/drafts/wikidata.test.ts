@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clubPlayersQuery, parseClubPlayers, parsePositions, positionFromLabels, positionsQuery } from "./wikidata";
+import { clubPlayersQuery, nationName, parseClubPlayers, parsePositions, positionFromLabels, positionsQuery } from "./wikidata";
 
 const E = "http://www.wikidata.org/entity/";
 const row = (over: Record<string, string | undefined> = {}) => {
@@ -36,6 +36,7 @@ describe("parseClubPlayers", () => {
         goals: 15,
         sitelinks: 84,
         onLoan: false,
+        endUnknown: false,
       },
     ]);
   });
@@ -57,6 +58,11 @@ describe("parseClubPlayers", () => {
   it("keeps missing dates as null and drops short aliases", () => {
     const [s] = parseClubPlayers({ results: { bindings: [row({ start: undefined, end: undefined, playerAltLabel: "CF, Cesc" })] } });
     expect([s.joinedOn, s.leftOn, s.aliases]).toEqual([null, null, ["Cesc"]]);
+  });
+
+  it("flags an end given as unknown value", () => {
+    const [s] = parseClubPlayers({ results: { bindings: [row({ end: undefined, endHidden: "http://www.wikidata.org/.well-known/genid/ee31" })] } });
+    expect([s.leftOn, s.endUnknown]).toEqual([null, true]);
   });
 
   it("keeps missing or odd counts as null", () => {
@@ -97,5 +103,23 @@ describe("positions", () => {
   it("only queries well-formed ids", () => {
     const q = positionsQuery(["Q1", "Q2 } DROP", "Q33"]);
     expect(q).toContain("VALUES ?player { wd:Q1 wd:Q33 }");
+  });
+});
+
+describe("unknown end dates", () => {
+  it("keeps the unknown-value spells and asks for them by name", () => {
+    const q = clubPlayersQuery("Chelsea F.C.");
+    expect(q).toContain("FILTER(isLiteral(?end))");
+    expect(q).toMatch(/^SELECT [^\n]*\?endHidden/);
+  });
+});
+
+describe("nationName", () => {
+  it("gives each country one name", () => {
+    expect(nationName("Kingdom of the Netherlands")).toBe("Netherlands");
+    expect(nationName("Kingdom of Denmark")).toBe("Denmark");
+    expect(nationName(" Nigeria ")).toBe("Nigeria");
+    expect(nationName("")).toBeNull();
+    expect(nationName(undefined)).toBeNull();
   });
 });

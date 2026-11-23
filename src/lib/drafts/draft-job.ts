@@ -303,6 +303,7 @@ async function clubSpells(club: number): Promise<ClubSpell[]> {
     joined_on: string | null;
     left_on: string | null;
     on_loan: boolean;
+    end_unknown: boolean;
     aliases: string[] | null;
     nationality: string | null;
     height_cm: number | null;
@@ -324,6 +325,7 @@ async function clubSpells(club: number): Promise<ClubSpell[]> {
     joined: r.joined_on,
     left: r.left_on,
     loan: r.on_loan,
+    endUnknown: r.end_unknown,
     nationality: r.nationality,
     heightCm: r.height_cm,
     careerClubs: r.career_clubs,

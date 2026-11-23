@@ -174,6 +174,15 @@ describe("build B", () => {
     expect(nationAtClub(squad.slice(5), 3)?.nation).toBe("France");
   });
 
+  it("never asks about Wales", () => {
+    const squad = [
+      ...Array.from({ length: 8 }, (_, i) => at(i + 1, `Welsh ${i}`, 2000 + i, 2002 + i, { nationality: "Wales" })),
+      ...Array.from({ length: 7 }, (_, i) => at(20 + i, `French ${i}`, 2000 + i, 2002 + i, { nationality: "France" })),
+    ];
+    for (const seed of [0, 1, 2, 3]) expect(nationAtClub(squad, seed)?.nation).toBe("France");
+    expect(nationAtClub(squad.slice(0, 8), 0)).toBeNull();
+  });
+
   it("skips a nation whose list is mostly unknown players", () => {
     // 7 Nigerians, only 5 of them in 12+ Wikipedias: under 3 in 4, so France it is.
     const squad = [

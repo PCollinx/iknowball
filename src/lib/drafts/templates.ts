@@ -18,6 +18,10 @@ export type ClubSpell = {
   joined: string | null;
   left: string | null;
   loan: boolean;
+  /** Wikidata gives the end as "unknown value" (player_spells.end_unknown): he
+   * played there, but `left` being null doesn't mean he still does, so
+   * questions that need the dates leave the spell out. */
+  endUnknown?: boolean;
   /** Build B's facts, from Wikidata; missing when unknown. */
   nationality?: string | null;
   heightCm?: number | null;
@@ -96,7 +100,8 @@ function overlapDays(a: ClubSpell, b: ClubSpell, today: string): number {
  * club's best known whose list is a fair length.
  */
 export function dressingRoom(spells: ClubSpell[], recent: Set<string>, seed: number, today: string): { player: ClubSpell; teammates: SharedPlayer[] } | null {
-  const dated = spells.filter((s) => s.joined && (s.joined >= "1992-08-15" || (s.left ?? today) >= "1993-08-15"));
+  // An unknown end isn't "still there", so those spells can't say who overlapped.
+  const dated = spells.filter((s) => s.joined && !s.endUnknown && (s.joined >= "1992-08-15" || (s.left ?? today) >= "1993-08-15"));
   const stars = [...new Map(dated.map((s) => [s.id, s])).values()].sort(byFame).slice(0, KNOWN_POOL);
   const options = stars
     .filter((star) => !recent.has(normalizeName(star.name)))
@@ -374,8 +379,10 @@ export type Ground = { club: number; name: string; capacity: number };
 
 /** Nigeria first when it fits (Nigeria-first, Collins), then the rest by the seed. */
 const NIGERIA = "Nigeria";
+/** Nations never asked about: Wales's players are too little known (Collins, 23 Nov 2026). */
+export const LEFT_OUT_NATIONS = new Set(["Wales"]);
 function nationsFirst(nations: string[], seed: number): string[] {
-  const rest = rotate(nations.filter((n) => n !== NIGERIA).sort(), seed);
+  const rest = rotate(nations.filter((n) => n !== NIGERIA && !LEFT_OUT_NATIONS.has(n)).sort(), seed);
   return nations.includes(NIGERIA) ? [NIGERIA, ...rest] : rest;
 }
 
