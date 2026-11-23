@@ -182,3 +182,41 @@ export async function postsFor(date: string) {
 }
 
 export type TodayPost = Awaited<ReturnType<typeof postsFor>>[number];
+
+/** Whether a post has anything to say, cheaply (one small read), for the maker
+ * bar's Posts count: it matches the tab's "to post" without drawing the posts. */
+export async function hasPost(kind: PostKind, date: string): Promise<boolean> {
+  const admin = createAdminClient();
+  const any = async (q: PromiseLike<{ count: number | null; error: unknown }>) => {
+    const { count, error } = await q;
+    if (error) throw error;
+    return (count ?? 0) > 0;
+  };
+  const between = (startsOn: string, endsOn: string) => [gameDateClosesAt(addDays(startsOn, -1)).toISOString(), gameDateClosesAt(endsOn).toISOString()] as const;
+
+  if (kind === "daily-on" || kind === "full-time") {
+    // Today's first half: the morning post needs it; full time needs someone to have finished it.
+    const { data, error } = await admin.from("dailies").select("id").eq("play_date", date).eq("status", "scheduled").eq("part", 1).limit(1);
+    if (error) throw error;
+    if (!data?.length) return false;
+    if (kind === "daily-on") return true;
+    return any(admin.from("attempts").select("id", { count: "exact", head: true }).eq("daily_id", data[0].id).not("submitted_at", "is", null));
+  }
+
+  if (kind === "clash") {
+    const week = currentWeek();
+    const [from, to] = between(week.startsOn, week.endsOn);
+    return any(admin.from("clash_runs").select("id", { count: "exact", head: true }).gte("started_at", from).lt("started_at", to).not("submitted_at", "is", null).gt("right_count", 0));
+  }
+
+  // Team of the week: last week, inside the season, with a finished Daily or a sprint in it.
+  if (seasonWeeks(seasonStart(date), date).length < 2) return false;
+  const startsOn = addDays(date, -7);
+  const endsOn = addDays(date, -1);
+  const [from, to] = between(startsOn, endsOn);
+  const [daily, clash] = await Promise.all([
+    any(admin.from("attempts").select("id, dailies!inner(play_date)", { count: "exact", head: true }).gte("dailies.play_date", startsOn).lte("dailies.play_date", endsOn).not("submitted_at", "is", null)),
+    any(admin.from("clash_runs").select("id", { count: "exact", head: true }).gte("started_at", from).lt("started_at", to).not("submitted_at", "is", null).gt("right_count", 0)),
+  ]);
+  return daily || clash;
+}
