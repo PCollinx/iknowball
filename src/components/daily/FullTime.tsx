@@ -110,6 +110,7 @@ export function FullTime(props: Props) {
               text={shareText}
               tone="teal"
               label="Send the card"
+              preview
               sub={`Can they beat ${points}?`}
               className=""
               image={card ? { url: "/daily/card", name: `iknowball-daily-${String(issue).padStart(3, "0")}.png` } : null}

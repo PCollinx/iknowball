@@ -174,6 +174,7 @@ function Ticket({ code, url, right, missed, table, challenge, rival }: { code: s
             text={cardMessage({ right, missed, toBeat: beat.right })}
             label={challenge ? "Pass it on" : rival ? `Send to ${rival}` : "Send to a friend"}
             image={{ url: `/clash/${code}/card`, name: `iknowball-clash-${code}.png` }}
+            preview
           />
         </div>
       </div>
