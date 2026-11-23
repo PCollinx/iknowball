@@ -9,6 +9,7 @@ import { EmptyPeg, LeagueStickers, Peg, Section, StatStickers } from "@/componen
 import { EmailForm, UsernameForm } from "@/components/profile/ProfileForms";
 import { OnYourPhone } from "@/components/pwa/OnYourPhone";
 import { WhistleSection } from "@/components/push/WhistleSection";
+import { AfterShirtSaved } from "@/components/push/AfterShirtSaved";
 import { APP_ICON_SRC } from "@/lib/og/logo";
 import { currentUser } from "@/lib/daily/data";
 import { getHub } from "@/lib/league/data";
@@ -119,6 +120,8 @@ async function ProfileScreen({ searchParams }: { searchParams: SearchParams }) {
         <OnYourPhone guest={guest} icon={APP_ICON_SRC} />
 
         <WhistleSection guest={guest} />
+        {/* Back from saving the shirt in the full-time pop-up: its next step, straight away. */}
+        <AfterShirtSaved guest={guest} />
 
         {admin && (
           <Section title="The maker">

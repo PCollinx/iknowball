@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
-import { Arrow } from "@/components/icons/Icon";
+import { Arrow, Check } from "@/components/icons/Icon";
 import { EmailForm } from "@/components/profile/ProfileForms";
 import { GoogleButton } from "@/components/profile/GoogleButton";
 import { IosSteps } from "@/components/pwa/IosSteps";
 import { useInstall } from "@/components/pwa/useInstall";
-import { askCopy, doneCopy, forcedAsk, stepOf, whatToAsk, type Ask, type Game, type Step } from "@/lib/push/ask";
+import { askCopy, doneCopy, forcedAsk, stepOf, whatToAsk, type Ask, type Game, type PendingShirt, type Step } from "@/lib/push/ask";
 import { isPhone, ticketDue } from "@/lib/pwa/platform";
 import { useWhistle } from "./useWhistle";
 
@@ -40,6 +40,16 @@ function notNow(step: Step) {
 
 const noChange = () => () => {};
 
+/** The guest is off to save their shirt: remember it, so the next step shows when they're back. */
+export const PENDING_SHIRT = "ikb_shirt_pending";
+function markPendingShirt(game: Game, score: number) {
+  try {
+    window.localStorage.setItem(PENDING_SHIRT, JSON.stringify({ game, score, at: Date.now() } satisfies PendingShirt));
+  } catch {
+    // Storage blocked: the next step comes at the next full time instead.
+  }
+}
+
 /** A preview or this computer. Fails safe: if Vercel's variable is missing, it's the live site. */
 function testSite(): boolean {
   return process.env.NEXT_PUBLIC_VERCEL_ENV === "preview" || ["localhost", "127.0.0.1"].includes(window.location.hostname);
@@ -47,7 +57,7 @@ function testSite(): boolean {
 
 type Phase = { kind: "waiting" } | { kind: "open"; ask: Ask } | { kind: "done"; ask: "install" | "whistle" } | { kind: "closed" };
 
-export function WhistleAsk({ game, score, guest }: { game: Game; score: number; guest: boolean }) {
+export function WhistleAsk({ game, score, guest, justSaved = false }: { game: Game; score: number; guest: boolean; /** Back from saving the shirt: the next step now, Not now or not, under "Shirt saved". */ justSaved?: boolean }) {
   const { way, inApp, install } = useInstall();
   const { state, turnOn } = useWhistle();
   const phone = useSyncExternalStore(noChange, () => isPhone(navigator.userAgent, navigator.maxTouchPoints), () => false);
@@ -64,9 +74,9 @@ export function WhistleAsk({ game, score, guest }: { game: Game; score: number; 
   useEffect(() => {
     if (settled.current || phase.kind !== "waiting" || decision === "wait") return;
     settled.current = true;
-    if (decision === null || (!forced && !due(stepOf(decision)))) return;
+    if (decision === null || (!forced && !justSaved && !due(stepOf(decision)))) return;
     timer.current = setTimeout(() => setPhase({ kind: "open", ask: decision }), DELAY_MS);
-  }, [phase.kind, decision, forced]);
+  }, [phase.kind, decision, forced, justSaved]);
   useEffect(() => () => clearTimeout(timer.current), []);
 
   const open = phase.kind === "open" || phase.kind === "done";
@@ -137,6 +147,12 @@ export function WhistleAsk({ game, score, guest }: { game: Game; score: number; 
         </div>
       </div>
       <div className="flex max-h-[60dvh] flex-col gap-3 overflow-y-auto border-[3px] border-t-0 border-navy bg-white px-3.5 pt-3.5 pb-3">
+        {justSaved && !done && (
+          <span className="flex w-fit items-center gap-1.5 bg-teal-light px-2 pt-1 pb-0.5 font-display text-[15px] leading-none uppercase">
+            <Check className="size-3.5" />
+            Shirt saved
+          </span>
+        )}
         <h2 className="font-display text-[32px] leading-[0.92] uppercase">{done ? done.title : copy.title}</h2>
         <p className="text-[15px] leading-snug text-slate">{done ? done.line : copy.line}</p>
         {!done && ask === "ios" && <IosSteps guest={guest} inApp={inApp} />}
@@ -155,8 +171,11 @@ export function WhistleAsk({ game, score, guest }: { game: Game; score: number; 
         ) : ask === "shirt" ? (
           // The app's own save buttons: same guest account, every score kept; both come back to Your shirt.
           <>
-            <GoogleButton label="Save with Google" />
-            <EmailForm mode="save" />
+            {/* Either button marks the save, so the next step shows when they're back signed in. */}
+            <div className="contents" onClickCapture={() => markPendingShirt(game, score)}>
+              <GoogleButton label="Save with Google" />
+              <EmailForm mode="save" />
+            </div>
             <button type="button" onClick={later} className="-mt-2 self-center py-1 text-[13px] font-semibold text-slate underline underline-offset-[3px]">
               Not now
             </button>

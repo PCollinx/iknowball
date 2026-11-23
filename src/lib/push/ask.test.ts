@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { askCopy, doneCopy, forcedAsk, stepOf, whatToAsk } from "./ask";
+import { askCopy, doneCopy, forcedAsk, PENDING_SHIRT_MS, readPendingShirt, stepOf, whatToAsk } from "./ask";
 
 describe("whatToAsk", () => {
   it("asks a phone in the browser to save it first, whatever the whistle", () => {
@@ -81,5 +81,19 @@ describe("forcedAsk", () => {
     expect(forcedAsk("?ask=phone", false)).toBeNull();
     expect(forcedAsk("", false)).toBeNull();
     expect(forcedAsk("?ask=whistle", true)).toBeNull();
+  });
+});
+
+describe("readPendingShirt", () => {
+  const now = 1_800_000_000_000;
+  it("reads what the guest was saving from", () => {
+    expect(readPendingShirt(JSON.stringify({ game: "clash", score: 14, at: now - 60_000 }), now)).toEqual({ game: "clash", score: 14, at: now - 60_000 });
+  });
+
+  it("forgets it after a day, and ignores anything odd", () => {
+    expect(readPendingShirt(JSON.stringify({ game: "daily", score: 65, at: now - PENDING_SHIRT_MS - 1 }), now)).toBeNull();
+    expect(readPendingShirt("{oops", now)).toBeNull();
+    expect(readPendingShirt(JSON.stringify({ game: "rugby", score: 1, at: now }), now)).toBeNull();
+    expect(readPendingShirt(null, now)).toBeNull();
   });
 });

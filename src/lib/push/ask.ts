@@ -47,6 +47,23 @@ export function forcedAsk(search: string, live: boolean): Ask | null {
 
 export type Game = "daily" | "clash";
 
+/** A guest tapped Save with Google or Save with email in the pop-up: kept in
+ * the browser so that, back on the site signed in, the next step shows at
+ * once (Collins, 23 Nov 2026). A day at most: an email link opened later
+ * than that just gets the usual full-time asks. */
+export type PendingShirt = { game: Game; score: number; at: number };
+export const PENDING_SHIRT_MS = 86_400_000;
+
+export function readPendingShirt(raw: string | null, now: number): PendingShirt | null {
+  try {
+    const p = JSON.parse(raw ?? "null") as Partial<PendingShirt> | null;
+    if (!p || (p.game !== "daily" && p.game !== "clash") || typeof p.score !== "number" || typeof p.at !== "number") return null;
+    return now - p.at <= PENDING_SHIRT_MS ? { game: p.game, score: p.score, at: p.at } : null;
+  } catch {
+    return null;
+  }
+}
+
 export type AskCopy = { on: string; off: string; title: string; line: string; button: string; keeps?: string[] };
 
 /** The board's two names, then the white card's words. `score` is the day's score or the Clash score to beat; `phone` says which device the shirt is kept on. */
