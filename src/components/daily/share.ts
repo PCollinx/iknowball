@@ -28,6 +28,8 @@ export type ShareCardData = {
   /** Each club in its own kit; undefined is royal. */
   kits: [Kit | undefined, Kit | undefined];
   host: string;
+  /** Before anyone's played (the maker's 09:00 X post): "?" for the score and "Your go". */
+  open?: boolean;
 };
 
 /** The how-to-play tail a prompt ends on, which the card leaves out. */
