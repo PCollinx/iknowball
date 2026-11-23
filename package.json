@@ -12,7 +12,7 @@
     "db:types": "supabase gen types typescript --linked > src/lib/supabase/database.types.ts"
   },
   "dependencies": {
-    "@sentry/nextjs": "^11.7.0",
+    "@sentry/nextjs": "^11.11.0",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.3",
     "next": "16.4.6",
@@ -35,5 +35,10 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^5.0.4"
+  },
+  "overrides": {
+    "@typescript-eslint/typescript-estree": {
+      "minimatch": "11.0.5"
+    }
   }
 }
