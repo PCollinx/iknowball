@@ -264,7 +264,9 @@ function EraQuestion({ question, kits }: { question: string | null; kits: Record
               </span>
             )}
             <span className="grid min-w-16 justify-items-center">
-              <ShirtBack kit={kits[name]?.kit} className="w-14" />
+              <span className="block w-14">
+                <ShirtBack kit={kits[name]?.kit} />
+              </span>
               <span className="-mt-3 bg-navy px-1.5 py-[3px] font-display text-[13px] leading-none whitespace-nowrap text-white uppercase">
                 {name}
               </span>
