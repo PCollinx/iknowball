@@ -47,3 +47,40 @@ export function questionClubs(question: string | null): { who: string; clubs: st
     .filter(Boolean);
   return clubs.length ? { who: question.slice(0, at), clubs } : null;
 }
+
+/** How a picks question's big line is drawn (option S·A, Collins, 25 Nov 2026). */
+export type QuestionLine =
+  /** "Yaya Touré at Barcelona → Man City": who, then each club as its kit. */
+  | { kind: "at"; who: string; clubs: string[] }
+  /** "Arsenal 2–0 Burnley · Sat 25 Oct": both kits with the score between, the date as a label. */
+  | { kind: "match"; home: string; away: string; score: string; when: string | null }
+  /** "Man United's 7th Premier League title": the title with the club's kit. */
+  | { kind: "title"; club: string; what: string }
+  /** "Thierry Henry's 2nd Golden Boot": the player with the award on a stamp. */
+  | { kind: "award"; who: string; what: string }
+  /** "2003/04": the season, big. */
+  | { kind: "season"; season: string }
+  | { kind: "plain"; text: string };
+
+const MATCH = /^(.+?) (\d+)–(\d+) (.+?)(?: · (.+))?$/;
+const COUNTED = /^(.+?)(?:'s|') ((?:\d+(?:st|nd|rd|th) )?(Premier League title|Golden Boot))$/;
+const SEASON = /^\d{4}\/\d{2}$/;
+
+/** Reads a picks question into the parts its line draws; anything unknown stays plain. */
+export function questionLine(question: string): QuestionLine {
+  const at = questionClubs(question);
+  if (at) return { kind: "at", ...at };
+  const match = MATCH.exec(question);
+  if (match) return { kind: "match", home: match[1], away: match[4], score: `${match[2]}–${match[3]}`, when: match[5] ?? null };
+  const counted = COUNTED.exec(question);
+  if (counted) return counted[3] === "Golden Boot" ? { kind: "award", who: counted[1], what: counted[2] } : { kind: "title", club: counted[1], what: counted[2] };
+  if (SEASON.test(question)) return { kind: "season", season: question };
+  return { kind: "plain", text: question };
+}
+
+/** The clubs a question's line dresses in their kits. */
+export function lineClubs(question: string | null): string[] {
+  if (!question) return [];
+  const line = questionLine(question);
+  return line.kind === "at" ? line.clubs : line.kind === "match" ? [line.home, line.away] : line.kind === "title" ? [line.club] : [];
+}
