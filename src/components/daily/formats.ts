@@ -31,3 +31,19 @@ export function ordinal(n: number): string {
 
 /** How a Rapid picks career path is written in its question: club names joined by arrows. */
 export const PATH_ARROW = " → ";
+
+/**
+ * A picks question that names clubs ("Yaya Touré at Barcelona → Man City",
+ * "Frank Lampard at Chelsea"): who it's about and the clubs after the last
+ * " at ", in order. Null for any other question (a season, a scoreline).
+ */
+export function questionClubs(question: string | null): { who: string; clubs: string[] } | null {
+  const at = question?.lastIndexOf(" at ") ?? -1;
+  if (!question || at <= 0) return null;
+  const clubs = question
+    .slice(at + 4)
+    .split(PATH_ARROW)
+    .map((c) => c.trim())
+    .filter(Boolean);
+  return clubs.length ? { who: question.slice(0, at), clubs } : null;
+}

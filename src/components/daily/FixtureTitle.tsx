@@ -3,7 +3,7 @@ import { headlineFixture, splitFixture } from "./fixture";
 
 // Big Shoulders 900 capitals run about 0.56em wide; a little spare so the
 // longest word never touches the edge.
-const CAP_WIDTH = 0.6;
+export const CAP_WIDTH = 0.6;
 
 /** The longest word, in em, so a heading can be sized to fit it. */
 export function fitWidth(title: string): number {

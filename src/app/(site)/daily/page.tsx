@@ -7,7 +7,7 @@ import { FullTime } from "@/components/daily/FullTime";
 import { InOrder } from "@/components/daily/InOrder";
 import { PickRound } from "@/components/daily/PickRound";
 import { KickOff } from "@/components/daily/KickOff";
-import { halfName } from "@/components/daily/formats";
+import { halfName, questionClubs } from "@/components/daily/formats";
 import { Masthead, shortDate } from "@/components/daily/Masthead";
 import { getHomeClash } from "@/lib/clash/data";
 import { statOfDay } from "@/lib/clash/rules";
@@ -201,7 +201,8 @@ function featuredClubs(clubs: Club[], title: string): Club[] {
 
 /** Clubs a career path names, to dress in their kits: Rapid picks' paths, or a career path In Order's answers at full time. */
 function careerClubNames(view: Awaited<ReturnType<typeof getDailyView>>): string[] {
-  if (view.kind === "pick" && view.daily.format === "pick") return view.questions.flatMap((q) => pathOf(q.question) ?? []);
+  // Career paths, and the clubs a picks question names ("Yaya Touré at Barcelona → Man City").
+  if (view.kind === "pick") return view.questions.flatMap((q) => pathOf(q.question) ?? questionClubs(q.question)?.clubs ?? []);
   if (view.kind === "fulltime" && view.order?.daily.template === "career-path") return view.order.slots.map((s) => s.correct);
   return [];
 }
