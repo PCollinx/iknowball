@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { Fragment, useState, useTransition, type CSSProperties } from "react";
 import { beginPart, endPart, submitPick } from "@/app/(site)/daily/actions";
 import type { PickAnswered, PickQuestion } from "@/lib/daily/data";
-import { FixtureTitle } from "./FixtureTitle";
+import { CAP_WIDTH, FixtureTitle } from "./FixtureTitle";
+import { questionClubs } from "./formats";
 import { GiveUp, Pitch, RoundHead, Steps, type Step, WhistleCover, type Whistle } from "./InPlay";
 import { KitTrail, pathOf, type PathClub } from "./KitTrail";
 import { ShirtBack, type Kit } from "./ShirtBack";
@@ -33,7 +34,7 @@ type Props = {
   answered: PickAnswered[];
   /** The fixture's kit for Rapid picks shirts. */
   kit: Kit | null;
-  /** Kits of the clubs in career path questions, by club name. */
+  /** Kits of the clubs named in the questions (career paths, "… at Chelsea"), by club name. */
   pathKits?: Record<string, PathClub>;
 };
 
@@ -132,9 +133,9 @@ export function PickRound(props: Props) {
 
       <section className="flex flex-col pt-3 pb-4 [grid-area:squad] lg:block lg:pt-6 lg:pb-10">
         {/* One line for the player: the next name replaces this one in place. */}
-        {current && era && <EraQuestion question={current.question} />}
+        {current && era && <EraQuestion question={current.question} kits={props.pathKits ?? {}} />}
         {/* Any other question on a Rapid picks round (a Golden Boot season), in the same big line. */}
-        {current && !era && current.question && !pathOf(current.question) && <EraQuestion question={current.question} />}
+        {current && !era && current.question && !pathOf(current.question) && <EraQuestion question={current.question} kits={props.pathKits ?? {}} />}
         {/* A career path: the player's clubs as a trail of kits, the next path replacing this one in place. */}
         {current && !era && pathOf(current.question) && (
           <KitTrail key={`path-${current.id}`} clubs={pathOf(current.question)!} kits={props.pathKits ?? {}} className="animate-deal-in" />
@@ -230,22 +231,51 @@ export function PickRound(props: Props) {
   );
 }
 
-/** "Dennis Bergkamp at Arsenal": the player big, the club after him in royal. */
-function EraQuestion({ question }: { question: string | null }) {
+/**
+ * The question's big line. One that names clubs ("Yaya Touré at Barcelona →
+ * Man City") is option C of https://claude.ai/artifact/QHbqo6Zz7e2bvrvMPXpP4S
+ * (Collins, 25 Nov 2026): the player in navy on one line, sized to fit, with
+ * each club as its kit beside him (below when there's no room), the club's
+ * name on the nameplate, never wrapped. Anything else (a season, a scoreline)
+ * is printed as it is. Headings are navy: no word in another colour.
+ */
+function EraQuestion({ question, kits }: { question: string | null; kits: Record<string, PathClub> }) {
   if (!question) return null;
-  const club = eraClub(question);
-  const name = club ? question.slice(0, question.lastIndexOf(" at ")) : question;
+  const parsed = questionClubs(question);
+  if (!parsed) return <p className="font-display text-[38px] text-balance leading-[0.9] uppercase lg:text-[65px]">{question}</p>;
+  const { who, clubs } = parsed;
+  // The whole name on one line: as big as the column allows, never past the cap.
+  const fit = { "--fit": `calc(100cqw / ${Math.max(who.length, 1) * CAP_WIDTH})` } as CSSProperties;
   return (
-    <p className="font-display text-[38px] text-balance leading-[0.9] uppercase lg:text-[65px]">
-      {name}
-      {club && <span className="text-royal"> at {club}</span>}
-    </p>
+    // One row at every width, as on the mock: the name's cell takes what the
+    // kits leave and the name shrinks to fit it, so nothing ever drops a line.
+    <div role="img" aria-label={question} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+      <div className="@container min-w-0" style={fit}>
+        <p aria-hidden className="font-display text-[min(32px,var(--fit))] leading-[0.9] whitespace-nowrap uppercase lg:text-[min(48px,var(--fit))]">
+          {who}
+        </p>
+      </div>
+      <span aria-hidden className="flex items-center gap-1">
+        {clubs.slice(0, 3).map((name, i) => (
+          <Fragment key={`${name}-${i}`}>
+            {i > 0 && (
+              <span className="text-lg text-teal">
+                <Arrow />
+              </span>
+            )}
+            <span className="grid min-w-16 justify-items-center">
+              <span className="block w-14">
+                <ShirtBack kit={kits[name]?.kit} />
+              </span>
+              <span className="-mt-3 bg-navy px-1.5 py-[3px] font-display text-[13px] leading-none whitespace-nowrap text-white uppercase">
+                {name}
+              </span>
+            </span>
+          </Fragment>
+        ))}
+      </span>
+    </div>
   );
-}
-
-function eraClub(question: string | null): string | null {
-  const at = question?.lastIndexOf(" at ") ?? -1;
-  return question && at > 0 ? question.slice(at + 4) : null;
 }
 
 /** The name on a shirt's tag: all but the first name ("Van Persie"), or the one name. */
