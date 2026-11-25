@@ -247,29 +247,31 @@ function EraQuestion({ question, kits }: { question: string | null; kits: Record
   // The whole name on one line: as big as the column allows, never past the cap.
   const fit = { "--fit": `calc(100cqw / ${Math.max(who.length, 1) * CAP_WIDTH})` } as CSSProperties;
   return (
-    <div className="@container" style={fit}>
-      <div role="img" aria-label={question} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-        <p aria-hidden className="font-display text-[min(32px,var(--fit))] leading-[0.9] whitespace-nowrap uppercase lg:text-[min(56px,var(--fit))]">
+    // One row at every width, as on the mock: the name's cell takes what the
+    // kits leave and the name shrinks to fit it, so nothing ever drops a line.
+    <div role="img" aria-label={question} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+      <div className="@container min-w-0" style={fit}>
+        <p aria-hidden className="font-display text-[min(32px,var(--fit))] leading-[0.9] whitespace-nowrap uppercase lg:text-[min(48px,var(--fit))]">
           {who}
         </p>
-        <span aria-hidden className="flex items-center gap-1 lg:gap-2">
-          {clubs.slice(0, 3).map((name, i) => (
-            <Fragment key={`${name}-${i}`}>
-              {i > 0 && (
-                <span className="text-lg text-teal lg:text-2xl">
-                  <Arrow />
-                </span>
-              )}
-              <span className="grid min-w-16 justify-items-center lg:min-w-24">
-                <ShirtBack kit={kits[name]?.kit} className="w-14 lg:w-20" />
-                <span className="-mt-3 bg-navy px-1.5 py-[3px] font-display text-[13px] leading-none whitespace-nowrap text-white uppercase lg:-mt-4 lg:text-base">
-                  {name}
-                </span>
-              </span>
-            </Fragment>
-          ))}
-        </span>
       </div>
+      <span aria-hidden className="flex items-center gap-1">
+        {clubs.slice(0, 3).map((name, i) => (
+          <Fragment key={`${name}-${i}`}>
+            {i > 0 && (
+              <span className="text-lg text-teal">
+                <Arrow />
+              </span>
+            )}
+            <span className="grid min-w-16 justify-items-center">
+              <ShirtBack kit={kits[name]?.kit} className="w-14" />
+              <span className="-mt-3 bg-navy px-1.5 py-[3px] font-display text-[13px] leading-none whitespace-nowrap text-white uppercase">
+                {name}
+              </span>
+            </span>
+          </Fragment>
+        ))}
+      </span>
     </div>
   );
 }
